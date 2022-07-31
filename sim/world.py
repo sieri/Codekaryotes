@@ -44,8 +44,26 @@ class World:
         self._creatures = [Codekaryote(Position.from_index(i)) for i in sample]
     # end def populate_randomly
 
+    def is_busy(self, position):
+        """
+        return true if this position is busy with an element at the moment
+        :param position: the position to check
+        :type position:
+        :return: Flag if it's busy
+        :rtype: ``bool``
+        """
+        for c in self._creatures:
+            if c.position == position:
+                return True
+            # end if
+        return False
+    # end is_busy
+
     def loop(self):
         while True:
+            for c in self._creatures:
+                c.update()
+            # end for
             redraw(self)
     # end def loop
 
@@ -93,8 +111,14 @@ class Position:
         :param y: The x coordinate
         :type y: ``ìnt``
         """
-        self.x = x
-        self.y = y
+        self._x = x
+        self._y = y
+
+    def __eq__(self, other):
+        return self._y == other.y and self._x == other.x
+    # end def __eq__
+
+    # -------------------Methods--------------------
 
     @classmethod
     def from_index(cls, index):
@@ -109,6 +133,8 @@ class Position:
         y = math.floor(index / world.width)
         return Position(x, y)
     # def from_index
+
+    # -----------------Properties------------------
 
     @property
     def x(self):
@@ -134,6 +160,8 @@ class Position:
             val = 0
         elif val > world.width:
             val = world.width
+        elif world.is_busy(Position(self.x+1, self.y)):
+            return
         self._x = val
 
     # end def x
@@ -162,6 +190,8 @@ class Position:
             val = 0
         elif val > world.height:
             val = world.height
+        elif world.is_busy(Position(self.x, self.y+1)):
+            return
         self._y = val
     # end def y
 # end class Position
