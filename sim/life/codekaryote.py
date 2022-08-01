@@ -65,7 +65,6 @@ class Codekaryote:
 
     def reproduce(self, position):
         from sim.world import World
-        print("And birth")
         genome = self.reproduce_genome()
         World().add_organism(organism=Codekaryote(starting_position=position, genomes=genome))
     # end def reproduce
@@ -117,7 +116,7 @@ class BaseModule:
         """
         return a new genome evolved
         :return: the new genome
-        :rtype: ``dict[int]``
+        :rtype: ``list[int]``
         """
         sample = random.sample(range(len(self._genome)), min(self._mutation_rate, len(self._genome)))
         gen = self._genome.copy()

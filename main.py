@@ -14,8 +14,8 @@ if __name__ == '__main__':
     world = World()
     world.initiate(size[0], size[1])
 
-    if param_world.CONTINIOUS_GENERATIONS:
-        world.populate_randomly(count_creature=count, count_plant=count)
+    if param_world.CONTINUOUS_GENERATIONS:
+        world.populate_randomly(count_creature=count, count_plant=count*5)
         world.loop_infinite()
     else:
         world.populate_randomly(count_creature=count, count_plant=0)

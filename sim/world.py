@@ -18,13 +18,18 @@ class World:
 
     _width = None
     _height = None
-    _organisms = []
+    _creature = []
+    _plant = []
     _tick_gen = 0
     _grid = np.array((0, 0))
     _executor = futures.ProcessPoolExecutor(12)
     _generation = 0
-    _to_remove = []
-    _to_add = []
+    _to_remove_creature = []
+    _to_remove_plant = []
+    _to_add_creature = []
+    _to_add_plant = []
+    _plant_cycle = 0
+    _oldest = 0
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, 'instance'):
@@ -58,9 +63,11 @@ class World:
         from sim.life.modules import generate_random_plant_genome
 
         sample = random.sample(range(self.width*self.height), count_creature+count_plant)
-        self._organisms = [Codekaryote(Position.from_index(i)) for i in sample[:count_creature]]
-        self._organisms += [Codekaryote(Position.from_index(i), genome_generator=generate_random_plant_genome) for i in sample[count_creature:]]
+        self._creature += [Codekaryote(Position.from_index(i)) for i in sample[:count_creature]]
+        self._plant += [Codekaryote(Position.from_index(i), genome_generator=generate_random_plant_genome) for i in sample[count_creature:]]
     # end def populate_randomly
+
+
 
     def populate_new_generation(self, count=10):
         """
@@ -70,9 +77,9 @@ class World:
         :param count: number of organisms to place
         :type count: ``int``
         """
-        to_evolve = count - len(self._organisms)
+        to_evolve = count - len(self._creature)
 
-        if len(self._organisms) > 0:
+        if len(self._creature) > 0:
             sample_to_evolve = [random.randint(0, len(self._organisms)-1) for _ in range(to_evolve)]
         else:
             print("Extinction Event")
@@ -80,16 +87,16 @@ class World:
 
         new_genome = []
         for i in sample_to_evolve:
-            parent = self._organisms[i]
+            parent = self._creature[i]
             new_genome.append(parent.reproduce_genome())
 
-        old_genome = [c.genome for c in self._organisms]
+        old_genome = [c.genome for c in self._creature]
 
         sample_positions = random.sample(range(self.width*self.height), count)
 
-        self._organisms.clear()
+        self._creature.clear()
         for (pos, genome) in zip(sample_positions, new_genome+old_genome):
-            self._organisms.append(Codekaryote(Position.from_index(pos), genome))
+            self._creature.append(Codekaryote(Position.from_index(pos), genome))
 
     # end def populate_new_generation
 
@@ -112,18 +119,19 @@ class World:
 
     def kill_right_screen(self):
         temp = []
-        for c in self._organisms:
+        for c in self._creature:
             if c.position.x > self._width/2:
                 temp.append(c)
         # end for
 
-        self._organisms = temp
+        self._creature = temp
+
     # end def kill_right_screen
 
     def build_grid(self):
         # build grid
         self._grid.fill(-1)
-        for i, c in enumerate(self._organisms):
+        for i, c in enumerate(self.organisms):
             self._grid[c.position.x, c.position.y] = i
         # end for
     # end def build_grid
@@ -144,25 +152,51 @@ class World:
 
     def loop_iteration(self):
         self.build_grid()
-        for c in self._organisms:
+        for c in self.organisms:
             c.update()
 
-        for remove in self._to_remove:
-            self._organisms.remove(remove)
-        self._to_remove.clear()
+        for remove in self._to_remove_creature:
+            self._creature.remove(remove)
+        self._to_remove_creature.clear()
 
-        self._organisms += self._to_add
-        self._to_add.clear()
+        for remove in self._to_remove_plant:
+            self._plant.remove(remove)
+        self._to_remove_plant.clear()
 
+        self._creature += self._to_add_creature
+        self._to_add_creature.clear()
+        self._plant += self._to_add_plant
+        self._to_add_plant.clear()
+
+        if param.CHEAT_ANTI_EXTINCTION:
+            if len(self._creature) < param.ANTI_EXTINCTION_THRESHOLD:
+                self.populate_randomly(param.ANTI_EXTINCTION_BONCE_BACK - len(self._creature), count_plant=0)
+
+        if param.PLANT_SPAWN:
+            self._plant_cycle += 1
+            if self._plant_cycle >= param.PLANT_CYCLE:
+                self._plant_cycle = 0
+                self.populate_randomly(count_creature=0, count_plant=param.PLANT_SPAWN)
+
+        print(f"end tick: creatures={len(self._creature)}, plants={len(self._plant)} || oldest generation {self._oldest}")
         redraw(self)
     # end def loop_iteration
 
     def remove_organism(self, organism):
-        self._to_remove.append(organism)
+        if hasattr(organism,  "movement"):
+            self._to_remove_creature.append(organism)
+            if organism.ancestry.generation > self._oldest:
+                self._oldest = organism.ancestry.generation
+            # end def
+        else:
+            self._to_remove_plant.append(organism)
     # end def remove_organism
 
     def add_organism(self, organism):
-        self._to_add.append(organism)
+        if hasattr(organism, "movement"):
+            self._to_add_creature.append(organism)
+        else:
+            self._to_add_plant.append(organism)
     # end def add_organism
 
     # -----------------Properties------------------
@@ -194,7 +228,7 @@ class World:
 
     @property
     def organisms(self):
-        return self._organisms
+        return self._creature+self._plant
     # end def organisms
 # end class World
 
