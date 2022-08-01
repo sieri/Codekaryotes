@@ -6,7 +6,7 @@ from concurrent import futures
 import numpy as np
 from more_itertools import grouper
 
-from sim.creatures.codekaryote import Codekaryote
+from sim.life.codekaryote import Codekaryote
 from gui.window import redraw
 from sim.parameters import world as param
 
@@ -18,11 +18,13 @@ class World:
 
     _width = None
     _height = None
-    _creatures = []
+    _organisms = []
     _tick_gen = 0
     _grid = np.array((0, 0))
     _executor = futures.ProcessPoolExecutor(12)
     _generation = 0
+    _to_remove = []
+    _to_add = []
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, 'instance'):
@@ -44,45 +46,50 @@ class World:
         self._grid = np.empty((self._width, self._height), dtype=np.int)
     # end def initiate
 
-    def populate_randomly(self, count=10):
+    def populate_randomly(self, count_creature=10, count_plant=10):
         """
-        populate the sim by placing creatures randomly
+        populate the sim by placing organisms randomly
 
-        :param count: number of creatures to place
-        :type count: ``int``
+        :param count_creature: number of creature to place - OPTIONAL
+        :type count_creature: ``int``
+        :param count_plant: number of plant to place - OPTIONAL
+        :type count_plant: ``int``
         """
-        sample = random.sample(range(self.width*self.height), count)
-        self._creatures = [Codekaryote(Position.from_index(i)) for i in sample]
+        from sim.life.modules import generate_random_plant_genome
+
+        sample = random.sample(range(self.width*self.height), count_creature+count_plant)
+        self._organisms = [Codekaryote(Position.from_index(i)) for i in sample[:count_creature]]
+        self._organisms += [Codekaryote(Position.from_index(i), genome_generator=generate_random_plant_genome) for i in sample[count_creature:]]
     # end def populate_randomly
 
     def populate_new_generation(self, count=10):
         """
-        populate the sim by placing creatures randomly, bringing back the population to the count through mutation of
+        populate the sim by placing organisms randomly, bringing back the population to the count through mutation of
         the survivors
 
-        :param count: number of creatures to place
+        :param count: number of organisms to place
         :type count: ``int``
         """
-        to_evolve = count - len(self._creatures)
+        to_evolve = count - len(self._organisms)
 
-        if len(self._creatures) > 0:
-            sample_to_evolve = [random.randint(0, len(self._creatures)-1) for _ in range(to_evolve)]
+        if len(self._organisms) > 0:
+            sample_to_evolve = [random.randint(0, len(self._organisms)-1) for _ in range(to_evolve)]
         else:
             print("Extinction Event")
             sys.exit()
 
         new_genome = []
         for i in sample_to_evolve:
-            parent = self._creatures[i]
+            parent = self._organisms[i]
             new_genome.append(parent.reproduce_genome())
 
-        old_genome = [c.genome for c in self._creatures]
+        old_genome = [c.genome for c in self._organisms]
 
         sample_positions = random.sample(range(self.width*self.height), count)
 
-        self._creatures.clear()
+        self._organisms.clear()
         for (pos, genome) in zip(sample_positions, new_genome+old_genome):
-            self._creatures.append(Codekaryote(Position.from_index(pos), genome))
+            self._organisms.append(Codekaryote(Position.from_index(pos), genome))
 
     # end def populate_new_generation
 
@@ -97,39 +104,66 @@ class World:
         return world.grid[position.x, position.y] != -1
     # end is_busy
 
-    def get_local_creatures(self, pos, r):
-        creatures_zone = self._grid[pos.x - r:pos.x + r, pos.y - r:pos.y + r]
-        creatures = creatures_zone[np.where(creatures_zone >= 0)]
-        return creatures
-    # end def get_local_creatures
+    def get_local_organisms(self, pos, r):
+        organisms_zone = self._grid[pos.x - r:pos.x + r, pos.y - r:pos.y + r]
+        organisms = organisms_zone[np.where(organisms_zone >= 0)]
+        return organisms
+    # end def get_local_organisms
 
     def kill_right_screen(self):
         temp = []
-        for c in self._creatures:
+        for c in self._organisms:
             if c.position.x > self._width/2:
                 temp.append(c)
         # end for
 
-        self._creatures = temp
+        self._organisms = temp
     # end def kill_right_screen
 
-    def loop(self):
+    def build_grid(self):
+        # build grid
+        self._grid.fill(-1)
+        for i, c in enumerate(self._organisms):
+            self._grid[c.position.x, c.position.y] = i
+        # end for
+    # end def build_grid
+
+    def loop_generation(self):
         print(f"generation: {self._generation}")
         for _ in range(param.GENERATION_TIME):
-
-            # build grid
-            self._grid.fill(-1)
-            for i, c in enumerate(self._creatures):
-                self._grid[c.position.x, c.position.y] = i
-            # end for
-
-            for c in self._creatures:
-                c.update()
-
-            redraw(self)
-
+            self.loop_iteration()
+        # end for
         self._generation += 1
-    # end def loop
+    # end def loop_generation
+
+    def loop_infinite(self):
+        while True:
+            self.loop_iteration()
+        # end while
+    # end def loop_infinite
+
+    def loop_iteration(self):
+        self.build_grid()
+        for c in self._organisms:
+            c.update()
+
+        for remove in self._to_remove:
+            self._organisms.remove(remove)
+        self._to_remove.clear()
+
+        self._organisms += self._to_add
+        self._to_add.clear()
+
+        redraw(self)
+    # end def loop_iteration
+
+    def remove_organism(self, organism):
+        self._to_remove.append(organism)
+    # end def remove_organism
+
+    def add_organism(self, organism):
+        self._to_add.append(organism)
+    # end def add_organism
 
     # -----------------Properties------------------
 
@@ -159,14 +193,10 @@ class World:
     # end def height
 
     @property
-    def creatures(self):
-        return self._creatures
-    # end def creatures
+    def organisms(self):
+        return self._organisms
+    # end def organisms
 # end class World
-
-
-
-
 
 
 world = World()
@@ -186,8 +216,6 @@ class Coordinate:
             self._coord[0] = kwargs["x"]
             self._coord[1] = kwargs["y"]
         # end if
-
-
     # end def __init__
 
     def __eq__(self, other):

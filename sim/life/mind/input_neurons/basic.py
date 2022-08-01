@@ -1,16 +1,16 @@
-from sim.creatures.mind.neuron import NeuronInput
+from sim.life.mind.neuron import NeuronInput
 
 THRESHOlD = 0.5
 
 
 class ConstantNeuron(NeuronInput):
 
-    def __init__(self, activation, creature):
+    def __init__(self, activation, organism):
         """
         :param activation: the activation function applied in this specific neuron
         :type activation: ``Activations``
-        :param creature: the creature to interact with
-        :type creature: ``Codekaryote``
+        :param organism: the organism to interact with
+        :type organism: ``Codekaryote``
         """
         super().__init__(activation, None)  # Todo make a body module for constant
 
@@ -26,14 +26,14 @@ class ConstantNeuron(NeuronInput):
 
 class TouchNeuron(NeuronInput):
 
-    def __init__(self, activation, creature):
+    def __init__(self, activation, organism):
         """
         :param activation: the activation function applied in this specific neuron
         :type activation: ``Activations``
-        :param creature: the creature to interact with
-        :type creature: ``Codekaryote``
+        :param organism: the organism to interact with
+        :type organism: ``Codekaryote``
         """
-        super().__init__(activation, creature.touch)
+        super().__init__(activation, organism.touch)
     # end def __init__
 
     # -------------------Methods--------------------
@@ -45,14 +45,14 @@ class TouchNeuron(NeuronInput):
 
 
 class TouchForwardNeuron(NeuronInput):
-    def __init__(self, activation, creature):
+    def __init__(self, activation, organism):
         """
         :param activation: the activation function applied in this specific neuron
         :type activation: ``Activations``
-        :param creature: the creature to interact with
-        :type creature: ``Codekaryote``
+        :param organism: the organism to interact with
+        :type organism: ``Codekaryote``
         """
-        super().__init__(activation, creature.touch)
+        super().__init__(activation, organism.touch)
     # end def __init__
 
     # -------------------Methods--------------------

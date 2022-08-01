@@ -1,29 +1,35 @@
 import random
 from sim.parameters import evolution as para_ev
-from utils import toggle_bit
+from utils import toggle_bit, clamp
 
 
 class Codekaryote:
 
-    def __init__(self, starting_position, genomes=None):
+    def __init__(self, starting_position, genomes=None, genome_generator=None):
         """
         :param starting_position: the position the Codekaryotes spawn in
         :type starting_position: ``Position``
         :param genomes: the genome of the Codekaryote if None generate randomly - OPTIONAL
-        :type genomes: ```dict(list[int])`` or ``None``
+        :type genomes: ``dict(list[int])`` or ``None``
+        :param genome_generator: function generating a genome, to create an other style of Codekaryotic life - OPTIONAL
+        :type genome_generator: ``funct``
         """
 
+        self._alive = True
         self._position = starting_position
         self._modules = []
 
+        if genome_generator is None:
+            from sim.life.modules import generate_random_creature_full_genome
+            genome_generator = generate_random_creature_full_genome
+
         if genomes is None:
-            from sim.creatures.modules import generate_random_genome
-            genomes = generate_random_genome()
+            genomes = genome_generator()
         # end if
 
         self._genome = genomes
 
-        from sim.creatures.modules import possible_modules
+        from sim.life.modules import possible_modules
         for key, genome in genomes.items():
             m = possible_modules[key](self, genome)
             self._modules.append(m)
@@ -47,6 +53,23 @@ class Codekaryote:
         return new_genome
     # end def reproduce_genome
 
+    def die(self):
+        """
+        remove the creature
+        """
+        from sim.world import World
+        if self._alive:
+            World().remove_organism(self)
+            self._alive = False
+    # end def die
+
+    def reproduce(self, position):
+        from sim.world import World
+        print("And birth")
+        genome = self.reproduce_genome()
+        World().add_organism(organism=Codekaryote(starting_position=position, genomes=genome))
+    # end def reproduce
+
     # -----------------Properties------------------
 
     @property
@@ -66,15 +89,16 @@ class BaseModule:
     A base module for systems that can evolve independently
     """
 
-    def __init__(self, creature, genome, name):
+    def __init__(self, organism, genome, name):
         """
-        :param creature: the creature where this module exists
-        :type creature: ``Codekaryote``
+        :param organism: the organism where this module exists
+        :type organism: ``Codekaryote``
         """
-        self._creature = creature
+        self._organism = organism
         self._genome = genome
         self._name = name
         self._mutation_rate = para_ev.BASE_RATE
+        organism.__setattr__(name, self)
     # def __init__
 
     def __str__(self):
@@ -106,9 +130,9 @@ class BaseModule:
     # -----------------Properties------------------
 
     @property
-    def creature(self):
-        return self._creature
-    # end def creature
+    def organism(self):
+        return self._organism
+    # end def organism
 
     @property
     def genome(self):

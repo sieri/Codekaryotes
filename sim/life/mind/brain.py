@@ -1,18 +1,20 @@
 import numpy as np
 
-from sim.creatures.codekaryote import BaseModule
+from sim.life.codekaryote import BaseModule
+from sim.life.common.energy import AbstractEnergyConsumer
 from sim.parameters import brain as param
-from sim.creatures.mind.neuron import NeuronInput, NeuronExit, Neuron, Activations, Link
-from sim.creatures.mind.output_neurons import moveneuron
-from sim.creatures.mind.input_neurons import basic, vision
+from sim.life.mind.neuron import NeuronInput, NeuronExit, Neuron, Activations, Link
+from sim.life.mind.output_neurons import moveneuron
+from sim.life.mind.input_neurons import basic, vision
 from utils import test_bit, bit_range, to_signed
 
 
-class Brain(BaseModule):
+class Brain(AbstractEnergyConsumer):
 
-    def __init__(self, creature, genome):
-        super().__init__(creature, genome, "brain")
-        setattr(creature, "brain", self)
+    def __init__(self, organism, genome):
+        super().__init__(organism=organism, genome=genome,
+                         passive=True, name="brain")
+        setattr(organism, "brain", self)
         self._input_neurons = []
         self._output_neurons = []
         self._internal_neurons = []
@@ -22,31 +24,31 @@ class Brain(BaseModule):
         i = 0
 
         # input neurons
-        self._input_neurons.append(basic.ConstantNeuron(Activations.from_genome(genome[i]), creature))
+        self._input_neurons.append(basic.ConstantNeuron(Activations.from_genome(genome[i]), organism))
         i += 1
-        self._input_neurons.append(vision.DistLeft(Activations.from_genome(genome[i]), creature))
+        self._input_neurons.append(vision.DistLeft(Activations.from_genome(genome[i]), organism))
         i += 1
-        self._input_neurons.append(vision.DistRight(Activations.from_genome(genome[i]), creature))
+        self._input_neurons.append(vision.DistRight(Activations.from_genome(genome[i]), organism))
         i += 1
-        self._input_neurons.append(vision.DistUp(Activations.from_genome(genome[i]), creature))
+        self._input_neurons.append(vision.DistUp(Activations.from_genome(genome[i]), organism))
         i += 1
-        self._input_neurons.append(vision.DistDown(Activations.from_genome(genome[i]), creature))
+        self._input_neurons.append(vision.DistDown(Activations.from_genome(genome[i]), organism))
         i += 1
-        self._input_neurons.append(vision.NumForward(Activations.from_genome(genome[i]), creature))
+        self._input_neurons.append(vision.NumForward(Activations.from_genome(genome[i]), organism))
         i += 1
-        self._input_neurons.append(basic.TouchNeuron(Activations.from_genome(genome[i]), creature))
+        self._input_neurons.append(basic.TouchNeuron(Activations.from_genome(genome[i]), organism))
         i += 1
-        self._input_neurons.append(basic.TouchForwardNeuron(Activations.from_genome(genome[i]), creature))
+        self._input_neurons.append(basic.TouchForwardNeuron(Activations.from_genome(genome[i]), organism))
         i += 1
 
         # output neurons
-        self._output_neurons.append(moveneuron.MoveRightNeuron(Activations.from_genome(genome[i]), creature))
+        self._output_neurons.append(moveneuron.MoveRightNeuron(Activations.from_genome(genome[i]), organism))
         i += 1
-        self._output_neurons.append(moveneuron.MoveLeftNeuron(Activations.from_genome(genome[i]), creature))
+        self._output_neurons.append(moveneuron.MoveLeftNeuron(Activations.from_genome(genome[i]), organism))
         i += 1
-        self._output_neurons.append(moveneuron.MoveUpNeuron(Activations.from_genome(genome[i]), creature))
+        self._output_neurons.append(moveneuron.MoveUpNeuron(Activations.from_genome(genome[i]), organism))
         i += 1
-        self._output_neurons.append(moveneuron.MoveDownNeuron(Activations.from_genome(genome[i]), creature))
+        self._output_neurons.append(moveneuron.MoveDownNeuron(Activations.from_genome(genome[i]), organism))
         i += 1
 
         # internal neurones
@@ -64,6 +66,8 @@ class Brain(BaseModule):
         self._clean_links()
 
         self._create_interface()
+
+        self._energy_rate = len(self._links)*param.ENERGY_PER_LINK
     # end def __init__
 
     # -------------------Methods--------------------
@@ -151,6 +155,7 @@ class Brain(BaseModule):
     # def _clean_links
 
     def update(self):
+        super().update()
         list(map(Link.update, self._links))
 
         # end for

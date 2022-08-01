@@ -1,6 +1,6 @@
 from random import randint
 from sim.parameters import brain as param
-from sim.creatures.mind.neuron import Activations
+from sim.life.mind.neuron import Activations
 
 
 def generate_neuron():

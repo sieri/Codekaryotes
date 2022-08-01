@@ -1,0 +1,1 @@
+ENERGY_MAX = 1024

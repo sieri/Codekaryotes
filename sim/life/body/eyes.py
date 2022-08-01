@@ -1,59 +1,61 @@
 import numpy as np
-
-from sim.creatures.codekaryote import BaseModule
+from sim.life.common.energy import AbstractEnergyConsumer
 from sim.world import World
 from sim.parameters import body as param
 
-class Eyes(BaseModule):
 
-    def __init__(self, creature, genome):
-        super().__init__(creature, genome, "eyes")
-        creature.__setattr__("eyes", self)
+class Eyes(AbstractEnergyConsumer):
+
+    def __init__(self, organism, genome):
+        super().__init__(organism=organism, genome=genome,
+                         passive=True, name="eyes")
         self._world = World()
 
         # initialize from the genome
         self._fov = genome[0] % 360
         self._range = genome[0] % param.EYE_RANGE_LIMIT
+
+        self._energy_rate = (self._fov/180*self._range) * param.ENERGY_EYES_RATE
     # end def __init__
 
     # -------------------Methods--------------------
 
     def update(self):
-        pass
+        super().update()
 
     # -----------------Properties------------------
 
     @property
     def dist_left(self):
-        return self._creature.position.x
+        return self._organism.position.x
     # end def dist_left
 
     @property
     def dist_right(self):
-        return self._world.width - self._creature.position.x
+        return self._world.width - self._organism.position.x
     # end def dist_right
 
     @property
     def dist_down(self):
-        return self._creature.position.y
+        return self._organism.position.y
     # end def dist_bottom
 
     @property
     def dist_up(self):
-        return self._world.height - self._creature.position.y
+        return self._world.height - self._organism.position.y
     # end def dist_up
 
     @property
     def num_forward(self):
         count = 0
-        pos = self._creature.position
+        pos = self._organism.position
 
         # get from the distance
-        creatures = self._world.get_local_creatures(pos, self._range)
-        for c_index in creatures:
-            c = self._world.creatures[c_index]
+        organisms = self._world.get_local_organisms(pos, self._range)
+        for c_index in organisms:
+            c = self._world.organisms[c_index]
             # noinspection PyUnresolvedReferences
-            angle = self._creature.movement_module.forward.angle_with(self.creature.position, c.position)
+            angle = self._organism.movement.forward.angle_with(self.organism.position, c.position)
             if abs(angle) < self._fov/2:
                 count += 1
         return count

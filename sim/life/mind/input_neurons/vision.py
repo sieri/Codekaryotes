@@ -1,16 +1,16 @@
-from sim.creatures.mind.neuron import NeuronInput
+from sim.life.mind.neuron import NeuronInput
 
 
 class VisionNeuron(NeuronInput):
 
-    def __init__(self, activation, creature):
+    def __init__(self, activation, organism):
         """
         :param activation: the activation function applied in this specific neuron
         :type activation: ``Activations``
-        :param creature: the creature to interact with
-        :type creature: ``Codekaryote``
+        :param organism: the organism to interact with
+        :type organism: ``Codekaryote``
         """
-        super().__init__(activation, creature.eyes)
+        super().__init__(activation, organism.eyes)
     # end def __init__
 
     # -------------------Methods--------------------
@@ -21,8 +21,8 @@ class VisionNeuron(NeuronInput):
 # noinspection DuplicatedCode
 class DistLeft(VisionNeuron):
 
-    def __init__(self, activation, creature):
-        super().__init__(activation, creature)
+    def __init__(self, activation, organism):
+        super().__init__(activation, organism)
 
     # end def __init__
 
@@ -37,8 +37,8 @@ class DistLeft(VisionNeuron):
 
 class DistUp(VisionNeuron):
 
-    def __init__(self, activation, creature):
-        super().__init__(activation, creature)
+    def __init__(self, activation, organism):
+        super().__init__(activation, organism)
 
     # end def __init__
 
@@ -54,8 +54,8 @@ class DistUp(VisionNeuron):
 # noinspection DuplicatedCode
 class DistDown(VisionNeuron):
 
-    def __init__(self, activation, creature):
-        super().__init__(activation, creature)
+    def __init__(self, activation, organism):
+        super().__init__(activation, organism)
 
     # end def __init__
 
@@ -70,8 +70,8 @@ class DistDown(VisionNeuron):
 
 class DistRight(VisionNeuron):
 
-    def __init__(self, activation, creature):
-        super().__init__(activation, creature)
+    def __init__(self, activation, organism):
+        super().__init__(activation, organism)
 
     # end def __init__
 
@@ -86,8 +86,8 @@ class DistRight(VisionNeuron):
 
 class NumForward(VisionNeuron):
 
-    def __init__(self, activation, creature):
-        super().__init__(activation, creature)
+    def __init__(self, activation, organism):
+        super().__init__(activation, organism)
     # end def __init__
 
     # -------------------Methods--------------------

@@ -5,10 +5,8 @@ import pygame
 from pygame import display, Color
 from pygame.time import Clock
 from pygame.locals import QUIT
-from gui.elements.creatures import draw_creature
+from gui.elements.organisms import draw_organism
 from gui.export_video import take_capture, save
-
-
 
 
 class Window:
@@ -72,8 +70,8 @@ class Window:
 
         self._surface.fill(Color(0, 0, 0))
 
-        for c in world.creatures:
-            draw_creature(self._surface, c, self._factor)
+        for c in world.organisms:
+            draw_organism(self._surface, c, self._factor)
         self.display_fps()
         display.flip()
         if self._export_video:

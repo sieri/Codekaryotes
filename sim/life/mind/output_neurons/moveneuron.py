@@ -1,18 +1,18 @@
-from sim.creatures.mind.neuron import NeuronExit
+from sim.life.mind.neuron import NeuronExit
 
 THRESHOlD = 0.5
 
 
 class MoveUpNeuron(NeuronExit):
 
-    def __init__(self, activation, creature):
+    def __init__(self, activation, organism):
         """
         :param activation: the activation function applied in this specific neuron
         :type activation: ``Activations``
-        :param creature: the creature to interact with
-        :type creature: ``Codekaryote``
+        :param organism: the organism to interact with
+        :type organism: ``Codekaryote``
         """
-        super().__init__(activation, creature.movement_module)
+        super().__init__(activation, organism.movement)
 
     # end def __init__
 
@@ -29,14 +29,14 @@ class MoveUpNeuron(NeuronExit):
 
 class MoveDownNeuron(NeuronExit):
 
-    def __init__(self, activation, creature):
+    def __init__(self, activation, organism):
         """
         :param activation: the activation function applied in this specific neuron
         :type activation: ``Activations``
-        :param creature: the creature to interact with
-        :type creature: ``Codekaryote``
+        :param organism: the organism to interact with
+        :type organism: ``Codekaryote``
         """
-        super().__init__(activation, creature.movement_module)
+        super().__init__(activation, organism.movement)
 
     # end def __init__
 
@@ -53,14 +53,14 @@ class MoveDownNeuron(NeuronExit):
 
 class MoveRightNeuron(NeuronExit):
 
-    def __init__(self, activation, creature):
+    def __init__(self, activation, organism):
         """
         :param activation: the activation function applied in this specific neuron
         :type activation: ``Activations``
-        :param creature: the creature to interact with
-        :type creature: ``Codekaryote``
+        :param organism: the organism to interact with
+        :type organism: ``Codekaryote``
         """
-        super().__init__(activation, creature.movement_module)
+        super().__init__(activation, organism.movement)
 
     # end def __init__
 
@@ -77,14 +77,14 @@ class MoveRightNeuron(NeuronExit):
 
 class MoveLeftNeuron(NeuronExit):
 
-    def __init__(self, activation, creature):
+    def __init__(self, activation, organism):
         """
         :param activation: the activation function applied in this specific neuron
         :type activation: ``Activations``
-        :param creature: the creature to interact with
-        :type creature: ``Codekaryote``
+        :param organism: the organism to interact with
+        :type organism: ``Codekaryote``
         """
-        super().__init__(activation, creature.movement_module)
+        super().__init__(activation, organism.movement)
 
     # end def __init__
 

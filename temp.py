@@ -1,6 +1,6 @@
-from sim.creatures.codekaryote import Codekaryote
-from sim.creatures.mind.neuron import Neuron, Activations
-from sim.creatures.mind.brain import Brain
+from sim.life.codekaryote import Codekaryote
+from sim.life.mind.neuron import Neuron, Activations
+from sim.life.mind.brain import Brain
 from timeit import timeit
 
 NUMBER = 100000
@@ -12,7 +12,7 @@ brain.update()
 number=NUMBER,
 setup=
 """
-from sim.creatures.codekaryote import Codekaryote
+from sim.organisms.codekaryote import Codekaryote
 from sim.world import Position, World
 world = World()
 world.initiate(100, 100)

@@ -20,4 +20,4 @@ def save():
     # end for
 
     frames[0].save('Codekaryotes.gif', format='GIF',
-                   append_images=frames[1:], save_all=True, duration=30, loop=1)
+                   append_images=frames[1:], save_all=True, duration=30, loop=True)
