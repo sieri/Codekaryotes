@@ -74,6 +74,7 @@ class BaseModule:
         self._creature = creature
         self._genome = genome
         self._name = name
+        self._mutation_rate = para_ev.BASE_RATE
     # def __init__
 
     # -------------------Methods--------------------
@@ -91,7 +92,7 @@ class BaseModule:
         :return: the new genome
         :rtype: ``dict[int]``
         """
-        sample = random.sample(range(len(self._genome)), min(para_ev.BASE_RATE, len(self._genome)))
+        sample = random.sample(range(len(self._genome)), min(self._mutation_rate, len(self._genome)))
         gen = self._genome.copy()
         for i in sample:
             gen[i] = toggle_bit(self._genome[i], random.randint(0, 31))

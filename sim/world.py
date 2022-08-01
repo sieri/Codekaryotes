@@ -1,9 +1,13 @@
 import math
 import random
+import sys
+
+import numpy as np
 
 from sim.creatures.codekaryote import Codekaryote
 from gui.window import redraw
 from sim.Parameters import world as param
+
 
 class World:
     """
@@ -54,7 +58,12 @@ class World:
         :type count: ``int``
         """
         to_evolve = count - len(self._creatures)
-        sample_to_evolve = [random.randint(0, len(self._creatures)-1) for _ in range(to_evolve)]
+
+        if len(self._creatures) > 0:
+            sample_to_evolve = [random.randint(0, len(self._creatures)-1) for _ in range(to_evolve)]
+        else:
+            print("Extinction Event")
+            sys.exit()
 
         new_genome = []
         for i in sample_to_evolve:
@@ -66,7 +75,7 @@ class World:
         sample_positions = random.sample(range(self.width*self.height), count)
 
         self._creatures.clear()
-        for (pos, genome)  in zip(sample_positions, new_genome+old_genome):
+        for (pos, genome) in zip(sample_positions, new_genome+old_genome):
             self._creatures.append(Codekaryote(Position.from_index(pos), genome))
 
     # end def populate_new_generation
@@ -137,25 +146,102 @@ class World:
 world = World()
 
 
-class Position:
+class Coordinate:
+    """
+    Base class for anything dealing with coordinate
+    """
+    def __init__(self, **kwargs):
+        self._coord = np.array([0, 0])
+
+        if "coord" in kwargs:
+            self._coord[0] = kwargs["coord"][0]
+            self._coord[1] = kwargs["coord"][1]
+        else:
+            self._coord[0] = kwargs["x"]
+            self._coord[1] = kwargs["y"]
+        # end if
+
+
+    # end def __init__
+
+    def __eq__(self, other):
+        return (self._coord == other.coord).all()
+    # end def __eq__
+
+    def __sub__(self, other):
+        return self._coord - other.coord
+    # end def __sub__
+
+    def __add__(self, other):
+        return self._coord + other.coord
+    # end def __add__
+
+    def __mul__(self, other):
+        if isinstance(other, Coordinate):
+            return self.__class__(coord=self._coord * other.coord)
+        else:
+            return self.__class__(coord=self._coord * other)
+    # end def __mul__
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self._coord})"
+    # end def __repr__
+
+    @property
+    def coord(self):
+        return self._coord
+    # end def coord
+
+    @property
+    def x(self):
+        """
+        Getter for x coordinate
+
+        :return: the value of x
+        :rtype: ``int``
+        """
+        return self._coord[0]
+
+    @x.setter
+    def x(self, val):
+        """
+        Setter for x coordinate
+
+        :param val: the value to set
+        :type val: ``int``
+        """
+        self._coord[0] = val
+
+    @property
+    def y(self):
+        """
+        Getter for y coordinate
+
+        :return: the value of y
+        :rtype: ``int``
+        """
+        return self._coord[1]
+    # end def y
+
+    @y.setter
+    def y(self, val):
+        """
+        Setter for y coordinate
+
+        :param val: the value to set
+        :type val: ``int``
+        """
+        self._coord[1] = val
+    # end def y
+
+class Position(Coordinate):
     """
     A position on the sim for an item
     """
 
-    def __init__(self, x, y):
-        """
-        :param x: The x coordinate
-        :type x: ``ìnt``
-        :param y: The x coordinate
-        :type y: ``ìnt``
-        """
-        self._x = x
-        self._y = y
-
-    def __eq__(self, other):
-        return self._y == other.y and self._x == other.x
-    # end def __eq__
-
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
     # -------------------Methods--------------------
 
     @classmethod
@@ -169,24 +255,26 @@ class Position:
         """
         x = index % world.width
         y = math.floor(index / world.width)
-        return Position(x, y)
+        return Position(x=x, y=y)
     # def from_index
+
+    def dist(self, other):
+        """
+        return the distance between two positions
+        :param other: the other positions
+        :type other: ``Position``
+        :return: the distance
+        :rtype: ``int``
+        """
+        square_x = (self.x - other.x)**2
+        square_y = (self.y - other.y)**2
+        
+        return math.sqrt(square_x+square_y)
+    # end def dist
 
     # -----------------Properties------------------
 
-    @property
-    def x(self):
-        """
-        Getter for x coordinate
-
-        :return: the value of x
-        :rtype: ``int``
-        """
-        return self._x
-
-    # end def x
-
-    @x.setter
+    @Coordinate.x.setter
     def x(self, val):
         """
         Setter for x coordinate
@@ -198,25 +286,11 @@ class Position:
             val = 0
         elif val > world.width:
             val = world.width
-        elif world.is_busy(Position(self.x+1, self.y)):
+        elif world.is_busy(Position(x=val, y=self.y)):
             return
-        self._x = val
+        self._coord[0] = val
 
-    # end def x
-
-    @property
-    def y(self):
-        """
-        Getter for y coordinate
-
-        :return: the value of y
-        :rtype: ``int``
-        """
-        return self._y
-
-    # end def y
-
-    @y.setter
+    @Coordinate.y.setter
     def y(self, val):
         """
         Setter for y coordinate
@@ -228,8 +302,40 @@ class Position:
             val = 0
         elif val > world.height:
             val = world.height
-        elif world.is_busy(Position(self.x, self.y+1)):
+        elif world.is_busy(Position(x=self.x, y=val)):
             return
-        self._y = val
+        self._coord[1] = val
     # end def y
+
 # end class Position
+
+class Vector(Coordinate):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    # end def __init__
+
+    # -------------------Methods--------------------
+
+    def clear(self):
+        self._coord = np.empty(2)
+
+    def angle_with(self, origin, other):
+        """
+        calculate the angle
+
+        :param origin: origin of the current vector
+        :type origin: ``Position``
+        :param other: other position
+        :type other: ``Position``
+        :return: the angle
+        :rtype: ``float``
+        """
+        v0 = self - origin
+        v1 = self - other
+
+        angle = np.math.atan2(np.linalg.det([v0, v1]), np.dot(v0, v1))
+        return np.degrees(angle)
+    # -----------------Properties------------------
+
+# end class Vector

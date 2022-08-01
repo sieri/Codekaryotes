@@ -1,5 +1,3 @@
-import pygame
-
 from sim.creatures.codekaryote import Codekaryote
 from pygame import Color
 from pygame.surface import Surface

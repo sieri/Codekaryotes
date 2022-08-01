@@ -1,5 +1,6 @@
 from sim.creatures.body.eyes import Eyes
 from sim.creatures.body.modules import Movement
+from sim.creatures.genome.body_generators import generate_eyes
 from sim.creatures.genome.brain_generator import generate_brain
 from sim.creatures.mind.brain import Brain
 
@@ -19,7 +20,7 @@ def generate_random_genome():
     """
     genomes = {
         "movement": [],
-        "eyes": [],
+        "eyes": generate_eyes(),
         "brain": generate_brain(),
     }
     return genomes

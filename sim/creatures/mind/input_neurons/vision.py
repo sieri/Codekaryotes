@@ -89,3 +89,19 @@ class DistRight(VisionNeuron):
         self._output_to_links(y)
     # end def update
 # end class DistRight
+
+
+class NumForward(VisionNeuron):
+
+    def __init__(self, activation, creature):
+        super().__init__(activation, creature)
+    # end def __init__
+
+    # -------------------Methods--------------------
+
+    def update(self):
+        self._inputs = [self._module.num_forward, ]
+        y = self._activate()
+        self._output_to_links(y)
+    # end def update
+# end class DistRight

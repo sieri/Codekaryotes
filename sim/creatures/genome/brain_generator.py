@@ -4,7 +4,7 @@ from sim.Parameters import brain as param
 
 def generate_brain():
     from sim.creatures.mind.neuron import Activations
-    inputs = [randint(0, len(Activations)) for _ in range(5)]
+    inputs = [randint(0, len(Activations)) for _ in range(6)]
 
     outputs = [randint(0, len(Activations)) for _ in range(4)]
 

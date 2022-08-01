@@ -8,6 +8,12 @@ class Eyes(BaseModule):
         super().__init__(creature, genome, "eyes")
         creature.__setattr__("eyes", self)
         self._world = World()
+
+        # initialize from the genome
+        self._fov = genome[0] % 360
+        self._range = genome[0] % max(self._world.width, self._world.height)
+
+
     # end def __init__
 
     # -------------------Methods--------------------
@@ -30,11 +36,22 @@ class Eyes(BaseModule):
     @property
     def dist_down(self):
         return self._creature.position.y
-
     # end def dist_bottom
 
     @property
     def dist_up(self):
         return self._world.height - self._creature.position.y
     # end def dist_up
+
+    @property
+    def num_forward(self):
+        count = 0
+        for c in self._world.creatures:
+            if self._creature.position.dist(c.position) < self._range:
+                # noinspection PyUnresolvedReferences
+                angle = self._creature.movement_module.forward.angle_with(self.creature.position, c.position)
+                if abs(angle) < self._fov/2:
+                    count += 1
+        return count
+    # end def num_forward
 # end class Eyes
