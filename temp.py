@@ -1,23 +1,22 @@
-from PIL import Image, ImageDraw, ImageFont
+from sim.creatures.codekaryote import Codekaryote
+from sim.creatures.mind.neuron import Neuron, Activations
+from sim.creatures.mind.brain import Brain
+from timeit import timeit
 
-fnt = ImageFont.truetype("arial", 36)
-def create_image_with_text(wh, text):
-    width, height = wh
-    img = Image.new('RGB', (300, 200), "yellow")
-    draw = ImageDraw.Draw(img)
-    # draw.ellipse takes a 4-tuple (x0, y0, x1, y1) where (x0, y0) is the top-left bound of the box
-    # and (x1, y1) is the lower-right bound of the box.
-    draw.text((width, height), text, font = fnt, fill="black")
-    return img
-# Create the frames
-frames = []
-x, y = 0, 0
-for i in range(100):
-    new_frame = create_image_with_text((x-100,y), "HELLO")
-    frames.append(new_frame)
-    x += 4
-    y += 1
+NUMBER = 100000
 
-# Save into a GIF file that loops forever
-frames[0].save('moving_text.gif', format='GIF',
-               append_images=frames[1:], save_all=True, duration=30, loop=0)
+print("Full brain", timeit(
+'''
+brain.update()
+''',
+number=NUMBER,
+setup=
+"""
+from sim.creatures.codekaryote import Codekaryote
+from sim.world import Position, World
+world = World()
+world.initiate(100, 100)
+code = Codekaryote(starting_position=Position(coord=[0, 0]), genomes={'movement': [], 'eyes': [119, 50], 'touch': [], 'brain': [2, 0, 4, 2, 1, 1, 5, 1, 2, 3, 0, 0, 1, 4, 0, 4, 3, 3, 2, 0, 0, 4, 2456978449, 3760448392, 1538909483, 2389701972, 2289435698, 3095255089, 864925571, 2379947949, 3681564904, 2421123410]})
+brain = code.brain
+
+"""))

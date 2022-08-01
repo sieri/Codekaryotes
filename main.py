@@ -5,7 +5,7 @@ from gui import window
 from sim.world import World
 
 if __name__ == '__main__':
-    num = 128
+    num = 256
     size = (num, num)
     count = num
     pygame.init()

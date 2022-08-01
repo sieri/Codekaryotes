@@ -1,5 +1,5 @@
 import random
-from sim.Parameters import evolution as para_ev
+from sim.parameters import evolution as para_ev
 from utils import toggle_bit
 
 
@@ -76,6 +76,9 @@ class BaseModule:
         self._name = name
         self._mutation_rate = para_ev.BASE_RATE
     # def __init__
+
+    def __str__(self):
+        return f"{self._name}({self._genome})"
 
     # -------------------Methods--------------------
 

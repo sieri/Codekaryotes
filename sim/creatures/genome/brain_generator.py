@@ -1,14 +1,19 @@
 from random import randint
-from sim.Parameters import brain as param
+from sim.parameters import brain as param
+from sim.creatures.mind.neuron import Activations
+
+
+def generate_neuron():
+    return randint(0, len(Activations))
 
 
 def generate_brain():
-    from sim.creatures.mind.neuron import Activations
-    inputs = [randint(0, len(Activations)) for _ in range(8)]
 
-    outputs = [randint(0, len(Activations)) for _ in range(4)]
+    inputs = [generate_neuron() for _ in range(8)]
 
-    internal = [randint(0, len(Activations)) for _ in range(param.INTERNAL_NEURON)]
+    outputs = [generate_neuron() for _ in range(4)]
+
+    internal = [generate_neuron() for _ in range(param.INTERNAL_NEURON)]
 
     links = [randint(0, 4303355903) for _ in range(param.LINKS)]
 

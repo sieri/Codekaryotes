@@ -8,7 +8,7 @@ from more_itertools import grouper
 
 from sim.creatures.codekaryote import Codekaryote
 from gui.window import redraw
-from sim.Parameters import world as param
+from sim.parameters import world as param
 
 
 class World:

@@ -19,7 +19,7 @@ class MoveUpNeuron(NeuronExit):
     # -------------------Methods--------------------
 
     def update(self):
-        y = self._activate()
+        y = self._interface_output[self._interface_index]
 
         if y > THRESHOlD:
             self._module.move_up()
@@ -43,7 +43,7 @@ class MoveDownNeuron(NeuronExit):
     # -------------------Methods--------------------
 
     def update(self):
-        y = self._activate()
+        y = self._interface_output[self._interface_index]
 
         if y > THRESHOlD:
             self._module.move_down()
@@ -67,7 +67,7 @@ class MoveRightNeuron(NeuronExit):
     # -------------------Methods--------------------
 
     def update(self):
-        y = self._activate()
+        y = self._interface_output[self._interface_index]
 
         if y > THRESHOlD:
             self._module.move_right()
@@ -91,7 +91,7 @@ class MoveLeftNeuron(NeuronExit):
     # -------------------Methods--------------------
 
     def update(self):
-        y = self._activate()
+        y = self._interface_output[self._interface_index]
 
         if y > THRESHOlD:
             self._module.move_left()

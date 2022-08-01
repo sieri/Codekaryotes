@@ -15,9 +15,6 @@ class VisionNeuron(NeuronInput):
 
     # -------------------Methods--------------------
 
-    def update(self):
-        raise NotImplementedError
-    # end def update
 # end class VisionNeuron
 
 
@@ -31,11 +28,10 @@ class DistLeft(VisionNeuron):
 
     # -------------------Methods--------------------
     
-    def update(self):
+    def prepare(self):
         self._inputs = [self._module.dist_left, ]
-        y = self._activate()
-        self._output_to_links(y)
-    # end def update
+        super().prepare()
+    # end def prepare
 # end class DistLeft
 
 
@@ -48,11 +44,10 @@ class DistUp(VisionNeuron):
 
     # -------------------Methods--------------------
 
-    def update(self):
+    def prepare(self):
         self._inputs = [self._module.dist_up, ]
-        y = self._activate()
-        self._output_to_links(y)
-    # end def update
+        super().prepare()
+    # end def prepare
 # end class DistUp
 
 
@@ -66,11 +61,10 @@ class DistDown(VisionNeuron):
 
     # -------------------Methods--------------------
 
-    def update(self):
+    def prepare(self):
         self._inputs = [self._module.dist_down, ]
-        y = self._activate()
-        self._output_to_links(y)
-    # end def update
+        super().prepare()
+    # end def prepare
 # end class DistDown
 
 
@@ -83,11 +77,10 @@ class DistRight(VisionNeuron):
 
     # -------------------Methods--------------------
 
-    def update(self):
+    def prepare(self):
         self._inputs = [self._module.dist_right, ]
-        y = self._activate()
-        self._output_to_links(y)
-    # end def update
+        super().prepare()
+    # end def prepare
 # end class DistRight
 
 
@@ -99,9 +92,8 @@ class NumForward(VisionNeuron):
 
     # -------------------Methods--------------------
 
-    def update(self):
+    def prepare(self):
         self._inputs = [self._module.num_forward, ]
-        y = self._activate()
-        self._output_to_links(y)
-    # end def update
+        super().prepare()
+    # end def prepare
 # end class DistRight

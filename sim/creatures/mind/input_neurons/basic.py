@@ -18,8 +18,9 @@ class ConstantNeuron(NeuronInput):
 
     # -------------------Methods--------------------
 
-    def update(self):
-        self._output_to_links(1)
+    def prepare(self):
+        self._inputs = [1, ]
+        super().prepare()
     # end def update
 # end class ConstantNeuron
 
@@ -37,10 +38,9 @@ class TouchNeuron(NeuronInput):
 
     # -------------------Methods--------------------
 
-    def update(self):
+    def prepare(self):
         self._inputs = [self._module.touch, ]
-        y = self._activate()
-        self._output_to_links(y)
+        super().prepare()
     # end def update
 
 
@@ -57,11 +57,10 @@ class TouchForwardNeuron(NeuronInput):
 
     # -------------------Methods--------------------
 
-    def update(self):
+    def prepare(self):
         self._inputs = [self._module.touch_forward, ]
-        y = self._activate()
-        self._output_to_links(y)
-    # end def update
+        super().prepare()
+    # end def prepare
 
 
 # end class MoveUpNeuron
