@@ -19,5 +19,5 @@ def save():
         frames.append(PIL.Image.open(img_file))
     # end for
 
-    frames[0].save('moving_text.gif', format='GIF',
+    frames[0].save('Codekaryotes.gif', format='GIF',
                    append_images=frames[1:], save_all=True, duration=30, loop=1)

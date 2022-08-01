@@ -10,6 +10,10 @@ if __name__ == '__main__':
     world = World()
     world.initiate(size[0], size[1])
     world.populate_randomly(count)
+    window.redraw(world)
 
-    world.loop()
+    while True:
+        world.loop()
+        world.kill_right_screen()
+        world.populate_new_generation(count)
 

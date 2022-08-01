@@ -12,11 +12,11 @@ from gui.export_video import take_capture, save
 class Window:
     def __init__(self, x, y, factor, export_video=False):
         """
-        :param x: the width of the grid of the world
+        :param x: the width of the grid of the world.py
         :type x: ``int``
         :param y: the height of the gird of the wold
         :type y: ``int``
-        :param factor: a factor to scale the world
+        :param factor: a factor to scale the world.py
         :type factor: ``float``
         :param export_video: flag if a video need to be exported - OPTIONAL
         :type export_video: ``bool``
@@ -32,8 +32,8 @@ class Window:
 
     def redraw(self, world):
         """
-        draw the world
-        :param world: the world to draw
+        draw the world.py
+        :param world: the world.py to draw
         :type world: ``World``
         """
         for event in pygame.event.get():
@@ -62,11 +62,11 @@ win = None
 def init(x, y, factor, export_video=False):
     """
     initialize and create a window
-    :param x: the width of the grid of the world
+    :param x: the width of the grid of the world.py
     :type x: ``int``
     :param y: the height of the gird of the wold
     :type y: ``int``
-    :param factor: a factor to scale the world
+    :param factor: a factor to scale the world.py
     :type factor: ``float``
     :param export_video: flag if a video need to be exported - OPTIONAL
     :type export_video: ``bool``
@@ -78,8 +78,8 @@ def init(x, y, factor, export_video=False):
 
 def redraw(world):
     """
-    draw the world
-    :param world: the world to draw
+    draw the world.py
+    :param world: the world.py to draw
     :type world: ``World``
     """
     # noinspection PyUnresolvedReferences

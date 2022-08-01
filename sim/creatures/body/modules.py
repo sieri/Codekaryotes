@@ -4,7 +4,7 @@ from sim.creatures.codekaryote import BaseModule
 class Movement(BaseModule):
 
     def __init__(self, creature, genome):
-        super().__init__(creature, genome)
+        super().__init__(creature, genome, "movement")
         creature.__setattr__("movement_module", self)
     # end def __init__
 
@@ -27,7 +27,7 @@ class Movement(BaseModule):
     # end def move_right
 
     def move_left(self):
-        self._creature.position.y -= 1
+        self._creature.position.x -= 1
     # end def move_left
 
 

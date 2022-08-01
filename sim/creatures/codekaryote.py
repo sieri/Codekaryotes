@@ -1,4 +1,6 @@
-from sim.creatures.genome.brain_generator import generate_brain
+import random
+from sim.Parameters import evolution as para_ev
+from utils import toggle_bit
 
 
 class Codekaryote:
@@ -10,34 +12,25 @@ class Codekaryote:
         :param genomes: the genome of the Codekaryote if None generate randomly - OPTIONAL
         :type genomes: ```dict(list[int])`` or ``None``
         """
+
         self._position = starting_position
         self._modules = []
 
         if genomes is None:
-            genomes = self.__class__.generate_random_genome()
+            from sim.creatures.modules import generate_random_genome
+            genomes = generate_random_genome()
+        # end if
+
+        self._genome = genomes
 
         from sim.creatures.modules import possible_modules
         for key, genome in genomes.items():
             m = possible_modules[key](self, genome)
             self._modules.append(m)
+        # end for
     # end def __init__
 
     # -------------------Methods--------------------
-
-    @classmethod
-    def generate_random_genome(cls):
-        """
-        Generate a random genome
-
-        :return: the random genome
-        :rtype: ```dict[str,list[int]]``
-        """
-        genomes = {
-            "movement": [],
-            "mind": generate_brain(),
-        }
-        return genomes
-    # end def generate_random_genome
 
     def update(self):
         for m in self._modules:
@@ -45,12 +38,26 @@ class Codekaryote:
         # end def for
     # end def update
 
+    def reproduce_genome(self):
+        new_genome = dict()
+        for m in self._modules:
+            new_genome[m.name] = m.evolve()
+        # end def for
+
+        return new_genome
+    # end def reproduce_genome
+
     # -----------------Properties------------------
 
     @property
     def position(self):
         return self._position
     # end def position
+    
+    @property
+    def genome(self):
+        return self._genome
+    # end def genome
 # end class Codekaryotes
 
 
@@ -59,13 +66,14 @@ class BaseModule:
     A base module for systems that can evolve independently
     """
 
-    def __init__(self, creature, genome):
+    def __init__(self, creature, genome, name):
         """
         :param creature: the creature where this module exists
         :type creature: ``Codekaryote``
         """
         self._creature = creature
         self._genome = genome
+        self._name = name
     # def __init__
 
     # -------------------Methods--------------------
@@ -77,6 +85,20 @@ class BaseModule:
         raise NotImplementedError
     # end def update
 
+    def evolve(self):
+        """
+        return a new genome evolved
+        :return: the new genome
+        :rtype: ``dict[int]``
+        """
+        sample = random.sample(range(len(self._genome)), min(para_ev.BASE_RATE, len(self._genome)))
+        gen = self._genome.copy()
+        for i in sample:
+            gen[i] = toggle_bit(self._genome[i], random.randint(0, 31))
+        # end for
+        return gen
+
+    # end def evolve
     # -----------------Properties------------------
 
     @property
@@ -88,4 +110,9 @@ class BaseModule:
     def genome(self):
         return self._genome
     # end def genome
+
+    @property
+    def name(self):
+        return self._name
+    # end def name
 # end class BaseModule

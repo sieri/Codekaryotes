@@ -2,14 +2,14 @@ from sim.creatures.codekaryote import BaseModule
 from sim.Parameters import brain as param
 from sim.creatures.mind.neuron import NeuronInput, NeuronExit, Neuron, Activations, Link
 from sim.creatures.mind.output_neurons import moveneuron
-from sim.creatures.mind.input_neurons import basic
-from utils import test_bit, bit_range
+from sim.creatures.mind.input_neurons import basic, vision
+from utils import test_bit, bit_range, to_signed
 
 
 class Brain(BaseModule):
 
     def __init__(self, creature, genome):
-        super().__init__(creature, genome)
+        super().__init__(creature, genome, "brain")
         self._input_neurons = []
         self._output_neurons = []
         self._internal_neurons = []
@@ -20,6 +20,14 @@ class Brain(BaseModule):
 
         # input neurons
         self._input_neurons.append(basic.ConstantNeuron(Activations.from_genome(genome[i]), creature))
+        i += 1
+        self._input_neurons.append(vision.DistLeft(Activations.from_genome(genome[i]), creature))
+        i += 1
+        self._input_neurons.append(vision.DistRight(Activations.from_genome(genome[i]), creature))
+        i += 1
+        self._input_neurons.append(vision.DistUp(Activations.from_genome(genome[i]), creature))
+        i += 1
+        self._input_neurons.append(vision.DistDown(Activations.from_genome(genome[i]), creature))
         i += 1
 
         # output neurons
@@ -69,7 +77,7 @@ class Brain(BaseModule):
             index = bit_range(gene, 16, 7) % len(self._internal_neurons)
             output = self._internal_neurons[index]
         # end if
-        weight = bit_range(gene, 0, 16)
+        weight = to_signed(bit_range(gene, 0, 16), 16) / 8191.75
         self._links.append(Link(source=source, output=output, weight=weight))
     # end def create_link
 

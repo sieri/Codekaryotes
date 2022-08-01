@@ -75,3 +75,19 @@ def bit_range(val, start, length):
     mask = (2**length-1) << start
     return (val & mask) >> start
 # end def bit_range
+
+def to_signed(val, n_bit):
+    """
+    transform a number to a signed integer
+    :param val: the value to convert
+    :type val: ``int``
+    :param n_bit: number of bit representing that number
+    :type n_bit: ``int``
+    :return: the signed number
+    :rtype: ``int``
+    """
+    if test_bit(val, n_bit-1):
+        return -bit_range(val, 0, n_bit-1)
+    else:
+        return val
+

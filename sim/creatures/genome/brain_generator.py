@@ -4,13 +4,12 @@ from sim.Parameters import brain as param
 
 def generate_brain():
     from sim.creatures.mind.neuron import Activations
-    inputs = [randint(0, len(Activations)),]
+    inputs = [randint(0, len(Activations)) for _ in range(5)]
 
-    outputs = [randint(0, len(Activations)), randint(0, len(Activations)),
-               randint(0, len(Activations)), randint(0, len(Activations)),]
+    outputs = [randint(0, len(Activations)) for _ in range(4)]
 
-    internal = [randint(0, len(Activations)) for i in range(param.INTERNAL_NEURON)]
+    internal = [randint(0, len(Activations)) for _ in range(param.INTERNAL_NEURON)]
 
-    links = [randint(0, 4303355903) for i in range(param.LINKS)]
+    links = [randint(0, 4303355903) for _ in range(param.LINKS)]
 
     return inputs+outputs+internal+links

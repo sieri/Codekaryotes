@@ -9,8 +9,8 @@ class Activations(IntEnum):
     TANH = 3
     GAUSSIAN = 4
 
-    @staticmethod
-    def from_genome(genome):
+    @classmethod
+    def from_genome(cls, genome):
         """
         get an activation from a genome int
         :param genome: the genome
@@ -18,7 +18,7 @@ class Activations(IntEnum):
         :return: the activation
         :rtype: ``Activation``
         """
-        return genome % 5
+        return genome % len(cls)
 # end class Operation
 
 
