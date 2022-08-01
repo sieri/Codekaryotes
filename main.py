@@ -1,12 +1,14 @@
+import pygame
+
 from gui import window
 
 from sim.world import World
 
 if __name__ == '__main__':
-    num = 256
+    num = 128
     size = (num, num)
     count = num
-
+    pygame.init()
     window.init(size[0], size[1], 2.5, False)
     world = World()
     world.initiate(size[0], size[1])

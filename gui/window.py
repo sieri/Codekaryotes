@@ -9,6 +9,8 @@ from gui.elements.creatures import draw_creature
 from gui.export_video import take_capture, save
 
 
+
+
 class Window:
     def __init__(self, x, y, factor, export_video=False):
         """
@@ -21,14 +23,39 @@ class Window:
         :param export_video: flag if a video need to be exported - OPTIONAL
         :type export_video: ``bool``
         """
-        display.set_mode((math.ceil((x+1)*factor), math.ceil((y+1)*factor)))
+
+        self._screen = display.set_mode((math.ceil((x + 1) * factor), math.ceil((y + 1) * factor)))
         self._x = x
         self._y = y
         self._factor = factor
         self._surface = display.get_surface()
         self._clock = Clock()
         self._export_video = export_video
+        self._fonts = self.create_fonts([32, 16, 14, 8])
     # def __init__
+
+    @staticmethod
+    def create_fonts(font_sizes_list):
+        "Creates different fonts with one list"
+        fonts = []
+        for size in font_sizes_list:
+            fonts.append(
+                pygame.font.SysFont("Arial", size))
+        return fonts
+
+    def render(self, fnt, what, color, where):
+        "Renders the fonts as passed from display_fps"
+        text_to_show = fnt.render(what, 0, pygame.Color(color))
+        self._screen.blit(text_to_show, where)
+
+    def display_fps(self):
+        "Data that will be rendered and blitted in _display"
+        self.render(
+            self._fonts[0],
+            what=str(int(self._clock.get_fps())),
+            color="white",
+            where=(0, 0))
+
 
     def redraw(self, world):
         """
@@ -47,11 +74,12 @@ class Window:
 
         for c in world.creatures:
             draw_creature(self._surface, c, self._factor)
-
+        self.display_fps()
         display.flip()
         if self._export_video:
             take_capture()
         self._clock.tick(60)
+
     # end def redraw
 # end class Window
 

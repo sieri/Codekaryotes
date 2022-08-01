@@ -2,7 +2,7 @@ import numpy as np
 
 from sim.creatures.codekaryote import BaseModule
 from sim.world import World
-
+from sim.Parameters import body as param
 
 class Eyes(BaseModule):
 
@@ -13,9 +13,7 @@ class Eyes(BaseModule):
 
         # initialize from the genome
         self._fov = genome[0] % 360
-        self._range = genome[0] % max(self._world.width, self._world.height)
-
-
+        self._range = genome[0] % param.EYE_RANGE_LIMIT
     # end def __init__
 
     # -------------------Methods--------------------

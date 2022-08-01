@@ -1,8 +1,10 @@
 import math
 import random
 import sys
+from concurrent import futures
 
 import numpy as np
+from more_itertools import grouper
 
 from sim.creatures.codekaryote import Codekaryote
 from gui.window import redraw
@@ -19,6 +21,8 @@ class World:
     _creatures = []
     _tick_gen = 0
     _grid = np.array((0, 0))
+    _executor = futures.ProcessPoolExecutor(12)
+    _generation = 0
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, 'instance'):
@@ -110,6 +114,7 @@ class World:
     # end def kill_right_screen
 
     def loop(self):
+        print(f"generation: {self._generation}")
         for _ in range(param.GENERATION_TIME):
 
             # build grid
@@ -117,10 +122,13 @@ class World:
             for i, c in enumerate(self._creatures):
                 self._grid[c.position.x, c.position.y] = i
             # end for
+
             for c in self._creatures:
                 c.update()
-            # end for
+
             redraw(self)
+
+        self._generation += 1
     # end def loop
 
     # -----------------Properties------------------
@@ -155,6 +163,10 @@ class World:
         return self._creatures
     # end def creatures
 # end class World
+
+
+
+
 
 
 world = World()
