@@ -31,7 +31,10 @@ class Brain(BaseModule):
         i += 1
         self._input_neurons.append(vision.NumForward(Activations.from_genome(genome[i]), creature))
         i += 1
-
+        self._input_neurons.append(basic.TouchNeuron(Activations.from_genome(genome[i]), creature))
+        i += 1
+        self._input_neurons.append(basic.TouchForwardNeuron(Activations.from_genome(genome[i]), creature))
+        i += 1
 
         # output neurons
         self._output_neurons.append(moveneuron.MoveRightNeuron(Activations.from_genome(genome[i]), creature))

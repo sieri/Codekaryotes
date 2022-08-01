@@ -3,10 +3,11 @@ from gui import window
 from sim.world import World
 
 if __name__ == '__main__':
-    size = (128, 128)
-    count = 128
+    num = 256
+    size = (num, num)
+    count = num
 
-    window.init(size[0], size[1], 5, False)
+    window.init(size[0], size[1], 2.5, False)
     world = World()
     world.initiate(size[0], size[1])
     world.populate_randomly(count)

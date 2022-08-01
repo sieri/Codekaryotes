@@ -91,3 +91,18 @@ def to_signed(val, n_bit):
     else:
         return val
 
+
+def clamp(n, smallest, largest):
+    """
+    clamp between two values
+    :param n: the number to clamp
+    :type n: ``float``
+    :param smallest: the smaller number
+    :type smallest: ``float``
+    :param largest: the bigger number
+    :type largest: ``float``
+    :return: the number clamped
+    :rtype: ``float``
+    """
+    return max(smallest, min(n, largest))
+# end def clamp

@@ -18,6 +18,7 @@ class World:
     _height = None
     _creatures = []
     _tick_gen = 0
+    _grid = np.array((0, 0))
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, 'instance'):
@@ -36,6 +37,7 @@ class World:
         self._width = width
         self._height = height
         self._tick_gen = 0
+        self._grid = np.empty((self._width, self._height), dtype=np.int)
     # end def initiate
 
     def populate_randomly(self, count=10):
@@ -88,13 +90,14 @@ class World:
         :return: Flag if it's busy
         :rtype: ``bool``
         """
-        for c in self._creatures:
-            if c.position == position:
-                return True
-            # end if
-        # end for
-        return False
+        return world.grid[position.x, position.y] != -1
     # end is_busy
+
+    def get_local_creatures(self, pos, r):
+        creatures_zone = self._grid[pos.x - r:pos.x + r, pos.y - r:pos.y + r]
+        creatures = creatures_zone[np.where(creatures_zone >= 0)]
+        return creatures
+    # end def get_local_creatures
 
     def kill_right_screen(self):
         temp = []
@@ -108,6 +111,12 @@ class World:
 
     def loop(self):
         for _ in range(param.GENERATION_TIME):
+
+            # build grid
+            self._grid.fill(-1)
+            for i, c in enumerate(self._creatures):
+                self._grid[c.position.x, c.position.y] = i
+            # end for
             for c in self._creatures:
                 c.update()
             # end for
@@ -115,6 +124,11 @@ class World:
     # end def loop
 
     # -----------------Properties------------------
+
+    @property
+    def grid(self):
+        return self._grid
+    # end def grid
 
     @property
     def width(self):
@@ -233,6 +247,8 @@ class Coordinate:
         """
         self._coord[1] = val
     # end def y
+# end class Coordinate
+
 
 class Position(Coordinate):
     """
@@ -284,8 +300,8 @@ class Position(Coordinate):
         """
         if val < 0:
             val = 0
-        elif val > world.width:
-            val = world.width
+        elif val >= world.width:
+            val = world.width-1
         elif world.is_busy(Position(x=val, y=self.y)):
             return
         self._coord[0] = val
@@ -300,17 +316,16 @@ class Position(Coordinate):
         """
         if val < 0:
             val = 0
-        elif val > world.height:
-            val = world.height
+        elif val >= world.height:
+            val = world.height-1
         elif world.is_busy(Position(x=self.x, y=val)):
             return
         self._coord[1] = val
     # end def y
-
 # end class Position
 
-class Vector(Coordinate):
 
+class Vector(Coordinate):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
     # end def __init__
@@ -337,5 +352,4 @@ class Vector(Coordinate):
         angle = np.math.atan2(np.linalg.det([v0, v1]), np.dot(v0, v1))
         return np.degrees(angle)
     # -----------------Properties------------------
-
 # end class Vector

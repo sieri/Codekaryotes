@@ -1,3 +1,5 @@
+import numpy as np
+
 from sim.creatures.codekaryote import BaseModule
 from sim.world import World
 
@@ -46,12 +48,16 @@ class Eyes(BaseModule):
     @property
     def num_forward(self):
         count = 0
-        for c in self._world.creatures:
-            if self._creature.position.dist(c.position) < self._range:
-                # noinspection PyUnresolvedReferences
-                angle = self._creature.movement_module.forward.angle_with(self.creature.position, c.position)
-                if abs(angle) < self._fov/2:
-                    count += 1
+        pos = self._creature.position
+
+        # get from the distance
+        creatures = self._world.get_local_creatures(pos, self._range)
+        for c_index in creatures:
+            c = self._world.creatures[c_index]
+            # noinspection PyUnresolvedReferences
+            angle = self._creature.movement_module.forward.angle_with(self.creature.position, c.position)
+            if abs(angle) < self._fov/2:
+                count += 1
         return count
     # end def num_forward
 # end class Eyes
