@@ -1,5 +1,5 @@
 import random
-from sim.Parameters import evolution as para_ev
+from sim.parameters import evolution as para_ev
 from utils import toggle_bit
 
 
@@ -30,6 +30,9 @@ class Codekaryote:
         # end for
     # end def __init__
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.genome})"
+    # end def __repr__
     # -------------------Methods--------------------
 
     def update(self):
@@ -52,6 +55,11 @@ class Codekaryote:
     @property
     def position(self):
         return self._position
+    # end def position
+
+    @position.setter
+    def position(self, value):
+        self._position = value
     # end def position
     
     @property

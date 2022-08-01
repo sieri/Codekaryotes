@@ -1,5 +1,5 @@
 from random import randint
-from sim.Parameters import brain as param
+from sim.parameters import brain as param
 
 
 def generate_brain():

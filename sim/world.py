@@ -1,14 +1,16 @@
 import math
 import random
 import sys
-from concurrent import futures
 
 import numpy as np
 from more_itertools import grouper
+import sharedmem
 
 from sim.creatures.codekaryote import Codekaryote
 from gui.window import redraw
-from sim.Parameters import world as param
+from sim.parameters import world as param
+
+from sim.multiprocess import processes, dispatch
 
 
 class World:
@@ -21,7 +23,7 @@ class World:
     _creatures = []
     _tick_gen = 0
     _grid = np.array((0, 0))
-    _executor = futures.ProcessPoolExecutor(12)
+
     _generation = 0
 
     def __new__(cls, *args, **kwargs):
@@ -123,8 +125,8 @@ class World:
                 self._grid[c.position.x, c.position.y] = i
             # end for
 
-            for c in self._creatures:
-                c.update()
+            batches = [c for c in grouper(12, self._creatures)]
+            dispatch(batches)
 
             redraw(self)
 
@@ -164,11 +166,6 @@ class World:
     # end def creatures
 # end class World
 
-
-
-
-
-
 world = World()
 
 
@@ -177,7 +174,7 @@ class Coordinate:
     Base class for anything dealing with coordinate
     """
     def __init__(self, **kwargs):
-        self._coord = np.array([0, 0])
+        self._coord = np.empty(2, dtype=np.int)
 
         if "coord" in kwargs:
             self._coord[0] = kwargs["coord"][0]
@@ -186,12 +183,10 @@ class Coordinate:
             self._coord[0] = kwargs["x"]
             self._coord[1] = kwargs["y"]
         # end if
-
-
     # end def __init__
 
     def __eq__(self, other):
-        return (self._coord == other.coord).all()
+        return self._coord == other.coord
     # end def __eq__
 
     def __sub__(self, other):
@@ -345,7 +340,7 @@ class Vector(Coordinate):
     # -------------------Methods--------------------
 
     def clear(self):
-        self._coord = np.empty(2)
+        self._coord = np.empty(2, dtype=np.int)
 
     def angle_with(self, origin, other):
         """

@@ -2,7 +2,7 @@ import numpy as np
 
 from sim.creatures.codekaryote import BaseModule
 from sim.world import World
-from sim.Parameters import body as param
+from sim.parameters import body as param
 
 class Eyes(BaseModule):
 

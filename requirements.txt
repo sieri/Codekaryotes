@@ -2,3 +2,4 @@ pygame
 Pillow >= 9.0
 numpy
 more-itertools
+sharedmem

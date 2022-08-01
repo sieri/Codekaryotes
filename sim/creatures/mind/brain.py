@@ -1,5 +1,5 @@
 from sim.creatures.codekaryote import BaseModule
-from sim.Parameters import brain as param
+from sim.parameters import brain as param
 from sim.creatures.mind.neuron import NeuronInput, NeuronExit, Neuron, Activations, Link
 from sim.creatures.mind.output_neurons import moveneuron
 from sim.creatures.mind.input_neurons import basic, vision

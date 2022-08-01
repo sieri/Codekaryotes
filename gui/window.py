@@ -9,8 +9,6 @@ from gui.elements.creatures import draw_creature
 from gui.export_video import take_capture, save
 
 
-
-
 class Window:
     def __init__(self, x, y, factor, export_video=False):
         """
