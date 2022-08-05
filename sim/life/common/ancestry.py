@@ -3,8 +3,6 @@ from sim.life.codekaryote import BaseModule
 
 class Ancestry(BaseModule):
 
-
-
     def __init__(self, organism, genome):
         super().__init__(organism=organism, genome=genome,
                          name="ancestry")

@@ -1,4 +1,4 @@
-pygame
+pygame~=2.1.2
 Pillow >= 9.0
-numpy
-matplotlib
+numpy~=1.23.1
+matplotlib~=3.5.2

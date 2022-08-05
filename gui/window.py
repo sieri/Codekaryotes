@@ -54,7 +54,6 @@ class Window:
             color="white",
             where=(0, 0))
 
-
     def redraw(self, world):
         """
         draw the world.py

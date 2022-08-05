@@ -121,7 +121,7 @@ class BaseModule:
         sample = random.sample(range(len(self._genome)), min(self._mutation_rate, len(self._genome)))
         gen = self._genome.copy()
         for i in sample:
-            gen[i] = toggle_bit(self._genome[i], random.randint(0, 31))
+            gen[i] = toggle_bit(gen[i], random.randint(0, 31))
         # end for
         return gen
 

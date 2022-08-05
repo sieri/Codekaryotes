@@ -29,7 +29,6 @@ class World:
     _to_add_creature = []
     _to_add_plant = []
     _plant_cycle = 0
-    _oldest = 0
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, 'instance'):
@@ -178,16 +177,12 @@ class World:
                 self._plant_cycle = 0
                 self.populate_randomly(count_creature=0, count_plant=param.PLANT_SPAWN)
 
-        print(f"end tick: creatures={len(self._creature)}, plants={len(self._plant)} || oldest generation {self._oldest}")
         redraw(self)
     # end def loop_iteration
 
     def remove_organism(self, organism):
         if hasattr(organism,  "movement"):
             self._to_remove_creature.append(organism)
-            if organism.ancestry.generation > self._oldest:
-                self._oldest = organism.ancestry.generation
-            # end def
         else:
             self._to_remove_plant.append(organism)
     # end def remove_organism
@@ -230,6 +225,16 @@ class World:
     def organisms(self):
         return self._creature+self._plant
     # end def organisms
+
+    @property
+    def creature(self):
+        return self._creature
+    # end def creature
+
+    @property
+    def plant(self):
+        return self._plant
+    # end def plant
 # end class World
 
 
