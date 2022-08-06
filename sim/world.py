@@ -47,7 +47,7 @@ class World:
         self._width = width
         self._height = height
         self._tick_gen = 0
-        self._grid = np.empty((self._width, self._height), dtype=np.int)
+        self._grid = np.full((self._width, self._height), dtype=np.int, fill_value=-1)
     # end def initiate
 
     def populate_randomly(self, count_creature=10, count_plant=10):
@@ -65,8 +65,6 @@ class World:
         self._creature += [Codekaryote(Position.from_index(i)) for i in sample[:count_creature]]
         self._plant += [Codekaryote(Position.from_index(i), genome_generator=generate_random_plant_genome) for i in sample[count_creature:]]
     # end def populate_randomly
-
-
 
     def populate_new_generation(self, count=10):
         """
@@ -99,7 +97,8 @@ class World:
 
     # end def populate_new_generation
 
-    def is_busy(self, position):
+    @staticmethod
+    def is_busy(position):
         """
         return true if this position is busy with an element at the moment
         :param position: the position to check
@@ -249,11 +248,10 @@ class Coordinate:
         self._coord = np.array([0, 0])
 
         if "coord" in kwargs:
-            self._coord[0] = kwargs["coord"][0]
-            self._coord[1] = kwargs["coord"][1]
+            self.coord = kwargs["coord"]
         else:
-            self._coord[0] = kwargs["x"]
-            self._coord[1] = kwargs["y"]
+            self.x = kwargs["x"]
+            self.y = kwargs["y"]
         # end if
     # end def __init__
 
@@ -284,6 +282,21 @@ class Coordinate:
     def coord(self):
         return self._coord
     # end def coord
+
+    @coord.setter
+    def coord(self, val):
+        if val[0] < 0:
+            val[0] = 0
+        elif val[0] >= world.width:
+            val[0] = world.width-1
+
+        if val[1] < 0:
+            val[1] = 0
+        elif val[1] >= world.height:
+            val[1] = world.width-1
+
+        self._x = val[0]
+        self._y = val[1]
 
     @property
     def x(self):
@@ -369,6 +382,25 @@ class Position(Coordinate):
 
     # -----------------Properties------------------
 
+    @Coordinate.coord.setter
+    def coord(self, val):
+        if val[0] < 0:
+            val[0] = 0
+        elif val[0] >= world.width:
+            val[0] = world.width - 1
+
+        if val[1] < 0:
+            val[1] = 0
+        elif val[1] >= world.height:
+            val[1] = world.width - 1
+
+        if world.is_busy(Coordinate(x=val[0], y=val[1])):
+            print("busy")
+            return
+
+        self._x = val[0]
+        self._y = val[1]
+
     @Coordinate.x.setter
     def x(self, val):
         """
@@ -381,7 +413,7 @@ class Position(Coordinate):
             val = 0
         elif val >= world.width:
             val = world.width-1
-        elif world.is_busy(Position(x=val, y=self.y)):
+        elif world.is_busy(Coordinate(x=val, y=self.y)):
             return
         self._coord[0] = val
 
@@ -397,7 +429,7 @@ class Position(Coordinate):
             val = 0
         elif val >= world.height:
             val = world.height-1
-        elif world.is_busy(Position(x=self.x, y=val)):
+        elif world.is_busy(Coordinate(x=self.x, y=val)):
             return
         self._coord[1] = val
     # end def y

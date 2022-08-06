@@ -85,9 +85,11 @@ class Displayer():
 
         # generation
         cls._gen_ax.clear()
-        count = aggr.count_gen_stat_pop.most_common(10)
-        keys = [f"Gen:{k[0]}" for k in count]
+        count = aggr.count_gen_stat_pop.most_common()
+        keys = [f"Gen:{k[0]}" for k in count[:10]]
         value = [k[1] for k in count]
+        keys.append("others")
+        value = value[:10] + [sum(value[10:]),]
         cls._gen_ax.barh(keys, value)
         cls._gen_ax.invert_yaxis()
 
