@@ -4,7 +4,8 @@ from sim.life.body.physics import Movement, Touch, BodyPassiveCircle, BodyActive
 from sim.life.common.aesthetic import Color
 from sim.life.common.ancestry import Ancestry
 from sim.life.common.energy import EnergySource, EnergyStorage
-from sim.life.genome.body_generators import generate_eyes, generate_organism_color, generate_energy_storage
+from sim.life.genome.body_generators import generate_eyes, generate_organism_color, generate_energy_storage, \
+    generate_size
 from sim.life.genome.brain_generator import generate_brain
 from sim.life.genome.plant_generator import generate_plant, generate_plant_color
 from sim.life.mind.brain import Brain
@@ -33,15 +34,15 @@ def generate_random_creature_full_genome():
     :rtype: ```dict[str,list[int]]``
     """
     genomes = {
-        "body_active_circle": [1, ],
-        "movement": [],
         "eyes": generate_eyes(),
         "touch": [],
-        "brain": generate_brain(),
+        "body_active_circle": generate_size(),
+        "movement": [],
         "color": generate_organism_color(),
         "energy_storage": generate_energy_storage(),
         "eating": [],
-        "ancestry": [0, ]
+        "ancestry": [0, ],
+        "brain": generate_brain(),
     }
     return genomes
 # end def generate_random_creature_full_genome
@@ -49,7 +50,7 @@ def generate_random_creature_full_genome():
 
 def generate_random_plant_genome():
     genomes = {
-        "body_passive_circle": [1, ],
+        "body_passive_circle": generate_size(),
         "energy_source": generate_plant(),
         "color": generate_plant_color(),
         "ancestry": [0, ],

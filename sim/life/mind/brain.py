@@ -167,9 +167,14 @@ class Brain(AbstractEnergyConsumer):
         np.tanh(self._tanh_inputs, out=self._tanh_outputs)
         np.exp(-np.power(self._gaussian_inputs, 2), out=self._gaussian_outputs)
 
+    # end def __init__
+
+    def output(self):
+        """
+        Send the signals of the last round to the body
+        """
         for o in self._output_neurons:
             o.update()
-    # end def __init__
 
     # -----------------Properties------------------
 

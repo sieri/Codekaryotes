@@ -15,27 +15,18 @@ class Eating(BaseModule):
     def update(self):
         pos = self._organism.position
         # noinspection PyUnresolvedReferences
-        fwd = self._organism.movement.forward
+        touch = self._organism.touch.touch_forward
 
-        return # Todo Reactivate
-
-        x = pos.x+round(clamp(fwd.x, -1, 1))
-        y = pos.y+round(clamp(fwd.y, -1, 1))
-
-        if x >= self._world.width or y >= self._world.width:
-            return
-        # end if
-        if self._world.grid[x, y] >= 0:
-            other = self._world.organisms[self._world.grid[x, y]]
+        if touch:
+            # noinspection PyUnresolvedReferences
+            other = self._organism.touch.organism_touching
             if hasattr(other, "energy_source"):
                 # noinspection PyUnresolvedReferences
                 self._organism.energy_storage.current_energy += other.energy_source.energy
                 other.die()
 
-                x = pos.x - round(clamp(fwd.x, -1, 1))
-                y = pos.y - round(clamp(fwd.y, -1, 1))
-                self.organism.reproduce((x, y))
+                self.organism.reproduce((pos.x, pos.y))
             # end if
-        # end if
+
     # -----------------Properties------------------
 # end class Eating

@@ -42,8 +42,14 @@ class Codekaryote:
     # -------------------Methods--------------------
 
     def update(self):
+        self.brain.output() # if plants need to be updated, split the class
+
         for m in self._modules:
             m.update()
+        # end def for
+
+        for m in self._modules:
+            m.reset()
         # end def for
     # end def update
 
@@ -76,6 +82,7 @@ class Codekaryote:
 
     @property
     def position(self):
+        # noinspection PyUnresolvedReferences
         return self.physical_body.position
     # end def position
     
@@ -114,6 +121,12 @@ class BaseModule:
         """
         raise NotImplementedError
     # end def update
+
+    def reset(self):
+        """
+        Reset a module after a step
+        """
+        pass
 
     def evolve(self):
         """

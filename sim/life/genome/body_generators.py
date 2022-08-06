@@ -14,3 +14,7 @@ def generate_organism_color():
 
 def generate_energy_storage():
     return [randint(0, 4303355903), ]
+
+
+def generate_size():
+    return [randint(0, 4303355903), ]

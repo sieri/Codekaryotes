@@ -14,6 +14,14 @@ class AbstractBody:
     _mass = 0
     _inertia = 0
     _body = None
+    FACTOR = 4303355903 / ((param.BODY_SIZE_MAX-param.BODY_SIZE_MIN)*10000)
+
+    def _gen(self, genome):
+        self._size = ((genome[0]/ self.FACTOR) / 10000) + param.BODY_SIZE_MIN
+        self._mass = (self._size**2) * param.BODY_MASS_UNIT
+        self._inertia = pm.moment_for_circle(self._mass, 0, self._size, (0, 0))
+        self._body = pm.Body(self._mass, self._inertia)
+    # end def genome
 
     # -----------------Properties------------------
 
@@ -44,16 +52,16 @@ class BodyActiveCircle(AbstractBody, AbstractEnergyConsumer):
     def __init__(self, organism, genome):
         super().__init__(organism=organism, genome=genome, passive=True, name="body")
 
-        self._size = genome[0]
-
-        self._mass = (self._size**2) * param.MASS_UNIT_BODY
-        self._inertia = pm.moment_for_circle(self._mass, 0, self._size, (0, 0))
+        self._gen(genome)
         self._energy_rate = param.ENERGY_SIZE_SCALE * self._mass
-        self._body = pm.Body(self._mass, self._inertia)
 
         setattr(self._organism, "physical_body", self._body)
         setattr(self._organism, "shape", pm.Circle(self._body, self._size, (0, 0)))
     # end def __init__
+
+    @property
+    def name(self):
+        return "body_active_circle"
 # end class BodyActiveCircle
 
 
@@ -62,11 +70,7 @@ class BodyPassiveCircle(AbstractBody, BaseModule):
     def __init__(self, organism, genome):
         super().__init__(organism=organism, genome=genome, name="body")
 
-        self._size = genome[0]
-
-        self._mass = (self._size**2) * param.MASS_UNIT_BODY
-        self._inertia = pm.moment_for_circle(self._mass, 0, self._size, (0, 0))
-        self._body = pm.Body(self._mass, self._inertia)
+        self._gen(genome)
 
         setattr(self._organism, "physical_body", self._body)
         setattr(self._organism, "shape", pm.Circle(self._body, self._size, (0, 0)))
@@ -75,6 +79,10 @@ class BodyPassiveCircle(AbstractBody, BaseModule):
 
     def update(self):
         pass
+
+    @property
+    def name(self):
+        return "body_passive_circle"
 
 # end class BodyPassiveCircle
 
@@ -95,10 +103,13 @@ class Movement(AbstractEnergyConsumer):
         self._active = (self._forward == [0, 0])
         super().update()
         self.organism.physical_body.apply_force_at_local_point(self._forward)
-
     # end def update
 
+    def reset(self):
+        self._forward = [0, 0]
+
     def move_up(self, ratio):
+
         self._forward[1] += ratio
     # end def move_up
 
@@ -128,34 +139,47 @@ class Touch(BaseModule):
     def __init__(self, organism, genome):
         super().__init__(organism, genome, "touch")
         self._world = World()
+
+        self._touch = 0
+        self._touch_forward = 0
+        self._organism_touching = None
     # end def __init__
 
     # -------------------Methods--------------------
 
     def update(self):
         pass
-    # end def update
+
+    def reset(self):
+        self._touch = 0
+        self._touch_forward = 0
+    # end def reset
+
+    def touch_update(self, other, points):
+        self._touch += 1
+
+        for point in points.points:
+            # noinspection PyUnresolvedReferences
+            local = self._organism.physical_body.world_to_local(point.point_a)
+            # TODO manage with rotation
+        self._touch_forward = 1
+        self._organism_touching = other
 
     # -----------------Properties------------------
 
     @property
     def touch(self):
-        organisms = self._world.get_local_organisms(self._organism.position, 1)
-        return len(organisms)
+        return self._touch
     # end def touch
 
     @property
     def touch_forward(self):
-        return False # TODO enable again
-        pos = self._organism.position
-        # noinspection PyUnresolvedReferences
-        fwd = self._organism.movement.forward
-        x = pos.x+round(clamp(fwd.x, -1, 1))
-        y = pos.y+round(clamp(fwd.y, -1, 1))
-
-        if x >= self._world.width or y >= self._world.width:
-            return 0
-
-        return self._world.grid[x, y] >= 0
+        return self._touch_forward
     # end def touch_forward
+
+    @property
+    def organism_touching(self):
+        return self._organism_touching
+    # end def organism_touching
+
 # end class Touch

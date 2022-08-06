@@ -9,7 +9,6 @@ import numpy as np
 from sim.life.codekaryote import Codekaryote
 from gui.window import redraw
 from sim.parameters import world as param
-from utils import clamp
 
 
 class World:
@@ -24,12 +23,13 @@ class World:
     _generation = 0
 
     _tick_gen = 0
-    _grid = np.array((0, 0))
     _executor = futures.ProcessPoolExecutor(12)
     _to_remove_creature = []
     _to_remove_plant = []
     _to_add_creature = []
     _to_add_plant = []
+    _plant_shape = {}
+    _creature_shape = {}
     _plant_cycle = 0
     _space = None
     _dt = 1.0 / 60.0
@@ -53,7 +53,6 @@ class World:
         self._width = width
         self._height = height
         self._tick_gen = 0
-        self._grid = np.full((self._width, self._height), dtype=np.int, fill_value=-1)
         self._space = pm.Space()
         self._space.gravity = (0, 0)
         self._space.damping = 0.5
@@ -119,8 +118,6 @@ class World:
 
     # end def populate_new_generation
 
-
-
     @staticmethod
     def pos_from_index(index):
         """
@@ -135,24 +132,6 @@ class World:
         return x, y
     # def from_index
 
-    @staticmethod
-    def is_busy(position):
-        """
-        return true if this position is busy with an element at the moment
-        :param position: the position to check
-        :type position:
-        :return: Flag if it's busy
-        :rtype: ``bool``
-        """
-        return world.grid[position.x, position.y] != -1
-    # end is_busy
-
-    def get_local_organisms(self, pos, r):
-        organisms_zone = self._grid[round(pos.x) - r:round(pos.x) + r, round(pos.y) - r:round(pos.y) + r]
-        organisms = organisms_zone[np.where(organisms_zone >= 0)]
-        return organisms
-    # end def get_local_organisms
-
     def kill_right_screen(self):
         temp = []
         for c in self._creature:
@@ -163,14 +142,6 @@ class World:
         self._creature = temp
 
     # end def kill_right_screen
-
-    def build_grid(self):
-        # build grid
-        self._grid.fill(-1)
-        for i, c in enumerate(self.organisms):
-            self._grid[clamp(round(c.position.x), 0, 255), clamp(round(c.position.y), 0, 255)] = i
-        # end for
-    # end def build_grid
 
     def loop_generation(self):
         print(f"generation: {self._generation}")
@@ -187,27 +158,30 @@ class World:
     # end def loop_infinite
 
     def loop_iteration(self):
-        self.build_grid()
-        for c in self.organisms:
+        for c in self.creature:
             c.update()
 
         for remove in self._to_remove_creature:
             self._creature.remove(remove)
             self._space.remove(remove.physical_body, remove.shape)
+            self._creature_shape.pop(remove.shape)
         self._to_remove_creature.clear()
 
         for remove in self._to_remove_plant:
             self._plant.remove(remove)
             self._space.remove(remove.physical_body, remove.shape)
+            self._plant_shape.pop(remove.shape)
         self._to_remove_plant.clear()
 
         for add in self._to_add_creature:
             self._space.add(add.physical_body, add.shape)
+            self._creature_shape[add.shape] = add
         self._creature += self._to_add_creature
         self._to_add_creature.clear()
 
         for add in self._to_add_plant:
             self._space.add(add.physical_body, add.shape)
+            self._plant_shape[add.shape] = add
         self._plant += self._to_add_plant
         self._to_add_plant.clear()
 
@@ -243,11 +217,6 @@ class World:
     # -----------------Properties------------------
 
     @property
-    def grid(self):
-        return self._grid
-    # end def grid
-
-    @property
     def width(self):
         """
         getter for the width of the sim
@@ -281,12 +250,40 @@ class World:
     def plant(self):
         return self._plant
     # end def plant
+    
+    @property
+    def creature_shape(self):
+        return self._creature_shape
+    # end def creature_shape
+    
+    @property
+    def plant_shape(self):
+        return self._plant_shape
+    # end def plant_shape
+    
 # end class World
 
 
+# noinspection PyUnusedLocal
 def collision_post_resolve(arbiter, space, data):
-    print("arbiter", arbiter)
-    print("space", space)
-    print("data", data)
+    shapes = arbiter.shapes
+    organism = [None, None]
+    creature = [bool, bool]
+
+    for i, shape in enumerate(shapes):
+        if shape in world.plant_shape:
+            organism[i] = world.plant_shape[shape]
+            creature[i] = False
+        elif shape in world.creature_shape:
+            organism[i] = world.creature_shape[shape]
+            creature[i] = True
+
+    if None not in organism:
+        if (not creature[0]) and creature[1]:
+            organism[1].touch.touch_update(organism[0], points=arbiter.contact_point_set)
+        elif creature[0] and creature[1]:
+            organism[0].touch.touch_update(organism[1], points=arbiter.contact_point_set)
+            organism[1].touch.touch_update(organism[0], points=arbiter.contact_point_set)
+
 
 world = World()
