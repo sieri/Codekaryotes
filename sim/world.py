@@ -3,12 +3,13 @@ import random
 import sys
 from concurrent import futures
 
+import pymunk as pm
 import numpy as np
-from more_itertools import grouper
 
 from sim.life.codekaryote import Codekaryote
 from gui.window import redraw
 from sim.parameters import world as param
+from utils import clamp
 
 
 class World:
@@ -20,15 +21,20 @@ class World:
     _height = None
     _creature = []
     _plant = []
+    _generation = 0
+
     _tick_gen = 0
     _grid = np.array((0, 0))
     _executor = futures.ProcessPoolExecutor(12)
-    _generation = 0
     _to_remove_creature = []
     _to_remove_plant = []
     _to_add_creature = []
     _to_add_plant = []
     _plant_cycle = 0
+    _space = None
+    _dt = 1.0 / 60.0
+    _ch = None
+    _constraints = None
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, 'instance'):
@@ -48,6 +54,20 @@ class World:
         self._height = height
         self._tick_gen = 0
         self._grid = np.full((self._width, self._height), dtype=np.int, fill_value=-1)
+        self._space = pm.Space()
+        self._space.gravity = (0, 0)
+        self._space.damping = 0.5
+        self._ch = self._space.add_collision_handler(0, 0)
+        self._ch.post_solve = collision_post_resolve
+
+        # wall
+        static_lines = [
+            pm.Segment(self._space.static_body, (0.0, 0.0), (self._width, 0.0), 0.0),
+            pm.Segment(self._space.static_body, (self._width, 0.0), (self._width, self._height), 0.0),
+            pm.Segment(self._space.static_body, (self._width, self._height), (0.0, self._height), 0.0),
+            pm.Segment(self._space.static_body, (0.0, self._height), (0.0, 0.0), 0.0),
+        ]
+        self._space.add(*static_lines)
     # end def initiate
 
     def populate_randomly(self, count_creature=10, count_plant=10):
@@ -62,8 +82,10 @@ class World:
         from sim.life.modules import generate_random_plant_genome
 
         sample = random.sample(range(self.width*self.height), count_creature+count_plant)
-        self._creature += [Codekaryote(Position.from_index(i)) for i in sample[:count_creature]]
-        self._plant += [Codekaryote(Position.from_index(i), genome_generator=generate_random_plant_genome) for i in sample[count_creature:]]
+        for i in sample[:count_creature]:
+            self.add_organism(Codekaryote(self.pos_from_index(i)))
+        for i in sample[count_creature:]:
+            self.add_organism(Codekaryote(self.pos_from_index(i), genome_generator=generate_random_plant_genome))
     # end def populate_randomly
 
     def populate_new_generation(self, count=10):
@@ -93,9 +115,25 @@ class World:
 
         self._creature.clear()
         for (pos, genome) in zip(sample_positions, new_genome+old_genome):
-            self._creature.append(Codekaryote(Position.from_index(pos), genome))
+            self.add_organism(Codekaryote(self.pos_from_index(pos), genome))
 
     # end def populate_new_generation
+
+
+
+    @staticmethod
+    def pos_from_index(index):
+        """
+        create a new position from an index in the current sim
+        :param index: the index of the position
+        :type index: ``int``
+        :return: the new position
+        :rtype: ``tuple(float, float)``
+        """
+        x = index % world.width
+        y = math.floor(index / world.width)
+        return x, y
+    # def from_index
 
     @staticmethod
     def is_busy(position):
@@ -110,7 +148,7 @@ class World:
     # end is_busy
 
     def get_local_organisms(self, pos, r):
-        organisms_zone = self._grid[pos.x - r:pos.x + r, pos.y - r:pos.y + r]
+        organisms_zone = self._grid[round(pos.x) - r:round(pos.x) + r, round(pos.y) - r:round(pos.y) + r]
         organisms = organisms_zone[np.where(organisms_zone >= 0)]
         return organisms
     # end def get_local_organisms
@@ -130,7 +168,7 @@ class World:
         # build grid
         self._grid.fill(-1)
         for i, c in enumerate(self.organisms):
-            self._grid[c.position.x, c.position.y] = i
+            self._grid[clamp(round(c.position.x), 0, 255), clamp(round(c.position.y), 0, 255)] = i
         # end for
     # end def build_grid
 
@@ -155,14 +193,21 @@ class World:
 
         for remove in self._to_remove_creature:
             self._creature.remove(remove)
+            self._space.remove(remove.physical_body, remove.shape)
         self._to_remove_creature.clear()
 
         for remove in self._to_remove_plant:
             self._plant.remove(remove)
+            self._space.remove(remove.physical_body, remove.shape)
         self._to_remove_plant.clear()
 
+        for add in self._to_add_creature:
+            self._space.add(add.physical_body, add.shape)
         self._creature += self._to_add_creature
         self._to_add_creature.clear()
+
+        for add in self._to_add_plant:
+            self._space.add(add.physical_body, add.shape)
         self._plant += self._to_add_plant
         self._to_add_plant.clear()
 
@@ -175,6 +220,8 @@ class World:
             if self._plant_cycle >= param.PLANT_CYCLE:
                 self._plant_cycle = 0
                 self.populate_randomly(count_creature=0, count_plant=param.PLANT_SPAWN)
+
+        self._space.step(self._dt)
 
         redraw(self)
     # end def loop_iteration
@@ -237,230 +284,9 @@ class World:
 # end class World
 
 
+def collision_post_resolve(arbiter, space, data):
+    print("arbiter", arbiter)
+    print("space", space)
+    print("data", data)
+
 world = World()
-
-
-class Coordinate:
-    """
-    Base class for anything dealing with coordinate
-    """
-    def __init__(self, **kwargs):
-        self._coord = np.array([0, 0])
-
-        if "coord" in kwargs:
-            self.coord = kwargs["coord"]
-        else:
-            self.x = kwargs["x"]
-            self.y = kwargs["y"]
-        # end if
-    # end def __init__
-
-    def __eq__(self, other):
-        return (self._coord == other.coord).all()
-    # end def __eq__
-
-    def __sub__(self, other):
-        return self._coord - other.coord
-    # end def __sub__
-
-    def __add__(self, other):
-        return self._coord + other.coord
-    # end def __add__
-
-    def __mul__(self, other):
-        if isinstance(other, Coordinate):
-            return self.__class__(coord=self._coord * other.coord)
-        else:
-            return self.__class__(coord=self._coord * other)
-    # end def __mul__
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self._coord})"
-    # end def __repr__
-
-    @property
-    def coord(self):
-        return self._coord
-    # end def coord
-
-    @coord.setter
-    def coord(self, val):
-        if val[0] < 0:
-            val[0] = 0
-        elif val[0] >= world.width:
-            val[0] = world.width-1
-
-        if val[1] < 0:
-            val[1] = 0
-        elif val[1] >= world.height:
-            val[1] = world.width-1
-
-        self._x = val[0]
-        self._y = val[1]
-
-    @property
-    def x(self):
-        """
-        Getter for x coordinate
-
-        :return: the value of x
-        :rtype: ``int``
-        """
-        return self._coord[0]
-
-    @x.setter
-    def x(self, val):
-        """
-        Setter for x coordinate
-
-        :param val: the value to set
-        :type val: ``int``
-        """
-        self._coord[0] = val
-
-    @property
-    def y(self):
-        """
-        Getter for y coordinate
-
-        :return: the value of y
-        :rtype: ``int``
-        """
-        return self._coord[1]
-    # end def y
-
-    @y.setter
-    def y(self, val):
-        """
-        Setter for y coordinate
-
-        :param val: the value to set
-        :type val: ``int``
-        """
-        self._coord[1] = val
-    # end def y
-# end class Coordinate
-
-
-class Position(Coordinate):
-    """
-    A position on the sim for an item
-    """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-    
-    # -------------------Methods--------------------
-
-    @classmethod
-    def from_index(cls, index):
-        """
-        create a new position from an index in the current sim
-        :param index: the index of the position
-        :type index: ``int``
-        :return: the new position
-        :rtype: ``Position``
-        """
-        x = index % world.width
-        y = math.floor(index / world.width)
-        return Position(x=x, y=y)
-    # def from_index
-
-    def dist(self, other):
-        """
-        return the distance between two positions
-        :param other: the other positions
-        :type other: ``Position``
-        :return: the distance
-        :rtype: ``int``
-        """
-        square_x = (self.x - other.x)**2
-        square_y = (self.y - other.y)**2
-        
-        return math.sqrt(square_x+square_y)
-    # end def dist
-
-    # -----------------Properties------------------
-
-    @Coordinate.coord.setter
-    def coord(self, val):
-        if val[0] < 0:
-            val[0] = 0
-        elif val[0] >= world.width:
-            val[0] = world.width - 1
-
-        if val[1] < 0:
-            val[1] = 0
-        elif val[1] >= world.height:
-            val[1] = world.width - 1
-
-        if world.is_busy(Coordinate(x=val[0], y=val[1])):
-            print("busy")
-            return
-
-        self._x = val[0]
-        self._y = val[1]
-
-    @Coordinate.x.setter
-    def x(self, val):
-        """
-        Setter for x coordinate
-
-        :param val: the value to set
-        :type val: ``int``
-        """
-        if val < 0:
-            val = 0
-        elif val >= world.width:
-            val = world.width-1
-        elif world.is_busy(Coordinate(x=val, y=self.y)):
-            return
-        self._coord[0] = val
-
-    @Coordinate.y.setter
-    def y(self, val):
-        """
-        Setter for y coordinate
-
-        :param val: the value to set
-        :type val: ``int``
-        """
-        if val < 0:
-            val = 0
-        elif val >= world.height:
-            val = world.height-1
-        elif world.is_busy(Coordinate(x=self.x, y=val)):
-            return
-        self._coord[1] = val
-    # end def y
-# end class Position
-
-
-class Vector(Coordinate):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-    # end def __init__
-
-    # -------------------Methods--------------------
-
-    def clear(self):
-        self._coord = np.empty(2)
-
-    def angle_with(self, origin, other):
-        """
-        calculate the angle
-
-        :param origin: origin of the current vector
-        :type origin: ``Position``
-        :param other: other position
-        :type other: ``Position``
-        :return: the angle
-        :rtype: ``float``
-        """
-        v0 = self - origin
-        v1 = self - other
-
-        angle = np.math.atan2(np.linalg.det([v0, v1]), np.dot(v0, v1))
-        return np.degrees(angle)
-    # -----------------Properties------------------
-# end class Vector

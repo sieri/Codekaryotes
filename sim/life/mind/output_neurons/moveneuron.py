@@ -1,7 +1,5 @@
 from sim.life.mind.neuron import NeuronExit
-
-THRESHOlD = 0.5
-
+from utils import clamp
 
 class MoveUpNeuron(NeuronExit):
 
@@ -21,8 +19,7 @@ class MoveUpNeuron(NeuronExit):
     def update(self):
         y = self._interface_output[self._interface_index]
 
-        if y > THRESHOlD:
-            self._module.move_up()
+        self._module.move_up(clamp(y, 0, 1))
     # end def update
 # end class MoveUpNeuron
 
@@ -44,9 +41,8 @@ class MoveDownNeuron(NeuronExit):
 
     def update(self):
         y = self._interface_output[self._interface_index]
-
-        if y > THRESHOlD:
-            self._module.move_down()
+        
+        self._module.move_down(clamp(y, 0, 1))
     # end def update
 # end class MoveDownNeuron
 
@@ -69,8 +65,7 @@ class MoveRightNeuron(NeuronExit):
     def update(self):
         y = self._interface_output[self._interface_index]
 
-        if y > THRESHOlD:
-            self._module.move_right()
+        self._module.move_right(clamp(y, 0, 1))
     # end def update
 # end class MoveRightNeuron
 
@@ -93,7 +88,6 @@ class MoveLeftNeuron(NeuronExit):
     def update(self):
         y = self._interface_output[self._interface_index]
 
-        if y > THRESHOlD:
-            self._module.move_left()
+        self._module.move_left(clamp(y, 0, 1))
     # end def update
 # end class MoveLeftNeuron

@@ -1,6 +1,7 @@
 import random
 from sim.parameters import evolution as para_ev
-from utils import toggle_bit, clamp
+from utils import toggle_bit
+import pymunk as pm
 
 
 class Codekaryote:
@@ -8,15 +9,14 @@ class Codekaryote:
     def __init__(self, starting_position, genomes=None, genome_generator=None):
         """
         :param starting_position: the position the Codekaryotes spawn in
-        :type starting_position: ``Position``
+        :type starting_position: ``tuple(int, int)``
         :param genomes: the genome of the Codekaryote if None generate randomly - OPTIONAL
         :type genomes: ``dict(list[int])`` or ``None``
-        :param genome_generator: function generating a genome, to create an other style of Codekaryotic life - OPTIONAL
+        :param genome_generator: function generating a genome, to create another style of Codekaryotic life - OPTIONAL
         :type genome_generator: ``funct``
         """
 
         self._alive = True
-        self._position = starting_position
         self._modules = []
 
         if genome_generator is None:
@@ -34,6 +34,9 @@ class Codekaryote:
             m = possible_modules[key](self, genome)
             self._modules.append(m)
         # end for
+
+        # noinspection PyUnresolvedReferences
+        self.physical_body.position = starting_position
     # end def __init__
 
     # -------------------Methods--------------------
@@ -73,7 +76,7 @@ class Codekaryote:
 
     @property
     def position(self):
-        return self._position
+        return self.physical_body.position
     # end def position
     
     @property

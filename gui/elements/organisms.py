@@ -1,12 +1,12 @@
 from sim.life.codekaryote import Codekaryote
 from pygame import Color
 from pygame.surface import Surface
-from pygame.draw import rect
+from pygame.draw import circle
 
 
 def draw_organism(surface, organism, factor):
     """
-    Draw a organism on the surface
+    Draw an organism on the surface
 
     :param surface: the surface to draw on it
     :type surface: ``Surface``
@@ -15,7 +15,7 @@ def draw_organism(surface, organism, factor):
     :param factor: the factor to scale the organism to
     :param factor: ``float``
     """
-    r = (organism.position.x*factor, organism.position.y*factor, factor, factor)
+    pos = organism.position * factor
     # noinspection PyUnresolvedReferences
-    rect(surface, color=Color(organism.color.color), rect=r)
+    circle(surface, Color(organism.color.color), pos, int(organism.body.size*factor), 2)
 # end def draw_organism

@@ -9,7 +9,6 @@ class AbstractEnergyConsumer(BaseModule):
 
     def __init__(self, organism, genome, passive, name):
         super().__init__(organism, genome, name)
-
         # generate from genome
         self._energy_rate = 0
         self._passive = passive
@@ -92,6 +91,3 @@ class EnergyStorage(AbstractEnergyConsumer):
     # end def current_energy
 
 # end class EnergyStorage
-
-
-

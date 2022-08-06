@@ -106,6 +106,8 @@ class Displayer():
 
 # end class Displayer
 
+world = None
+
 class Aggregator(object):
     """
     A class for aggregating data from the simulation data
@@ -114,7 +116,6 @@ class Aggregator(object):
     def __init__(self):
         global conn
         self.data = []
-        self._world = World()
         self._time = 0.2
         self.count_stat_pop = Buffer(maxlen=NUMBER_TICK)
         self.count_stat_plant = Buffer(maxlen=NUMBER_TICK)
@@ -123,11 +124,12 @@ class Aggregator(object):
         self.count_gen_stat_pop = Counter()
         self.count_gen_stat_plant = Counter()
 
+    # noinspection PyUnresolvedReferences
     def run(self):
         while True:
             time.sleep(self._time)
-            snapshot_pop = self._world.creature.copy()
-            snapshot_plant = self._world.plant.copy()
+            snapshot_pop = world.creature.copy()
+            snapshot_plant = world.plant.copy()
 
             self.count_stat_pop.put(len(snapshot_pop))
             self.count_stat_plant.put(len(snapshot_plant))
@@ -138,13 +140,8 @@ class Aggregator(object):
             self.max_gen_stat_pop.put(self.count_gen_stat_pop.most_common(1)[0])
             self.max_gen_stat_plant.put(self.count_gen_stat_plant.most_common(1)[0])
 
-            self.update_graph()
+            conn.send(self)
     # end while
-
-    def update_graph(self):
-        conn.send(self)
-
-
 # end def run
 
 
@@ -174,7 +171,8 @@ class Buffer(deque):
 
 
 def start_thread():
-    global conn
+    global conn, world
+    world = World()
     thread_con, conn = mult.Pipe()
 
     process = mult.Process(target=Displayer.run, args=(thread_con,), name="statistical analysis")

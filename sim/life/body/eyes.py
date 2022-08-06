@@ -1,4 +1,3 @@
-import numpy as np
 from sim.life.common.energy import AbstractEnergyConsumer
 from sim.world import World
 from sim.parameters import body as param
@@ -47,6 +46,7 @@ class Eyes(AbstractEnergyConsumer):
 
     @property
     def num_forward(self):
+        return 0 # TODO renenable
         count = 0
         pos = self._organism.position
 
