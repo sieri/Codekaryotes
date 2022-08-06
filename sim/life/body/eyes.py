@@ -2,13 +2,13 @@ from sim.life.common.energy import AbstractEnergyConsumer
 from sim.world import World
 from sim.parameters import body as param
 
+world = World()
 
 class Eyes(AbstractEnergyConsumer):
 
     def __init__(self, organism, genome):
         super().__init__(organism=organism, genome=genome,
                          passive=True, name="eyes")
-        self._world = World()
 
         # initialize from the genome
         self._fov = genome[0] % 360
@@ -31,7 +31,7 @@ class Eyes(AbstractEnergyConsumer):
 
     @property
     def dist_right(self):
-        return self._world.width - self._organism.position.x
+        return world.width - self._organism.position.x
     # end def dist_right
 
     @property
@@ -41,7 +41,7 @@ class Eyes(AbstractEnergyConsumer):
 
     @property
     def dist_up(self):
-        return self._world.height - self._organism.position.y
+        return world.height - self._organism.position.y
     # end def dist_up
 
     @property
@@ -51,9 +51,9 @@ class Eyes(AbstractEnergyConsumer):
         pos = self._organism.position
 
         # get from the distance
-        organisms = self._world.get_local_organisms(pos, self._range)
+        organisms = world.get_local_organisms(pos, self._range)
         for c_index in organisms:
-            c = self._world.organisms[c_index]
+            c = world.organisms[c_index]
             # noinspection PyUnresolvedReferences
             angle = self._organism.movement.forward.angle_with(self.organism.position, c.position)
             if abs(angle) < self._fov/2:

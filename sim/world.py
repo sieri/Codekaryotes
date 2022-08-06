@@ -55,7 +55,7 @@ class World:
         self._tick_gen = 0
         self._space = pm.Space()
         self._space.gravity = (0, 0)
-        self._space.damping = 0.5
+        self._space.damping = 0.9
         self._ch = self._space.add_collision_handler(0, 0)
         self._ch.post_solve = collision_post_resolve
 
@@ -193,7 +193,7 @@ class World:
             self._plant_cycle += 1
             if self._plant_cycle >= param.PLANT_CYCLE:
                 self._plant_cycle = 0
-                self.populate_randomly(count_creature=0, count_plant=param.PLANT_SPAWN)
+                self.populate_randomly(count_creature=0, count_plant=param.PLANT_RATE)
 
         self._space.step(self._dt)
 

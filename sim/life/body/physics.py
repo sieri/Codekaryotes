@@ -5,6 +5,7 @@ from utils import clamp
 from sim.parameters import body as param
 import pymunk as pm
 
+world = World()
 
 class AbstractBody:
     """
@@ -93,6 +94,8 @@ class Movement(AbstractEnergyConsumer):
         super().__init__(organism=organism, genome=genome,
                          passive=False, name="movement")
 
+        self.need_reset = True
+
         self._forward = [0, 0]
         self._energy_rate = param.ENERGY_MOVEMENT_RATE
     # end def __init__
@@ -138,7 +141,8 @@ class Touch(BaseModule):
 
     def __init__(self, organism, genome):
         super().__init__(organism, genome, "touch")
-        self._world = World()
+
+        self.need_reset = True
 
         self._touch = 0
         self._touch_forward = 0

@@ -18,6 +18,7 @@ class Codekaryote:
 
         self._alive = True
         self._modules = []
+        self._modules_reset = []
 
         if genome_generator is None:
             from sim.life.modules import generate_random_creature_full_genome
@@ -33,6 +34,8 @@ class Codekaryote:
         for key, genome in genomes.items():
             m = possible_modules[key](self, genome)
             self._modules.append(m)
+            if m.need_reset:
+                self._modules_reset.append(m)
         # end for
 
         # noinspection PyUnresolvedReferences
@@ -48,7 +51,7 @@ class Codekaryote:
             m.update()
         # end def for
 
-        for m in self._modules:
+        for m in self._modules_reset:
             m.reset()
         # end def for
     # end def update
@@ -107,6 +110,7 @@ class BaseModule:
         self._genome = genome
         self._name = name
         self._mutation_rate = para_ev.BASE_RATE
+        self.need_reset = True
         organism.__setattr__(name, self)
     # def __init__
 
