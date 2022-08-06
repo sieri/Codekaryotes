@@ -37,7 +37,6 @@ class EnergySource(BaseModule):
 
         # generate from genome
         self._energy_source = genome[0]/FACTOR
-
     # end def __init__
 
     # -------------------Methods--------------------
@@ -64,7 +63,7 @@ class EnergyStorage(AbstractEnergyConsumer):
 
         # generate from genome
         self._energy_storage_max = genome[0]/FACTOR
-        self.current_energy = self._energy_storage_max
+        self.current_energy = self._energy_storage_max/2
 
         self._energy_rate = self._energy_storage_max*body_param.ENERGY_STORAGE_LOSS_RATE
 
@@ -86,8 +85,21 @@ class EnergyStorage(AbstractEnergyConsumer):
     @current_energy.setter
     def current_energy(self, value):
         self._current_energy = value
+        if self._current_energy > self._energy_storage_max:
+            self._current_energy = self._energy_storage_max
+
         if self._current_energy <= 0:
             self.organism.die()
     # end def current_energy
+
+    @property
+    def energy_storage_max(self):
+        return self._energy_storage_max
+    # end def energy_storage_max
+
+    @property
+    def percent(self):
+        return self._current_energy/self._energy_storage_max
+    # end def percent
 
 # end class EnergyStorage

@@ -1,5 +1,5 @@
 from sim.life.body.eyes import Eyes
-from sim.life.body.lifecycle import Eating
+from sim.life.body.lifecycle import Eating, Reproducer
 from sim.life.body.physics import Movement, Touch, BodyPassiveCircle, BodyActiveCircle
 from sim.life.common.aesthetic import Color
 from sim.life.common.ancestry import Ancestry
@@ -21,7 +21,9 @@ possible_modules = {
             "energy_source": EnergySource,
             "energy_storage": EnergyStorage,
             "eating": Eating,
-            "ancestry": Ancestry
+            "reproducer": Reproducer,
+            "ancestry": Ancestry,
+
 
 }
 
@@ -41,6 +43,7 @@ def generate_random_creature_full_genome():
         "color": generate_organism_color(),
         "energy_storage": generate_energy_storage(),
         "eating": [],
+        "reproducer": [],
         "ancestry": [0, ],
         "brain": generate_brain(),
     }
