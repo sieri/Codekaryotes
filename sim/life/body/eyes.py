@@ -4,6 +4,7 @@ from sim.parameters import body as param
 
 world = World()
 
+
 class Eyes(AbstractEnergyConsumer):
 
     def __init__(self, organism, genome):

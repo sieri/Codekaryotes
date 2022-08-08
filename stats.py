@@ -48,7 +48,7 @@ class Displayer():
         cls._gen_ax.xaxis.set_ticks_position('none')
         cls._gen_ax.yaxis.set_ticks_position('none')
 
-        ani = animation.FuncAnimation(cls._fig, cls.update_graph, interval=1000)
+        ani = animation.FuncAnimation(cls._fig, cls.update_graph, interval=500)
 
         plt.show()
 

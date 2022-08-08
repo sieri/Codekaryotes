@@ -1,13 +1,6 @@
-from sim.world import World
-import pickle
+from Codekaryotes import sum_as_string
 
-world = World()
-world.initiate(10, 10)
+a=10
+b=11
 
-world.populate_randomly(count_creature=10, count_plant=30)
-
-if __name__ == '__main__':
-    world.loop_generation()
-    # noinspection PyProtectedMember
-
-    print(pickle.dumps(world._jar))
+print(sum_as_string(a, b))

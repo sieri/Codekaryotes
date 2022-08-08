@@ -84,7 +84,6 @@ class BodyPassiveCircle(AbstractBody, BaseModule):
     @property
     def name(self):
         return "body_passive_circle"
-
 # end class BodyPassiveCircle
 
 
