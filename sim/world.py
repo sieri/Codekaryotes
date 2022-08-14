@@ -41,6 +41,7 @@ class World:
             cls.instance = super().__new__(cls)
         return cls.instance
 
+
     # -------------------Methods--------------------
 
     def initiate(self, width=10, height=10):

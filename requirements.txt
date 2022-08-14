@@ -1,5 +1,6 @@
 pygame~=2.1.2
 Pillow >= 9.0
-numpy~=1.23.1
+numpy
 matplotlib~=3.5.2
 pymunk
+numba

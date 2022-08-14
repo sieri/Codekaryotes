@@ -81,7 +81,7 @@ class Window:
 # end class Window
 
 
-win = None
+win = type("",(),dict(redraw=lambda _, __: None))()
 
 
 def init(x, y, factor, export_video=False):
