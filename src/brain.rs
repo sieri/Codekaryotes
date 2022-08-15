@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 extern crate pyo3;
 
 use pyo3::prelude::*;
@@ -40,32 +38,40 @@ pub struct NeuronDefinition {
 pub struct Neuron {
     pub id: usize,
     pub out_val: f64,
-}
-
-#[derive(Debug)]
-pub struct NeuronInput {
-    pub id: usize,
-    pub out_val: f64,
-    pub object: PyObject,
-}
-
-#[derive(Debug)]
-pub struct NeuronOutput {
-    pub id: usize,
-    pub out_val: f64,
-    pub object: PyObject,
+    pub in_val: f64,
+    pub object: Option<PyObject>,
 }
 
 #[derive(Debug)]
 #[pyclass(module = "codekaryotes.codekaryotes")]
 #[derive(FromPyObject)]
-pub struct Link {
+pub struct LinkDefinition {
     #[pyo3(get, set)]
     pub weight: f64,
     #[pyo3(get, set)]
     pub input: usize,
     #[pyo3(get, set)]
     pub output: usize,
+    #[pyo3(get, set)]
+    pub input_type: Position,
+    #[pyo3(get, set)]
+    pub output_type: Position,
+}
+
+#[derive(Debug)]
+struct Link {
+    input: usize,
+    output: usize,
+    weight: f64,
+}
+
+#[derive(Debug)]
+pub struct NeuronLists {
+    linear: Vec<usize>,
+    binary: Vec<usize>,
+    logistic: Vec<usize>,
+    tanh: Vec<usize>,
+    gaussian: Vec<usize>,
 }
 
 #[derive(Debug)]
@@ -74,25 +80,15 @@ pub struct Brain {
     inputs: Vec<NeuronDefinition>,
     internals: Vec<NeuronDefinition>,
     outputs: Vec<NeuronDefinition>,
+    links_def: Vec<LinkDefinition>,
+
     links: Vec<Link>,
 
-    linear_internal: Vec<Neuron>,
-    binary_step_internal: Vec<Neuron>,
-    logistic_internal: Vec<Neuron>,
-    tanh_internal: Vec<Neuron>,
-    gaussian_internal: Vec<Neuron>,
+    neurons: Vec<Neuron>,
 
-    linear_input: Vec<NeuronInput>,
-    binary_step_input: Vec<NeuronInput>,
-    logistic_input: Vec<NeuronInput>,
-    tanh_input: Vec<NeuronInput>,
-    gaussian_input: Vec<NeuronInput>,
-
-    linear_output: Vec<NeuronOutput>,
-    binary_step_output: Vec<NeuronOutput>,
-    logistic_output: Vec<NeuronOutput>,
-    tanh_output: Vec<NeuronOutput>,
-    gaussian_output: Vec<NeuronOutput>,
+    neurons_id_input: NeuronLists,
+    neurons_id_internal: NeuronLists,
+    neurons_id_output: NeuronLists,
 }
 
 #[pymethods]
@@ -108,53 +104,110 @@ impl NeuronDefinition {
     }
 }
 
+trait NeuronalInterface {
+    fn o(&self) -> f64;
+    fn i(&mut self, val: f64);
+}
+
+trait LinkTrait {
+    fn update_neuron(&mut self);
+}
+
 impl Neuron {
     fn new(id: usize) -> Neuron {
-        Neuron { id, out_val: 0.0 }
-    }
-}
-
-impl NeuronInput {
-    fn new(id: usize, object: PyObject) -> NeuronInput {
-        NeuronInput {
+        Neuron {
             id,
             out_val: 0.0,
-            object: object,
+            in_val: 0.0,
+            object: None,
         }
     }
 
-    fn update(&mut self, py: Python<'_>) {
-        let name = self.object.getattr(py, "__type__");
-        println!("module {:?}", name);
-        let a = self.object.getattr(py, "input");
-        println!("a {:?}", a);
-        let b = a.unwrap();
-        println!("b {:?}", b);
-        let c = b.extract(py);
-        println!("c {:?}", c);
+    fn new_obj(id: usize, object: PyObject) -> Neuron {
+        Neuron {
+            id,
+            out_val: 0.0,
+            in_val: 0.0,
+            object: Some(object),
+        }
+    }
 
-        self.out_val = c.unwrap();
+    fn update_neural_input(&mut self, py: Python<'_>) {
+        self.in_val = (self.object)
+            .as_ref()
+            .unwrap()
+            .getattr(py, "input")
+            .unwrap()
+            .extract(py)
+            .unwrap();
+    }
+
+    fn write_in(&mut self, val: f64) {
+        self.in_val = val;
     }
 }
 
-impl NeuronOutput {
-    fn new(id: usize, object: PyObject) -> NeuronOutput {
-        NeuronOutput {
-            id,
-            out_val: 0.0,
-            object,
+impl Link {
+    fn new(input: usize, output: usize, weight: f64) -> Self {
+        Link {
+            input,
+            output,
+            weight,
         }
+    }
+}
+
+impl NeuronLists {
+    fn iter(&self) -> Iter<'_> {
+        Iter {
+            inner: self,
+            index: 0,
+        }
+    }
+
+    fn find(&self, id: usize) -> usize {
+        for l in self.iter() {
+            let res = l.iter().find(|&&x| x == id);
+            if res.is_some() {
+                return *res.unwrap();
+            }
+        }
+        0
+    }
+}
+
+struct Iter<'a> {
+    inner: &'a NeuronLists,
+    index: u8,
+}
+
+impl<'a> Iterator for Iter<'a> {
+    type Item = &'a Vec<usize>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let ret = match self.index {
+            0 => &self.inner.linear,
+            1 => &self.inner.binary,
+            2 => &self.inner.gaussian,
+            3 => &self.inner.tanh,
+            4 => &self.inner.logistic,
+            _ => return None,
+        };
+        self.index += 1;
+        Some(ret)
     }
 }
 
 #[pymethods]
-impl Link {
+impl LinkDefinition {
     #[new]
-    fn __new__(input: usize, output: usize, weight: f64) -> Self {
-        Link {
+    fn __new__(input: usize, output: usize, weight: f64, input_type: Position) -> Self {
+        LinkDefinition {
             weight,
             output,
+            input_type,
             input,
+            output_type: Position::Output,
         }
     }
 }
@@ -167,22 +220,32 @@ impl Brain {
             inputs: vec![],
             internals: vec![],
             outputs: vec![],
+            links_def: vec![],
             links: vec![],
-            linear_internal: vec![],
-            binary_step_internal: vec![],
-            logistic_internal: vec![],
-            tanh_internal: vec![],
-            gaussian_internal: vec![],
-            linear_input: vec![],
-            binary_step_input: vec![],
-            logistic_input: vec![],
-            tanh_input: vec![],
-            gaussian_input: vec![],
-            linear_output: vec![],
-            binary_step_output: vec![],
-            logistic_output: vec![],
-            tanh_output: vec![],
-            gaussian_output: vec![],
+
+            neurons: vec![],
+
+            neurons_id_input: NeuronLists {
+                linear: vec![],
+                binary: vec![],
+                logistic: vec![],
+                tanh: vec![],
+                gaussian: vec![],
+            },
+            neurons_id_internal: NeuronLists {
+                linear: vec![],
+                binary: vec![],
+                logistic: vec![],
+                tanh: vec![],
+                gaussian: vec![],
+            },
+            neurons_id_output: NeuronLists {
+                linear: vec![],
+                binary: vec![],
+                logistic: vec![],
+                tanh: vec![],
+                gaussian: vec![],
+            },
         }
     }
 
@@ -201,90 +264,121 @@ impl Brain {
         Ok(())
     }
 
-    pub fn add_link(&mut self, l: Link) -> PyResult<()> {
-        self.links.push(l);
+    pub fn add_link(&mut self, l: LinkDefinition) -> PyResult<()> {
+        self.links_def.push(l);
         Ok(())
     }
 
     pub fn initiate(&mut self) -> PyResult<()> {
-        let gil = pyo3::Python::acquire_gil();
+        let gil = Python::acquire_gil();
         let &py = &gil.python();
+
+        let internal_prefix: usize = 2usize.pow(31);
+        let output_prefix: usize = 2usize.pow(32);
 
         for input in self.inputs.iter() {
             match input.activation {
-                Activation::Linear => self
-                    .linear_input
-                    .push(NeuronInput::new(input.id, input.object.clone_ref(py))),
-                Activation::BinaryStep => self
-                    .binary_step_input
-                    .push(NeuronInput::new(input.id, input.object.clone_ref(py))),
-                Activation::Logistic => self
-                    .logistic_input
-                    .push(NeuronInput::new(input.id, input.object.clone_ref(py))),
-                Activation::Tanh => self
-                    .tanh_input
-                    .push(NeuronInput::new(input.id, input.object.clone_ref(py))),
-                Activation::Gaussian => self
-                    .gaussian_input
-                    .push(NeuronInput::new(input.id, input.object.clone_ref(py))),
+                Activation::Linear => self.neurons_id_input.linear.push(input.id),
+                Activation::BinaryStep => self.neurons_id_input.binary.push(input.id),
+                Activation::Logistic => self.neurons_id_input.logistic.push(input.id),
+                Activation::Tanh => self.neurons_id_input.tanh.push(input.id),
+                Activation::Gaussian => self.neurons_id_input.gaussian.push(input.id),
             }
+            self.neurons
+                .push(Neuron::new_obj(input.id, input.object.clone_ref(py)))
         }
 
         for internal in self.internals.iter() {
             match internal.activation {
-                Activation::Linear => self.linear_internal.push(Neuron::new(internal.id)),
-                Activation::BinaryStep => self.binary_step_internal.push(Neuron::new(internal.id)),
-                Activation::Logistic => self.logistic_internal.push(Neuron::new(internal.id)),
-                Activation::Tanh => self.tanh_internal.push(Neuron::new(internal.id)),
-                Activation::Gaussian => self.gaussian_internal.push(Neuron::new(internal.id)),
+                Activation::Linear => self
+                    .neurons_id_internal
+                    .linear
+                    .push(internal_prefix + internal.id),
+                Activation::BinaryStep => self
+                    .neurons_id_internal
+                    .binary
+                    .push(internal_prefix + internal.id),
+                Activation::Logistic => self
+                    .neurons_id_internal
+                    .logistic
+                    .push(internal_prefix + internal.id),
+                Activation::Tanh => self
+                    .neurons_id_internal
+                    .tanh
+                    .push(internal_prefix + internal.id),
+                Activation::Gaussian => self
+                    .neurons_id_internal
+                    .gaussian
+                    .push(internal_prefix + internal.id),
             }
+            self.neurons
+                .push(Neuron::new(internal_prefix + internal.id))
         }
 
         for output in self.outputs.iter() {
             match output.activation {
                 Activation::Linear => self
-                    .linear_output
-                    .push(NeuronOutput::new(output.id, output.object.clone_ref(py))),
+                    .neurons_id_output
+                    .linear
+                    .push(output_prefix + output.id),
                 Activation::BinaryStep => self
-                    .binary_step_output
-                    .push(NeuronOutput::new(output.id, output.object.clone_ref(py))),
+                    .neurons_id_output
+                    .binary
+                    .push(output_prefix + output.id),
                 Activation::Logistic => self
-                    .logistic_output
-                    .push(NeuronOutput::new(output.id, output.object.clone_ref(py))),
-                Activation::Tanh => self
-                    .tanh_output
-                    .push(NeuronOutput::new(output.id, output.object.clone_ref(py))),
-                Activation::Gaussian => self.gaussian_output.push(NeuronOutput::new(
-                    output.id,
-                    output.object.clone_ref(py).clone_ref(py),
-                )),
+                    .neurons_id_output
+                    .logistic
+                    .push(output_prefix + output.id),
+                Activation::Tanh => self.neurons_id_output.tanh.push(output_prefix + output.id),
+                Activation::Gaussian => self
+                    .neurons_id_output
+                    .gaussian
+                    .push(output_prefix + output.id),
             }
+            self.neurons.push(Neuron::new_obj(
+                output_prefix + output.id,
+                output.object.clone_ref(py),
+            ))
+        }
+
+        // create links
+        for l in self.links_def.iter() {
+            let input = match l.input_type {
+                Position::Input => self.neurons_id_input.find(l.input),
+                Position::Internal => self.neurons_id_internal.find(l.input),
+                _ => 0,
+            };
+            let output = match l.output_type {
+                Position::Output => self.neurons_id_output.find(l.output),
+                Position::Internal => self.neurons_id_internal.find(l.output),
+                _ => 0,
+            };
+
+            let nl = Link::new(input, output, l.weight);
+            self.links.push(nl);
         }
 
         Ok(())
     }
 
     pub fn update(&mut self) -> PyResult<()> {
-        let gil = pyo3::Python::acquire_gil();
+        let gil = Python::acquire_gil();
         let &py = &gil.python();
 
-        // acquire inputs
+        //feed links
+        self.links.iter_mut().for_each(|x| -> () {
+            let new_val = self.neurons[x.input].out_val * x.weight;
+            self.neurons[x.output].write_in(new_val);
+        });
 
-        for x in self.linear_input.iter_mut() {
-            x.update(py);
+        // acquire inputs
+        for inp in self.neurons_id_input.iter() {
+            for x in inp.iter() {
+                self.neurons[*x].update_neural_input(py);
+            }
         }
-        for x in self.binary_step_input.iter_mut() {
-            x.update(py);
-        }
-        for x in self.logistic_input.iter_mut() {
-            x.update(py);
-        }
-        for x in self.tanh_input.iter_mut() {
-            x.update(py);
-        }
-        for x in self.gaussian_input.iter_mut() {
-            x.update(py);
-        }
+
+        //activate neurons
 
         Ok(())
     }

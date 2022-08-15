@@ -1,7 +1,7 @@
 from codekaryotes.codekaryotes import brain_update, get_brain, Brain, Activation, Position, \
     acc_from_int
 from codekaryotes.codekaryotes import NeuronDefinition as nd
-from codekaryotes.codekaryotes import Link as lk
+from codekaryotes.codekaryotes import LinkDefinition as lk
 from sim.parameters.settings import Settings
 
 import numpy as np
@@ -252,19 +252,20 @@ else:
                 self._rust_brain.add_input(nd(acc_from_int(n.activation), Position.Internal, i, n))
                 links = [lk for lk in self._links if self._input_neurons is lk._input]
                 for lk in links:
-                    rust_link_partial.update((lk.id,lk(input=i, output=0, weight=lk._weight)))
+                    rust_link_partial.update((lk.id,lk(input=i, output=0, weight=lk._weight, input_type=Position.Input)))
 
 
             for (i, n) in enumerate(self._internal_neurons):
                 self._rust_brain.add_internal(nd(acc_from_int(n.activation), Position.Internal, i, n))
-                links = [lk for lk in self._links if self._input_neurons is lk._input]
+                links = [lk for lk in self._links if self._internal_neurons is lk._input]
                 for lk in links:
-                    rust_link_partial.update((lk.id,lk(input=i, output=0, weight=lk._weight)))
+                    rust_link_partial.update((lk.id,lk(input=i, output=0, weight=lk._weight,input_type=Position.Internal)))
 
-                links = [lk for lk in self._links if self._output_neurons is lk._output]
+                links = [lk for lk in self._links if self._internal_neurons is lk._output]
                 for lk in links:
                     rlk = rust_link_partial[lk.id]
                     rlk.output = lk._output
+                    rlk.output_type = Position.Internal
                     rust_link.append(rlk)
 
             for (i, n) in enumerate(self._output_neurons):
