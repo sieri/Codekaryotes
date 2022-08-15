@@ -1,6 +1,7 @@
 from codekaryotes.codekaryotes import brain_update, get_brain, Brain, Activation, Position, \
     acc_from_int
 from codekaryotes.codekaryotes import NeuronDefinition as nd
+from codekaryotes.codekaryotes import Link as lk
 from sim.parameters.settings import Settings
 
 import numpy as np
@@ -236,35 +237,55 @@ else:
 
             # links
             for j in range(param.INTERNAL_NEURON):
-                self._create_link(genome[i])
+                self._create_link(genome[i], j)
                 i += 1
             # end for
 
             self._clean_links()
 
-            print("Init rust brain")
             self._rust_brain = get_brain()
 
+            rust_link_partial = {}
+            rust_link = []
+            print("Python Input")
             for (i, n) in enumerate(self._input_neurons):
-                acc = acc_from_int(n.activation)
-                print(acc)
-                n = nd(acc, Position.Input, i,n)
-                print(n)
-                print("Activation of node", dir(n))
-                self._rust_brain.add_input(n)
+                self._rust_brain.add_input(nd(acc_from_int(n.activation), Position.Internal, i, n))
+                links = [lk for lk in self._links if self._input_neurons is lk._input]
+                for lk in links:
+                    rust_link_partial.update((lk.id,lk(input=i, output=0, weight=lk._weight)))
+
 
             for (i, n) in enumerate(self._internal_neurons):
                 self._rust_brain.add_internal(nd(acc_from_int(n.activation), Position.Internal, i, n))
+                links = [lk for lk in self._links if self._input_neurons is lk._input]
+                for lk in links:
+                    rust_link_partial.update((lk.id,lk(input=i, output=0, weight=lk._weight)))
+
+                links = [lk for lk in self._links if self._output_neurons is lk._output]
+                for lk in links:
+                    rlk = rust_link_partial[lk.id]
+                    rlk.output = lk._output
+                    rust_link.append(rlk)
 
             for (i, n) in enumerate(self._output_neurons):
                 self._rust_brain.add_output(nd(acc_from_int(n.activation), Position.Output, i, n))
 
+                links = [lk for lk in self._links if self._output_neurons is lk._output]
+                for lk in links:
+                    rlk = rust_link_partial[lk.id]
+                    rlk.output = lk._output
+                    rust_link.append(rlk)
+
+            for l in rust_link:
+                self._rust_brain.add_link(l)
+
+            self._rust_brain.initiate()
             self._energy_rate = len(self._links)*param.ENERGY_PER_LINK
         # end def __init__
 
         # -------------------Methods--------------------
 
-        def _create_link(self, gene):
+        def _create_link(self, gene, id):
             """
             create a link from a specific gene int
             :param gene: the gene
@@ -287,7 +308,7 @@ else:
                 output = self._internal_neurons[index]
             # end if
             weight = to_signed(bit_range(gene, 0, 16), 16) / 8191.75
-            self._links.append(Link(source=source, output=output, weight=weight))
+            self._links.append(Link(source=source, output=output, weight=weight, id=id))
         # end def create_link
 
         # noinspection DuplicatedCode
@@ -348,24 +369,13 @@ else:
 
         def update(self):
             super().update()
-            list(map(Link.update, self._links))
-
-            # end for
-            for i in self._input_neurons:
-                i.prepare()
-
-            np.choose(self._binary_inputs < 0, [1, 0], out=self._binary_outputs)
-            self._logistic_outputs = 1 / (1 + np.exp(-self._logistic_inputs))
-            np.tanh(self._tanh_inputs, out=self._tanh_outputs)
-            np.exp(-np.power(self._gaussian_inputs, 2), out=self._gaussian_outputs)
-
+            self._rust_brain.update()
         # end def __init__
 
         def output(self):
             """
             Send the signals of the last round to the body
             """
-            for o in self._output_neurons:
-                o.update()
+            self._rust_brain.output()
 
         # -----------------Properties------------------

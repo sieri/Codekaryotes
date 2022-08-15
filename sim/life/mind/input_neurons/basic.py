@@ -20,7 +20,7 @@ class ConstantNeuron(NeuronInput):
 
     def prepare(self):
         self._inputs = [1, ]
-        super().prepare()
+        return super().prepare()
     # end def update
 # end class ConstantNeuron
 
@@ -40,7 +40,7 @@ class TouchNeuron(NeuronInput):
 
     def prepare(self):
         self._inputs = [self._module.touch, ]
-        super().prepare()
+        return super().prepare()
     # end def update
 
 
@@ -59,7 +59,7 @@ class TouchForwardNeuron(NeuronInput):
 
     def prepare(self):
         self._inputs = [self._module.touch_forward, ]
-        super().prepare()
+        return super().prepare()
     # end def prepare
 
 

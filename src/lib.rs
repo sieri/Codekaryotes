@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 mod brain;
 
-use crate::brain::{Activation, Brain, NeuronDefinition, Position};
+use crate::brain::{Activation, Brain, Link, NeuronDefinition, Position};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
@@ -13,11 +13,7 @@ fn brain_update() {
 
 #[pyfunction]
 fn get_brain() -> Brain {
-    Brain {
-        inputs: vec![],
-        internals: vec![],
-        outputs: vec![],
-    }
+    Brain::new()
 }
 
 #[pyfunction]
@@ -42,5 +38,6 @@ fn codekaryotes(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<NeuronDefinition>()?;
     m.add_class::<Activation>()?;
     m.add_class::<Position>()?;
+    m.add_class::<Link>()?;
     Ok(())
 }

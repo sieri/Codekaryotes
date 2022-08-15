@@ -30,7 +30,7 @@ class DistLeft(VisionNeuron):
     
     def prepare(self):
         self._inputs = [self._module.dist_left, ]
-        super().prepare()
+        return super().prepare()
     # end def prepare
 # end class DistLeft
 
@@ -46,7 +46,7 @@ class DistUp(VisionNeuron):
 
     def prepare(self):
         self._inputs = [self._module.dist_up, ]
-        super().prepare()
+        return super().prepare()
     # end def prepare
 # end class DistUp
 
@@ -63,7 +63,7 @@ class DistDown(VisionNeuron):
 
     def prepare(self):
         self._inputs = [self._module.dist_down, ]
-        super().prepare()
+        return super().prepare()
     # end def prepare
 # end class DistDown
 
@@ -79,7 +79,7 @@ class DistRight(VisionNeuron):
 
     def prepare(self):
         self._inputs = [self._module.dist_right, ]
-        super().prepare()
+        return super().prepare()
     # end def prepare
 # end class DistRight
 
@@ -94,6 +94,6 @@ class NumForward(VisionNeuron):
 
     def prepare(self):
         self._inputs = [self._module.num_forward, ]
-        super().prepare()
+        return super().prepare()
     # end def prepare
 # end class DistRight

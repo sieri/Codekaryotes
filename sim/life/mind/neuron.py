@@ -1,6 +1,8 @@
 import math
 from enum import IntEnum
 
+from sim.parameters.settings import Settings
+
 
 class Activations(IntEnum):
     LINEAR = 0
@@ -134,12 +136,19 @@ class NeuronInput(Neuron):
             s += i
         # end for
         self._inputs.clear()
-
-        self._interface_input[self._interface_index] = s
+        print(s)
+        if not Settings().brain_rust:
+            self._interface_input[self._interface_index] = s
+        else:
+            return s
 
 
     # -----------------Properties------------------
 
+    @property
+    def input(self):
+        return self.prepare()
+    # end def input
 
 # end class NeuronInput
 
@@ -148,7 +157,7 @@ class Link:
     """
     links two neurons, with a specific weights
     """
-    def __init__(self, source, output, weight):
+    def __init__(self, source, output, weight, id):
         """
         :param source: source neuron
         :type source: ``Neuron``
@@ -160,6 +169,7 @@ class Link:
         self._weight = weight
         self._output = output
         self._input = source
+        self.id = id
 
     # end def __init__
 
