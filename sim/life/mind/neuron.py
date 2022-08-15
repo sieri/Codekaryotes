@@ -104,6 +104,9 @@ class NeuronExit(Neuron):
         raise NotImplementedError
     # end def __init__
 
+    def output(self, value):
+        raise NotImplementedError
+
     # -----------------Properties------------------
 
 
@@ -136,7 +139,7 @@ class NeuronInput(Neuron):
             s += i
         # end for
         self._inputs.clear()
-        print(s)
+
         if not Settings().brain_rust:
             self._interface_input[self._interface_index] = s
         else:

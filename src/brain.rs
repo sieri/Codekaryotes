@@ -1,8 +1,8 @@
 extern crate pyo3;
-
 use pyo3::prelude::*;
+use std::fmt::{Display, Formatter, Result};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 #[pyclass(module = "codekaryotes.codekaryotes")]
 pub enum Activation {
     Linear = 0,
@@ -40,6 +40,7 @@ pub struct Neuron {
     pub out_val: f64,
     pub in_val: f64,
     pub object: Option<PyObject>,
+    pub act: Activation,
 }
 
 #[derive(Debug)]
@@ -66,15 +67,6 @@ struct Link {
 }
 
 #[derive(Debug)]
-pub struct NeuronLists {
-    linear: Vec<usize>,
-    binary: Vec<usize>,
-    logistic: Vec<usize>,
-    tanh: Vec<usize>,
-    gaussian: Vec<usize>,
-}
-
-#[derive(Debug)]
 #[pyclass(module = "codekaryotes.codekaryotes")]
 pub struct Brain {
     inputs: Vec<NeuronDefinition>,
@@ -86,9 +78,8 @@ pub struct Brain {
 
     neurons: Vec<Neuron>,
 
-    neurons_id_input: NeuronLists,
-    neurons_id_internal: NeuronLists,
-    neurons_id_output: NeuronLists,
+    neurons_id_input: Vec<usize>,
+    neurons_id_output: Vec<usize>,
 }
 
 #[pymethods]
@@ -104,30 +95,23 @@ impl NeuronDefinition {
     }
 }
 
-trait NeuronalInterface {
-    fn o(&self) -> f64;
-    fn i(&mut self, val: f64);
-}
-
-trait LinkTrait {
-    fn update_neuron(&mut self);
-}
-
 impl Neuron {
-    fn new(id: usize) -> Neuron {
+    fn new(id: usize, act: Activation) -> Neuron {
         Neuron {
             id,
             out_val: 0.0,
             in_val: 0.0,
             object: None,
+            act,
         }
     }
 
-    fn new_obj(id: usize, object: PyObject) -> Neuron {
+    fn new_obj(id: usize, act: Activation, object: PyObject) -> Neuron {
         Neuron {
             id,
             out_val: 0.0,
             in_val: 0.0,
+            act,
             object: Some(object),
         }
     }
@@ -142,8 +126,42 @@ impl Neuron {
             .unwrap();
     }
 
+    fn update_neural_output(&mut self, py: Python<'_>) {
+        let res = self
+            .object
+            .as_ref()
+            .unwrap()
+            .call_method(py, "output", (self.out_val,), None);
+
+        if res.is_err() {
+            println!("Error on output update {:?}", res);
+        }
+    }
+
     fn write_in(&mut self, val: f64) {
         self.in_val = val;
+    }
+}
+
+impl Display for Neuron {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        let prefix = {
+            match self.object.is_none() {
+                true => "❤",
+                false => "✅",
+            }
+        };
+        write!(
+            f,
+            "{}Neuron: [id{}, in:{}, out:{}, act:{}]",
+            prefix, self.id, self.in_val, self.out_val, self.act,
+        )
+    }
+}
+
+impl Display for Activation {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "{:?}", self)
     }
 }
 
@@ -154,47 +172,6 @@ impl Link {
             output,
             weight,
         }
-    }
-}
-
-impl NeuronLists {
-    fn iter(&self) -> Iter<'_> {
-        Iter {
-            inner: self,
-            index: 0,
-        }
-    }
-
-    fn find(&self, id: usize) -> usize {
-        for l in self.iter() {
-            let res = l.iter().find(|&&x| x == id);
-            if res.is_some() {
-                return *res.unwrap();
-            }
-        }
-        0
-    }
-}
-
-struct Iter<'a> {
-    inner: &'a NeuronLists,
-    index: u8,
-}
-
-impl<'a> Iterator for Iter<'a> {
-    type Item = &'a Vec<usize>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let ret = match self.index {
-            0 => &self.inner.linear,
-            1 => &self.inner.binary,
-            2 => &self.inner.gaussian,
-            3 => &self.inner.tanh,
-            4 => &self.inner.logistic,
-            _ => return None,
-        };
-        self.index += 1;
-        Some(ret)
     }
 }
 
@@ -225,27 +202,8 @@ impl Brain {
 
             neurons: vec![],
 
-            neurons_id_input: NeuronLists {
-                linear: vec![],
-                binary: vec![],
-                logistic: vec![],
-                tanh: vec![],
-                gaussian: vec![],
-            },
-            neurons_id_internal: NeuronLists {
-                linear: vec![],
-                binary: vec![],
-                logistic: vec![],
-                tanh: vec![],
-                gaussian: vec![],
-            },
-            neurons_id_output: NeuronLists {
-                linear: vec![],
-                binary: vec![],
-                logistic: vec![],
-                tanh: vec![],
-                gaussian: vec![],
-            },
+            neurons_id_input: vec![],
+            neurons_id_output: vec![],
         }
     }
 
@@ -273,84 +231,45 @@ impl Brain {
         let gil = Python::acquire_gil();
         let &py = &gil.python();
 
-        let internal_prefix: usize = 2usize.pow(31);
-        let output_prefix: usize = 2usize.pow(32);
-
         for input in self.inputs.iter() {
-            match input.activation {
-                Activation::Linear => self.neurons_id_input.linear.push(input.id),
-                Activation::BinaryStep => self.neurons_id_input.binary.push(input.id),
-                Activation::Logistic => self.neurons_id_input.logistic.push(input.id),
-                Activation::Tanh => self.neurons_id_input.tanh.push(input.id),
-                Activation::Gaussian => self.neurons_id_input.gaussian.push(input.id),
-            }
-            self.neurons
-                .push(Neuron::new_obj(input.id, input.object.clone_ref(py)))
+            self.neurons_id_input.push(input.id);
+            self.neurons.push(Neuron::new_obj(
+                input.id,
+                input.activation,
+                input.object.clone_ref(py),
+            ))
         }
+        let internal_prefix: usize = self.neurons.len();
 
         for internal in self.internals.iter() {
-            match internal.activation {
-                Activation::Linear => self
-                    .neurons_id_internal
-                    .linear
-                    .push(internal_prefix + internal.id),
-                Activation::BinaryStep => self
-                    .neurons_id_internal
-                    .binary
-                    .push(internal_prefix + internal.id),
-                Activation::Logistic => self
-                    .neurons_id_internal
-                    .logistic
-                    .push(internal_prefix + internal.id),
-                Activation::Tanh => self
-                    .neurons_id_internal
-                    .tanh
-                    .push(internal_prefix + internal.id),
-                Activation::Gaussian => self
-                    .neurons_id_internal
-                    .gaussian
-                    .push(internal_prefix + internal.id),
-            }
-            self.neurons
-                .push(Neuron::new(internal_prefix + internal.id))
+            self.neurons.push(Neuron::new(
+                internal_prefix + internal.id,
+                internal.activation,
+            ))
         }
 
+        let output_prefix: usize = self.neurons.len();
+
         for output in self.outputs.iter() {
-            match output.activation {
-                Activation::Linear => self
-                    .neurons_id_output
-                    .linear
-                    .push(output_prefix + output.id),
-                Activation::BinaryStep => self
-                    .neurons_id_output
-                    .binary
-                    .push(output_prefix + output.id),
-                Activation::Logistic => self
-                    .neurons_id_output
-                    .logistic
-                    .push(output_prefix + output.id),
-                Activation::Tanh => self.neurons_id_output.tanh.push(output_prefix + output.id),
-                Activation::Gaussian => self
-                    .neurons_id_output
-                    .gaussian
-                    .push(output_prefix + output.id),
-            }
+            self.neurons_id_output.push(output_prefix + output.id);
             self.neurons.push(Neuron::new_obj(
                 output_prefix + output.id,
+                output.activation,
                 output.object.clone_ref(py),
             ))
         }
 
         // create links
+        //println!("Hello!{:?}", self.links_def);
         for l in self.links_def.iter() {
             let input = match l.input_type {
-                Position::Input => self.neurons_id_input.find(l.input),
-                Position::Internal => self.neurons_id_internal.find(l.input),
+                Position::Input => l.input,
+                Position::Internal => internal_prefix + l.input,
                 _ => 0,
             };
             let output = match l.output_type {
-                Position::Output => self.neurons_id_output.find(l.output),
-                Position::Internal => self.neurons_id_internal.find(l.output),
+                Position::Output => output_prefix + l.output,
+                Position::Internal => internal_prefix + l.output,
                 _ => 0,
             };
 
@@ -366,24 +285,47 @@ impl Brain {
         let &py = &gil.python();
 
         //feed links
-        self.links.iter_mut().for_each(|x| -> () {
+        //println!("----------Feed Link----------");
+        self.links.iter().for_each(|x| -> () {
             let new_val = self.neurons[x.input].out_val * x.weight;
             self.neurons[x.output].write_in(new_val);
+            //println!("new_val={}, written in {}", new_val, self.neurons[x.output]);
         });
 
         // acquire inputs
         for inp in self.neurons_id_input.iter() {
-            for x in inp.iter() {
-                self.neurons[*x].update_neural_input(py);
-            }
+            self.neurons[*inp].update_neural_input(py);
         }
 
         //activate neurons
+        //println!("----------Activation----------");
+        self.neurons.iter_mut().for_each(|n| -> () {
+            match n.act {
+                Activation::Linear => n.out_val = n.in_val,
+                Activation::BinaryStep => {
+                    if n.in_val > 0.0 {
+                        n.out_val = 1.0;
+                    } else {
+                        n.out_val = 0.0;
+                    }
+                }
+                Activation::Logistic => n.out_val = 1.0 / (1.0 + (-n.in_val).exp()),
+                Activation::Tanh => n.out_val = n.in_val.tanh(),
+                Activation::Gaussian => n.out_val = (-(n.in_val.powi(2))).exp(),
+            };
+            //println!("{}", n);
+        });
 
         Ok(())
     }
 
-    pub fn output(&self) -> PyResult<()> {
+    pub fn output(&mut self) -> PyResult<()> {
+        let gil = Python::acquire_gil();
+        let &py = &gil.python();
+        for x in self.neurons_id_output.iter() {
+            self.neurons[*x].update_neural_output(py);
+        }
+
         Ok(())
     }
 }

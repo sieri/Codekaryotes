@@ -1,7 +1,7 @@
 from codekaryotes.codekaryotes import brain_update, get_brain, Brain, Activation, Position, \
     acc_from_int
 from codekaryotes.codekaryotes import NeuronDefinition as nd
-from codekaryotes.codekaryotes import LinkDefinition as lk
+from codekaryotes.codekaryotes import LinkDefinition
 from sim.parameters.settings import Settings
 
 import numpy as np
@@ -101,7 +101,7 @@ if not Settings().brain_rust:
                 output = self._internal_neurons[index]
             # end if
             weight = to_signed(bit_range(gene, 0, 16), 16) / 8191.75
-            self._links.append(Link(source=source, output=output, weight=weight))
+            self._links.append(Link(source=source, output=output, weight=weight, id=0))
         # end def create_link
 
         # noinspection DuplicatedCode
@@ -247,34 +247,34 @@ else:
 
             rust_link_partial = {}
             rust_link = []
-            print("Python Input")
+
             for (i, n) in enumerate(self._input_neurons):
                 self._rust_brain.add_input(nd(acc_from_int(n.activation), Position.Internal, i, n))
-                links = [lk for lk in self._links if self._input_neurons is lk._input]
+                links = [lk for lk in self._links if lk._input in self._input_neurons]
                 for lk in links:
-                    rust_link_partial.update((lk.id,lk(input=i, output=0, weight=lk._weight, input_type=Position.Input)))
+                    rust_link_partial[lk.id] =LinkDefinition(input=i, output=0, weight=lk._weight, input_type=Position.Input)
 
 
             for (i, n) in enumerate(self._internal_neurons):
                 self._rust_brain.add_internal(nd(acc_from_int(n.activation), Position.Internal, i, n))
-                links = [lk for lk in self._links if self._internal_neurons is lk._input]
+                links = [lk for lk in self._links if lk._input in self._internal_neurons ]
                 for lk in links:
-                    rust_link_partial.update((lk.id,lk(input=i, output=0, weight=lk._weight,input_type=Position.Internal)))
+                    rust_link_partial[lk.id] =LinkDefinition(input=i, output=0, weight=lk._weight,input_type=Position.Internal)
 
-                links = [lk for lk in self._links if self._internal_neurons is lk._output]
+                links = [lk for lk in self._links if lk._output in self._internal_neurons ]
                 for lk in links:
                     rlk = rust_link_partial[lk.id]
-                    rlk.output = lk._output
+                    rlk.output = i
                     rlk.output_type = Position.Internal
                     rust_link.append(rlk)
 
             for (i, n) in enumerate(self._output_neurons):
                 self._rust_brain.add_output(nd(acc_from_int(n.activation), Position.Output, i, n))
 
-                links = [lk for lk in self._links if self._output_neurons is lk._output]
+                links = [lk for lk in self._links if lk._output in self._output_neurons]
                 for lk in links:
                     rlk = rust_link_partial[lk.id]
-                    rlk.output = lk._output
+                    rlk.output = i
                     rust_link.append(rlk)
 
             for l in rust_link:
@@ -377,6 +377,7 @@ else:
             """
             Send the signals of the last round to the body
             """
+
             self._rust_brain.output()
 
         # -----------------Properties------------------

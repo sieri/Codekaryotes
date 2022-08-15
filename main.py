@@ -7,11 +7,11 @@ from sim.parameters import world as param_world
 import stats
 
 if __name__ == '__main__':
-    num = 100
+    num = 256
     size = (num, num)
     count = num
     pygame.init()
-    window.init(size[0], size[1], 5, False)
+    window.init(size[0], size[1], 2.5, False)
     world = World()
     world.initiate(size[0], size[1])
     stats.start_thread()
