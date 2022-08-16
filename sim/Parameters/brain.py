@@ -3,6 +3,7 @@ LINKS = 10
 
 ENERGY_PER_LINK = 0.0004
 
+
 # Static parameters, do not change without structure changes
-NUM_INPUT = 14
+NUM_INPUT = 11
 NUM_OUTPUT= 4
