@@ -116,7 +116,7 @@ class Aggregator(object):
     def __init__(self):
         global conn
         self.data = []
-        self._time = 0.2
+        self._time = 0.5
         self.count_stat_pop = Buffer(maxlen=NUMBER_TICK)
         self.count_stat_plant = Buffer(maxlen=NUMBER_TICK)
         self.max_gen_stat_pop = Buffer(maxlen=NUMBER_TICK)
@@ -131,14 +131,17 @@ class Aggregator(object):
             snapshot_pop = world.creature.copy()
             snapshot_plant = world.plant.copy()
 
+            if len(snapshot_pop) == 0:
+                continue
+
             self.count_stat_pop.put(len(snapshot_pop))
             self.count_stat_plant.put(len(snapshot_plant))
 
             self.count_gen_stat_pop = Counter([o.ancestry.generation for o in snapshot_pop])
-            self.count_gen_stat_plant = Counter([o.ancestry.generation for o in snapshot_plant])
+            #self.count_gen_stat_plant = Counter([o.ancestry.generation for o in snapshot_plant])  #reactivate with plant evolution
 
             self.max_gen_stat_pop.put(self.count_gen_stat_pop.most_common(1)[0])
-            self.max_gen_stat_plant.put(self.count_gen_stat_plant.most_common(1)[0])
+            #self.max_gen_stat_plant.put(self.count_gen_stat_plant.most_common(1)[0]) # reactivate with plant evolution
 
             conn.send(self)
     # end while

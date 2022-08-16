@@ -1,3 +1,4 @@
+import math
 import random
 from sim.parameters import evolution as para_ev
 from utils import toggle_bit
@@ -40,6 +41,8 @@ class Codekaryote:
 
         # noinspection PyUnresolvedReferences
         self.physical_body.position = starting_position
+        # noinspection PyUnresolvedReferences
+        self.physical_body.angle = random.random()*2*math.pi
     # end def __init__
 
     # -------------------Methods--------------------

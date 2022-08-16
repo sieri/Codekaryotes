@@ -7,7 +7,7 @@ import pymunk as pm
 import numpy as np
 
 from sim.life.codekaryote import Codekaryote
-from gui.window import redraw
+from gui.window import redraw, end
 from sim.parameters import world as param
 
 
@@ -106,9 +106,10 @@ class World:
         to_evolve = count - len(self._creature)
 
         if len(self._creature) > 0:
-            sample_to_evolve = [random.randint(0, len(self._organisms)-1) for _ in range(to_evolve)]
+            sample_to_evolve = [random.randint(0, len(self._creature)-1) for _ in range(to_evolve)]
         else:
             print("Extinction Event")
+            end()
             sys.exit()
 
         new_genome = []
@@ -195,7 +196,14 @@ class World:
 
         if param.CHEAT_ANTI_EXTINCTION:
             if len(self._creature) < param.ANTI_EXTINCTION_THRESHOLD:
-                self.populate_randomly(param.ANTI_EXTINCTION_BONCE_BACK - len(self._creature), count_plant=0)
+                if param.ANTI_EXTINCTION_BONCE_BACK_WITH_SURVIVOR:
+                    self.populate_new_generation(param.ANTI_EXTINCTION_BONCE_BACK - len(self._creature))
+                else:
+                    self.populate_randomly(param.ANTI_EXTINCTION_BONCE_BACK - len(self._creature), count_plant=0)
+        elif len(self._creature) == 0:
+            print("Extinction Event")
+            end()
+            sys.exit()
 
         if param.PLANT_SPAWN:
             self._plant_cycle += 1

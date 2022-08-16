@@ -2,7 +2,8 @@ from sim.life.codekaryote import BaseModule
 from sim.parameters import plant as plant_param
 from sim.parameters import body as body_param
 
-FACTOR = 4303355903 / plant_param.ENERGY_MAX
+FACTOR_STORAGE = 4303355903 / body_param.ENERGY_STORAGE_MAX
+FACTOR_SOURCE = 4303355903 / plant_param.ENERGY_MAX
 
 
 class AbstractEnergyConsumer(BaseModule):
@@ -36,7 +37,7 @@ class EnergySource(BaseModule):
         super().__init__(organism, genome, "energy_source")
 
         # generate from genome
-        self._energy_source = genome[0]/FACTOR
+        self._energy_source = genome[0]/FACTOR_SOURCE
     # end def __init__
 
     # -------------------Methods--------------------
@@ -62,7 +63,7 @@ class EnergyStorage(AbstractEnergyConsumer):
                          passive=True, name="energy_storage")
 
         # generate from genome
-        self._energy_storage_max = genome[0]/FACTOR
+        self._energy_storage_max = genome[0]/FACTOR_STORAGE
         self.current_energy = self._energy_storage_max/2
 
         self._energy_rate = self._energy_storage_max*body_param.ENERGY_STORAGE_LOSS_RATE

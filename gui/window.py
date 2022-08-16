@@ -35,6 +35,7 @@ class Window:
         self.draw_options = pygame_util.DrawOptions(surface=self._surface)
         self.draw_options.transform = pymunk.Transform.scaling(factor)
         self.draw_options.shape_outline_color = (255,0,0,255)
+        self._ticks= 0.0
 
     # def __init__
 
@@ -83,13 +84,18 @@ class Window:
         display.flip()
         if self._export_video:
             take_capture()
-        self._clock.tick(60)
+        self._clock.tick()
+        self._ticks += 1
 
     # end def redraw
+    def end(self):
+        print("Ending at clock tick:", self._ticks)
+        pygame.quit()
+        sys.exit()
 # end class Window
 
 
-win = type("",(),dict(redraw=lambda _, __: None))()
+win = type("",(),dict(redraw=lambda _, __: None, end=lambda _: None))()
 
 
 def init(x, y, factor, export_video=False):
@@ -118,3 +124,15 @@ def redraw(world):
     # noinspection PyUnresolvedReferences
     win.redraw(world)
 # end def redraw
+
+def end():
+    """
+    draw the world.py
+    :param world: the world.py to draw
+    :type world: ``World``
+    """
+    # noinspection PyUnresolvedReferences
+    win.end()
+# end def redraw
+
+
