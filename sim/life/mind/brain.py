@@ -40,7 +40,7 @@ if not Settings().brain_rust:
             i += 1
             self._input_neurons.append(vision.DistDown(Activations.from_genome(genome[i]), organism))
             i += 1
-            self._input_neurons.append(vision.NumForward(Activations.from_genome(genome[i]), organism))
+            self._input_neurons.append(vision.NumSeen(Activations.from_genome(genome[i]), organism))
             i += 1
             self._input_neurons.append(basic.TouchNeuron(Activations.from_genome(genome[i]), organism))
             i += 1
@@ -212,12 +212,25 @@ else:
             i += 1
             self._input_neurons.append(vision.DistDown(Activations.from_genome(genome[i]), organism))
             i += 1
-            self._input_neurons.append(vision.NumForward(Activations.from_genome(genome[i]), organism))
+            self._input_neurons.append(vision.NumSeen(Activations.from_genome(genome[i]), organism))
+            i += 1
+            self._input_neurons.append(vision.NumSeenCreatures(Activations.from_genome(genome[i]), organism))
+            i += 1
+            self._input_neurons.append(vision.NumSeenPlants(Activations.from_genome(genome[i]), organism))
+            i += 1
+            self._input_neurons.append(vision.ClosestCreatureDist(Activations.from_genome(genome[i]), organism))
+            i += 1
+            self._input_neurons.append(vision.ClosestPlantDist(Activations.from_genome(genome[i]), organism))
+            i += 1
+            self._input_neurons.append(vision.ClosestCreatureAngle(Activations.from_genome(genome[i]), organism))
+            i += 1
+            self._input_neurons.append(vision.ClosestPlantAngle(Activations.from_genome(genome[i]), organism))
             i += 1
             self._input_neurons.append(basic.TouchNeuron(Activations.from_genome(genome[i]), organism))
             i += 1
             self._input_neurons.append(basic.TouchForwardNeuron(Activations.from_genome(genome[i]), organism))
             i += 1
+            assert(i==param.NUM_INPUT, "Wrong number of input setup")
 
             # output neurons
             self._output_neurons.append(moveneuron.MoveRightNeuron(Activations.from_genome(genome[i]), organism))
@@ -228,6 +241,7 @@ else:
             i += 1
             self._output_neurons.append(moveneuron.MoveDownNeuron(Activations.from_genome(genome[i]), organism))
             i += 1
+            assert (i == param.NUM_OUTPUT+param.NUM_INPUT, "Wrong number of output setup")
 
             # internal neurones
             for j in range(param.INTERNAL_NEURON):

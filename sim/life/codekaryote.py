@@ -88,7 +88,13 @@ class Codekaryote:
         # noinspection PyUnresolvedReferences
         return self.physical_body.position
     # end def position
-    
+
+    @property
+    def angle(self):
+        # noinspection PyUnresolvedReferences
+        return self.physical_body.angle
+    # end def angle
+
     @property
     def genome(self):
         return self._genome

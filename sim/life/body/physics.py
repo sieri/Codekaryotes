@@ -57,7 +57,10 @@ class BodyActiveCircle(AbstractBody, AbstractEnergyConsumer):
         self._energy_rate = param.ENERGY_SIZE_SCALE * self._mass
 
         setattr(self._organism, "physical_body", self._body)
-        setattr(self._organism, "shape", pm.Circle(self._body, self._size, (0, 0)))
+        circle = pm.Circle(self._body, self._size, (0, 0))
+        setattr(circle, "owner", self)
+        setattr(circle, "organism", self._organism)
+        setattr(self._organism, "shape", circle)
     # end def __init__
 
     @property
@@ -74,7 +77,10 @@ class BodyPassiveCircle(AbstractBody, BaseModule):
         self._gen(genome)
 
         setattr(self._organism, "physical_body", self._body)
-        setattr(self._organism, "shape", pm.Circle(self._body, self._size, (0, 0)))
+        circle = pm.Circle(self._body, self._size, (0, 0))
+        setattr(circle, "owner", self)
+        setattr(circle, "organism", self._organism)
+        setattr(self._organism, "shape", circle)
 
     # end def __init__
 

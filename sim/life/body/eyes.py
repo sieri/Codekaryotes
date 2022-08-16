@@ -1,3 +1,4 @@
+import itertools
 import math
 
 import numpy as np
@@ -10,6 +11,14 @@ from sim.parameters import body as param
 world = World()
 
 N_SEGMENT_CONE = 5
+
+def dist(organism, pos):
+    pos2 = organism.position
+    return math.sqrt((pos2.x-pos.x)**2+(pos2.y-pos.y)**2)
+
+def angle(organism, pos):
+    pos2 = organism.position
+    return math.atan2(pos2.y-pos.y, pos2.x-pos.x)
 
 class Eyes(AbstractEnergyConsumer):
 
@@ -66,19 +75,30 @@ class Eyes(AbstractEnergyConsumer):
         for s in self._shape:
             s.collision_type = 3
             s.sensor = True
-            s.__setattr__("color", (255, 255, 255, 128))
+            setattr(s, "color", (255, 255, 255, 128))
+            setattr(s,"owner", self)
 
         setattr(self._organism, "vision_cone", self._shape)
 
 
-
-
+        self._seen_creatures = []
+        self._seen_plants = []
     # end def __init__
 
     # -------------------Methods--------------------
 
     def update(self):
         super().update()
+
+    def reset(self):
+        self._seen_creatures.clear()
+        self._seen_plants.clear()
+
+    def new_seen_creature(self, creature):
+        self._seen_creatures.append(creature)
+
+    def new_seen_plant(self, plant):
+        self._seen_plants.append(plant)
 
     # -----------------Properties------------------
 
@@ -103,19 +123,71 @@ class Eyes(AbstractEnergyConsumer):
     # end def dist_up
 
     @property
-    def num_forward(self):
-        return 0 # TODO renenable
-        count = 0
-        pos = self._organism.position
+    def num_seen(self):
+        return len(self._seen_creatures)+len(self._seen_plants)
+    # end def num_seen
 
-        # get from the distance
-        organisms = world.get_local_organisms(pos, self._range)
-        for c_index in organisms:
-            c = world.organisms[c_index]
-            # noinspection PyUnresolvedReferences
-            angle = self._organism.movement.forward.angle_with(self.organism.position, c.position)
-            if abs(angle) < self._fov/2:
-                count += 1
-        return count
-    # end def num_forward
+    @property
+    def num_seen_creatures(self):
+        return len(self._seen_creatures)
+    # end def num_seen_creatures
+
+    @property
+    def num_seen_plants(self):
+        return len(self._seen_plants)
+    # end def num_seen_plants
+
+
+    @property
+    def closest_creature_dist(self):
+        if self.num_seen_creatures == 0:
+            return -1
+        elif self.num_seen_creatures == 1:
+            return dist(self._seen_creatures[0],self._organism.position)
+
+        dists = map(dist,self._seen_creatures,itertools.repeat(self._organism.position))
+        return min(list(dists))
+    # end def closest_creature_dist
+
+    
+    @property
+    def closest_plant_dist(self):
+        if self.num_seen_plants == 0:
+            return -1
+        elif self.num_seen_plants == 1:
+            return dist(self._seen_plants[0], self._organism.position)
+
+        dists = map(dist, self._seen_plants, itertools.repeat(self._organism.position))
+        return min(list(dists))
+    # end def closest_plant_dist
+
+
+    @property
+    def closest_creature_angle(self):
+        if self.num_seen_creatures == 0:
+            return 0
+        elif self.num_seen_creatures == 1:
+            return angle(self._seen_creatures[0], self._organism.position)-self._organism.angle
+
+        dists = list(map(dist, self._seen_creatures, itertools.repeat(self._organism.position)))
+        min_val = min(dists)
+        index = np.where(dists == np.amin(dists))[0][0]
+        return angle(self._seen_creatures[index], self._organism.position)-self._organism.angle
+
+    # end def closest_creature_angle
+
+    @property
+    def closest_plant_angle(self):
+        if self.num_seen_plants == 0:
+            return 0
+        elif self.num_seen_plants == 1:
+            return angle(self._seen_plants[0], self._organism.position) - self._organism.angle
+
+        dists = list(map(dist, self._seen_plants, itertools.repeat(self._organism.position)))
+        min_val = min(dists)
+        index = np.where(dists == np.amin(dists))[0][0]
+        return angle(self._seen_plants[index], self._organism.position) - self._organism.angle
+
+    # end def closest_plant_angle
+
 # end class Eyes

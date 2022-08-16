@@ -60,7 +60,7 @@ class World:
         self._ch = self._space.add_collision_handler(0, 0)
         self._ch_eyes = self._space.add_collision_handler(3, 0)
         self._ch.post_solve = collision_post_resolve
-        self._ch_eyes.post_solve = eyes_post_resolve
+        self._ch_eyes.begin = eyes_handler
 
         # wall
         static_lines = [
@@ -68,7 +68,12 @@ class World:
             pm.Segment(self._space.static_body, (self._width, 0.0), (self._width, self._height), 0.0),
             pm.Segment(self._space.static_body, (self._width, self._height), (0.0, self._height), 0.0),
             pm.Segment(self._space.static_body, (0.0, self._height), (0.0, 0.0), 0.0),
+
         ]
+
+        for l in static_lines:
+            l.collision_type = 1
+
         self._space.add(*static_lines)
     # end def initiate
 
@@ -284,33 +289,33 @@ def collision_post_resolve(arbiter, space, data):
     if None not in organism:
         if (not creature[0]) and creature[1]:
             organism[1].touch.touch_update(organism[0], points=arbiter.contact_point_set)
+        elif (creature[0]) and (not creature[1]):
+            organism[0].touch.touch_update(organism[1], points=arbiter.contact_point_set)
         elif creature[0] and creature[1]:
             organism[0].touch.touch_update(organism[1], points=arbiter.contact_point_set)
             organism[1].touch.touch_update(organism[0], points=arbiter.contact_point_set)
 
 # noinspection PyUnusedLocal
-def eyes_post_resolve(arbiter, space, data):
-
-    print("collisions")
+def eyes_handler(arbiter, space, data):
 
     shapes = arbiter.shapes
-    organism = [None, None]
-    creature = [bool, bool]
+    organism = None
+    creature = False
 
-    for i, shape in enumerate(shapes):
-        if shape in world.plant_shape:
-            organism[i] = world.plant_shape[shape]
-            creature[i] = False
-        elif shape in world.creature_shape:
-            organism[i] = world.creature_shape[shape]
-            creature[i] = True
+    if shapes[1] in world.plant_shape:
+        organism = world.plant_shape[shapes[1]]
+        creature = False
+    elif shapes[1] in world.creature_shape:
+        organism = world.creature_shape[shapes[1]]
+        creature = True
 
-    # if None not in organism:
-    #     if (not creature[0]) and creature[1]:
-    #         organism[1].touch.touch_update(organism[0], points=arbiter.contact_point_set)
-    #     elif creature[0] and creature[1]:
-    #         organism[0].touch.touch_update(organism[1], points=arbiter.contact_point_set)
-    #         organism[1].touch.touch_update(organism[0], points=arbiter.contact_point_set)
+    if organism is not None:
+        if creature:
+            shapes[0].owner.new_seen_creature(shapes[1].organism)
+        else:
+            shapes[0].owner.new_seen_plant(shapes[1].organism)
+
+    return True
 
 
 world = World()

@@ -87,7 +87,7 @@ class DistRight(VisionNeuron):
 # end class DistRight
 
 
-class NumForward(VisionNeuron):
+class NumSeen(VisionNeuron):
 
     def __init__(self, activation, organism):
         super().__init__(activation, organism)
@@ -96,7 +96,97 @@ class NumForward(VisionNeuron):
     # -------------------Methods--------------------
 
     def prepare(self):
-        self._inputs = [self._module.num_forward, ]
+        self._inputs = [self._module.num_seen, ]
         return super().prepare()
     # end def prepare
-# end class DistRight
+# end class NumSeen
+
+
+class NumSeenCreatures(VisionNeuron):
+
+    def __init__(self, activation, organism):
+        super().__init__(activation, organism)
+    # end def __init__
+
+    # -------------------Methods--------------------
+
+    def prepare(self):
+        self._inputs = [self._module.num_seen_creatures, ]
+        return super().prepare()
+    # end def prepare
+# end class NumSeenCreatures
+
+
+class NumSeenPlants(VisionNeuron):
+
+    def __init__(self, activation, organism):
+        super().__init__(activation, organism)
+    # end def __init__
+
+    # -------------------Methods--------------------
+
+    def prepare(self):
+        self._inputs = [self._module.num_seen_plants, ]
+        return super().prepare()
+    # end def prepare
+# end class NumSeen
+
+
+class ClosestCreatureDist(VisionNeuron):
+
+    def __init__(self, activation, organism):
+        super().__init__(activation, organism)
+    # end def __init__
+
+    # -------------------Methods--------------------
+
+    def prepare(self):
+        self._inputs = [self._module.closest_creature_dist, ]
+        return super().prepare()
+    # end def prepare
+# end class ClosestCreatureDist
+
+
+class ClosestPlantDist(VisionNeuron):
+
+    def __init__(self, activation, organism):
+        super().__init__(activation, organism)
+    # end def __init__
+
+    # -------------------Methods--------------------
+
+    def prepare(self):
+        self._inputs = [self._module.closest_plant_dist, ]
+        return super().prepare()
+    # end def prepare
+# end class ClosestPlantDist
+
+
+class ClosestCreatureAngle(VisionNeuron):
+
+    def __init__(self, activation, organism):
+        super().__init__(activation, organism)
+    # end def __init__
+
+    # -------------------Methods--------------------
+
+    def prepare(self):
+        self._inputs = [self._module.closest_creature_angle, ]
+        return super().prepare()
+    # end def prepare
+# end class ClosestCreatureAngle
+
+
+class ClosestPlantAngle(VisionNeuron):
+
+    def __init__(self, activation, organism):
+        super().__init__(activation, organism)
+    # end def __init__
+
+    # -------------------Methods--------------------
+
+    def prepare(self):
+        self._inputs = [self._module.closest_plant_angle, ]
+        return super().prepare()
+    # end def prepare
+# end class ClosestPlantAngle

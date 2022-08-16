@@ -9,9 +9,9 @@ def generate_neuron():
 
 def generate_brain():
 
-    inputs = [generate_neuron() for _ in range(8)]
+    inputs = [generate_neuron() for _ in range(param.NUM_INPUT)]
 
-    outputs = [generate_neuron() for _ in range(4)]
+    outputs = [generate_neuron() for _ in range(param.NUM_OUTPUT)]
 
     internal = [generate_neuron() for _ in range(param.INTERNAL_NEURON)]
 

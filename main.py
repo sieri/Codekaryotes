@@ -1,3 +1,5 @@
+import os
+
 import pygame
 
 from gui import window
@@ -5,6 +7,8 @@ from gui import window
 from sim.world import World
 from sim.parameters import world as param_world
 import stats
+
+os.environ["RUST_BACKTRACE"] = "full"
 
 if __name__ == '__main__':
     num = 256
