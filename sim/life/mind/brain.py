@@ -236,6 +236,8 @@ else:
             i += 1
             self._input_neurons.append(basic.SpeedRotationNeuron(Activations.from_genome(genome[i]), organism))
             i += 1
+            self._input_neurons.append(basic.EnergyNeuron(Activations.from_genome(genome[i]), organism))
+            i += 1
             assert i==param.NUM_INPUT
 
             # output neurons

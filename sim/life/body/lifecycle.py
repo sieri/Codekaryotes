@@ -48,7 +48,7 @@ class Reproducer(BaseModule):
 
     def update(self):
         # noinspection PyUnresolvedReferences
-        if self._organism.energy_storage.percent > param.REPRODUCE_THRESHOLD:
+        if self._organism.energy_storage.level > param.REPRODUCE_THRESHOLD:
             self._organism.reproduce((self._organism.position.x, self._organism.position.y))
             # noinspection PyUnresolvedReferences
             self._organism.energy_storage.current_energy -= self._organism.energy_storage.energy_storage_max * param.REPRODUCE_COST

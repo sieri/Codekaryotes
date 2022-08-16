@@ -98,7 +98,7 @@ class EnergyStorage(AbstractEnergyConsumer):
     # end def energy_storage_max
 
     @property
-    def percent(self):
+    def level(self):
         return self._current_energy/self._energy_storage_max
     # end def percent
 
