@@ -101,36 +101,41 @@ class Movement(AbstractEnergyConsumer):
 
         self.need_reset = True
 
-        self._forward = [0, 0]
+        self._forward = 0
+        self._torque = 0
         self._energy_rate = param.ENERGY_MOVEMENT_RATE
     # end def __init__
 
     # -------------------Methods--------------------
 
     def update(self):
-        self._active = (self._forward == [0, 0])
+        self._active = not (self._forward == 0)
         super().update()
-        self.organism.physical_body.apply_force_at_local_point(self._forward)
+        self.organism.physical_body.apply_force_at_local_point((self._forward,0))
+        self.organism.physical_body.torque = self._torque
     # end def update
 
     def reset(self):
-        self._forward = [0, 0]
+        self._forward = 0
+        self._torque = 0
 
-    def move_up(self, ratio):
+    def move_forward(self, ratio):
 
-        self._forward[1] += ratio
+        self._forward += ratio
     # end def move_up
 
-    def move_down(self, ratio):
-        self._forward[1] -= ratio
+    def move_backward(self, ratio):
+        self._forward -= ratio
     # end def move_down
 
-    def move_right(self, ratio):
-        self._forward[0] += ratio
+    def turn_right(self, ratio):
+        #self._forward[0] += ratio
+        self._torque += ratio
     # end def move_right
 
-    def move_left(self, ratio):
-        self._forward[0] -= ratio
+    def turn_left(self, ratio):
+        #self._forward[0] -= ratio
+        self._torque -= ratio
     # end def move_left
 
     # -----------------Properties------------------

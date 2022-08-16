@@ -1,7 +1,7 @@
 from sim.life.mind.neuron import NeuronExit
 from utils import clamp
 
-class MoveUpNeuron(NeuronExit):
+class MoveForwardNeuron(NeuronExit):
 
     def __init__(self, activation, organism):
         """
@@ -19,17 +19,17 @@ class MoveUpNeuron(NeuronExit):
     def update(self):
         y = self._interface_output[self._interface_index]
 
-        self._module.move_up(clamp(y, 0, 1))
+        self._module.move_forward(clamp(y, 0, 1))
 
     # end def update
     def output(self, value):
         y = clamp(value, 0, 1)
 
-        self._module.move_up(clamp(y, 0, 1))
+        self._module.move_forward(clamp(y, 0, 1))
 # end class MoveUpNeuron
 
 
-class MoveDownNeuron(NeuronExit):
+class MoveBackwardNeuron(NeuronExit):
 
     def __init__(self, activation, organism):
         """
@@ -47,17 +47,17 @@ class MoveDownNeuron(NeuronExit):
     def update(self):
         y = self._interface_output[self._interface_index]
         
-        self._module.move_down(clamp(y, 0, 1))
+        self._module.move_backward(clamp(y, 0, 1))
 
     def output(self, value):
         y = clamp(value, 0, 1)
 
-        self._module.move_down(clamp(y, 0, 1))
+        self._module.move_backward(clamp(y, 0, 1))
 
 # end class MoveDownNeuron
 
 
-class MoveRightNeuron(NeuronExit):
+class TurnRightNeuron(NeuronExit):
 
     def __init__(self, activation, organism):
         """
@@ -75,17 +75,17 @@ class MoveRightNeuron(NeuronExit):
     def update(self):
         y = self._interface_output[self._interface_index]
 
-        self._module.move_right(clamp(y, 0, 1))
+        self._module.turn_right(clamp(y, 0, 1))
     # end def update
 
     def output(self, value):
         y = clamp(value, 0, 1)
 
-        self._module.move_right(clamp(y, 0, 1))
+        self._module.turn_right(clamp(y, 0, 1))
 # end class MoveRightNeuron
 
 
-class MoveLeftNeuron(NeuronExit):
+class TurnLeftNeuron(NeuronExit):
 
     def __init__(self, activation, organism):
         """
@@ -103,11 +103,11 @@ class MoveLeftNeuron(NeuronExit):
     def update(self):
         y = self._interface_output[self._interface_index]
 
-        self._module.move_left(clamp(y, 0, 1))
+        self._module.turn_left(clamp(y, 0, 1))
 
     def output(self, value):
         y = clamp(value, 0, 1)
 
-        self._module.move_left(clamp(y, 0, 1))
+        self._module.turn_left(clamp(y, 0, 1))
     # end def update
 # end class MoveLeftNeuron
