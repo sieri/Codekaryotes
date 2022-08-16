@@ -75,10 +75,10 @@ class Window:
 
         self._surface.fill(Color(0, 0, 0))
 
-        world._space.debug_draw(self.draw_options)
+        # world._space.debug_draw(self.draw_options)
 
-        #for c in world.organisms:
-        #    draw_organism(self._surface, c, self._factor)
+        for c in world.organisms:
+            draw_organism(self._surface, c, self._factor)
         self.display_fps()
         display.flip()
         if self._export_video:

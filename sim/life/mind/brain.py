@@ -230,7 +230,13 @@ else:
             i += 1
             self._input_neurons.append(basic.TouchForwardNeuron(Activations.from_genome(genome[i]), organism))
             i += 1
-            assert(i==param.NUM_INPUT, "Wrong number of input setup")
+            self._input_neurons.append(basic.AngleNeuron(Activations.from_genome(genome[i]), organism))
+            i += 1
+            self._input_neurons.append(basic.SpeedNeuron(Activations.from_genome(genome[i]), organism))
+            i += 1
+            self._input_neurons.append(basic.SpeedRotationNeuron(Activations.from_genome(genome[i]), organism))
+            i += 1
+            assert i==param.NUM_INPUT
 
             # output neurons
             self._output_neurons.append(moveneuron.TurnRightNeuron(Activations.from_genome(genome[i]), organism))
@@ -241,7 +247,7 @@ else:
             i += 1
             self._output_neurons.append(moveneuron.MoveBackwardNeuron(Activations.from_genome(genome[i]), organism))
             i += 1
-            assert (i == param.NUM_OUTPUT+param.NUM_INPUT, "Wrong number of output setup")
+            assert i == param.NUM_OUTPUT+param.NUM_INPUT
 
             # internal neurones
             for j in range(param.INTERNAL_NEURON):
