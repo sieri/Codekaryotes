@@ -2,6 +2,8 @@ from sim.life.mind.neuron import NeuronInput
 from sim.world import World
 
 world = World()
+
+
 class VisionNeuron(NeuronInput):
 
     def __init__(self, activation, organism):

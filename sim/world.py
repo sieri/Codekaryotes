@@ -58,7 +58,9 @@ class World:
         self._space.gravity = (0, 0)
         self._space.damping = 0.9
         self._ch = self._space.add_collision_handler(0, 0)
+        self._ch_eyes = self._space.add_collision_handler(3, 0)
         self._ch.post_solve = collision_post_resolve
+        self._ch_eyes.post_solve = eyes_post_resolve
 
         # wall
         static_lines = [
@@ -164,7 +166,7 @@ class World:
 
         for remove in self._to_remove_creature:
             self._creature.remove(remove)
-            self._space.remove(remove.physical_body, remove.shape)
+            self._space.remove(remove.physical_body, remove.shape, *remove.vision_cone)
             self._creature_shape.pop(remove.shape)
         self._to_remove_creature.clear()
 
@@ -175,7 +177,7 @@ class World:
         self._to_remove_plant.clear()
 
         for add in self._to_add_creature:
-            self._space.add(add.physical_body, add.shape)
+            self._space.add(add.physical_body, add.shape, *add.vision_cone)
             self._creature_shape[add.shape] = add
         self._creature += self._to_add_creature
         self._to_add_creature.clear()
@@ -285,6 +287,30 @@ def collision_post_resolve(arbiter, space, data):
         elif creature[0] and creature[1]:
             organism[0].touch.touch_update(organism[1], points=arbiter.contact_point_set)
             organism[1].touch.touch_update(organism[0], points=arbiter.contact_point_set)
+
+# noinspection PyUnusedLocal
+def eyes_post_resolve(arbiter, space, data):
+
+    print("collisions")
+
+    shapes = arbiter.shapes
+    organism = [None, None]
+    creature = [bool, bool]
+
+    for i, shape in enumerate(shapes):
+        if shape in world.plant_shape:
+            organism[i] = world.plant_shape[shape]
+            creature[i] = False
+        elif shape in world.creature_shape:
+            organism[i] = world.creature_shape[shape]
+            creature[i] = True
+
+    # if None not in organism:
+    #     if (not creature[0]) and creature[1]:
+    #         organism[1].touch.touch_update(organism[0], points=arbiter.contact_point_set)
+    #     elif creature[0] and creature[1]:
+    #         organism[0].touch.touch_update(organism[1], points=arbiter.contact_point_set)
+    #         organism[1].touch.touch_update(organism[0], points=arbiter.contact_point_set)
 
 
 world = World()

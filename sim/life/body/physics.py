@@ -1,11 +1,11 @@
 from sim.life.codekaryote import BaseModule
 from sim.life.common.energy import AbstractEnergyConsumer
 from sim.world import World
-from utils import clamp
 from sim.parameters import body as param
 import pymunk as pm
 
 world = World()
+
 
 class AbstractBody:
     """
@@ -18,7 +18,7 @@ class AbstractBody:
     FACTOR = 4303355903 / ((param.BODY_SIZE_MAX-param.BODY_SIZE_MIN)*10000)
 
     def _gen(self, genome):
-        self._size = ((genome[0]/ self.FACTOR) / 10000) + param.BODY_SIZE_MIN
+        self._size = ((genome[0] / self.FACTOR) / 10000) + param.BODY_SIZE_MIN
         self._mass = (self._size**2) * param.BODY_MASS_UNIT
         self._inertia = pm.moment_for_circle(self._mass, 0, self._size, (0, 0))
         self._body = pm.Body(self._mass, self._inertia)

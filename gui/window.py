@@ -2,6 +2,8 @@ import math
 import sys
 
 import pygame
+import pymunk
+from pymunk import pygame_util
 from pygame import display, Color
 from pygame.time import Clock
 from pygame.locals import QUIT
@@ -30,6 +32,10 @@ class Window:
         self._clock = Clock()
         self._export_video = export_video
         self._fonts = self.create_fonts([32, 16, 14, 8])
+        self.draw_options = pygame_util.DrawOptions(surface=self._surface)
+        self.draw_options.transform = pymunk.Transform.scaling(factor)
+        self.draw_options.shape_outline_color = (255,0,0,255)
+
     # def __init__
 
     @staticmethod
@@ -69,8 +75,10 @@ class Window:
 
         self._surface.fill(Color(0, 0, 0))
 
-        for c in world.organisms:
-            draw_organism(self._surface, c, self._factor)
+        world._space.debug_draw(self.draw_options)
+
+        #for c in world.organisms:
+        #    draw_organism(self._surface, c, self._factor)
         self.display_fps()
         display.flip()
         if self._export_video:

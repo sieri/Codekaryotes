@@ -36,9 +36,9 @@ def generate_random_creature_full_genome():
     :rtype: ```dict[str,list[int]]``
     """
     genomes = {
+        "body_active_circle": generate_size(),
         "eyes": generate_eyes(),
         "touch": [],
-        "body_active_circle": generate_size(),
         "movement": [],
         "color": generate_organism_color(),
         "energy_storage": generate_energy_storage(),
