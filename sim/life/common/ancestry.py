@@ -8,6 +8,7 @@ class Ancestry(BaseModule):
                          name="ancestry")
         self._mutation_rate = 0
         self._generation = genome[0]
+        self._age = 0
     # end def __init__
 
     # -------------------Methods--------------------
@@ -16,7 +17,7 @@ class Ancestry(BaseModule):
         return [self._generation+1, ]
 
     def update(self):
-        pass
+        self._age += 1
 
     # -----------------Properties------------------
 
@@ -24,5 +25,10 @@ class Ancestry(BaseModule):
     def generation(self):
         return self._generation
     # end def generation
+
+    @property
+    def age(self):
+        return self._age
+    # end def age
 
 # end class Ancestry(BaseModule)

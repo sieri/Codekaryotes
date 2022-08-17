@@ -22,6 +22,7 @@ conn = None
 class Displayer():
     """Subprocess displaying the graphs"""
 
+    _age_ax = None
     _pop_ax = None
     _gen_ax = None
     _fig = None
@@ -33,9 +34,9 @@ class Displayer():
     def run(cls, pipe):
         Displayer.pipe = pipe
         style.use('fivethirtyeight')
-        cls._fig = plt.figure(figsize=(5, 5))
+        cls._fig = plt.figure(figsize=(10, 5))
         # population count graph
-        cls._pop_ax = plt.subplot(121)
+        cls._pop_ax = plt.subplot(131)
         pop = mpatches.Patch(color='b', label='Population')
         plant = mpatches.Patch(color='g', label='Plant')
         cls._legends["pop"] = [pop, plant]
@@ -43,12 +44,18 @@ class Displayer():
         cls._pop_ax.set(xlim=(0, NUMBER_TICK), xticks=np.linspace(0, NUMBER_TICK, 9),
                         yticks=np.linspace(0, 100, 10))
 
+
         # generation plot
-        cls._gen_ax = plt.subplot(122)
+        cls._gen_ax = plt.subplot(132)
         cls._gen_ax.xaxis.set_ticks_position('none')
         cls._gen_ax.yaxis.set_ticks_position('none')
 
-        ani = animation.FuncAnimation(cls._fig, cls.update_graph, interval=10)
+        # population count graph
+        cls._age_ax = plt.subplot(133)
+        cls._age_ax.set(xlim=(0, NUMBER_TICK), xticks=np.linspace(0, NUMBER_TICK, 9),
+                        yticks=np.linspace(0, 100, 10))
+
+        ani = animation.FuncAnimation(cls._fig, cls.update_graph, interval=45)
 
         plt.show()
 
@@ -69,9 +76,9 @@ class Displayer():
             mult.current_process().kill()
             return
 
-        cls._pop_ax.clear()
 
         # population
+        cls._pop_ax.clear()
         cls._pop_ax.plot(cls._horizontal_ticks[:len(aggr.count_stat_pop)], aggr.count_stat_pop, 'b')
         cls._pop_ax.plot(cls._horizontal_ticks[:len(aggr.count_stat_plant)], aggr.count_stat_plant, 'g')
 
@@ -103,6 +110,19 @@ class Displayer():
                      fontsize=10, fontweight='bold',
                      color='grey')
 
+        # age of oldest
+        cls._age_ax.clear()
+        cls._age_ax.plot(cls._horizontal_ticks[:len(aggr.max_age_stat_pop)], aggr.max_age_stat_pop, 'y')
+
+        m = max(aggr.max_age_stat_pop)
+        high_point = m - m % 10 + 10
+        cls._age_ax.set(xlim=(0, NUMBER_TICK), xticks=np.linspace(0, NUMBER_TICK, 9),
+                        yticks=np.linspace(0, high_point, 10))
+        cls._age_ax.set_title('Age of oldest codekaryote',
+                              loc='center', )
+
+
+
 
 # end class Displayer
 
@@ -119,8 +139,7 @@ class Aggregator(object):
         self._time = 0.5
         self.count_stat_pop = Buffer(maxlen=NUMBER_TICK)
         self.count_stat_plant = Buffer(maxlen=NUMBER_TICK)
-        self.max_gen_stat_pop = Buffer(maxlen=NUMBER_TICK)
-        self.max_gen_stat_plant = Buffer(maxlen=NUMBER_TICK)
+        self.max_age_stat_pop = Buffer(maxlen=NUMBER_TICK)
         self.count_gen_stat_pop = Counter()
         self.count_gen_stat_plant = Counter()
 
@@ -140,8 +159,7 @@ class Aggregator(object):
             self.count_gen_stat_pop = Counter([o.ancestry.generation for o in snapshot_pop])
             #self.count_gen_stat_plant = Counter([o.ancestry.generation for o in snapshot_plant])  #reactivate with plant evolution
 
-            self.max_gen_stat_pop.put(self.count_gen_stat_pop.most_common(1)[0])
-            #self.max_gen_stat_plant.put(self.count_gen_stat_plant.most_common(1)[0]) # reactivate with plant evolution
+            self.max_age_stat_pop.put(max([o.ancestry.age for o in snapshot_pop]))
 
             conn.send(self)
     # end while
