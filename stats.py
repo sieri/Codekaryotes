@@ -2,17 +2,18 @@ import threading
 import time
 import multiprocessing as mult
 
+import  matplotlib.style
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.animation as animation
-from matplotlib import style
 
 import numpy as np
 
 from sim.world import World
 from collections import deque, Counter
 
-plt.style.use('ggplot')
+mpl.style.use('dark_background')   # any style
 
 NUMBER_TICK = 100
 
@@ -33,15 +34,15 @@ class Displayer():
     @classmethod
     def run(cls, pipe):
         Displayer.pipe = pipe
-        style.use('fivethirtyeight')
         cls._fig = plt.figure(figsize=(10, 5))
+
         # population count graph
         cls._pop_ax = plt.subplot(131)
         pop = mpatches.Patch(color='b', label='Population')
         plant = mpatches.Patch(color='g', label='Plant')
         cls._legends["pop"] = [pop, plant]
         cls._pop_ax.legend(handles=cls._legends["pop"])
-        cls._pop_ax.set(xlim=(0, NUMBER_TICK), xticks=np.linspace(0, NUMBER_TICK, 9),
+        cls._pop_ax.set(xlim=(0, NUMBER_TICK), xticks=np.linspace(0, NUMBER_TICK, 10),
                         yticks=np.linspace(0, 100, 10))
 
 
@@ -52,8 +53,12 @@ class Displayer():
 
         # population count graph
         cls._age_ax = plt.subplot(133)
-        cls._age_ax.set(xlim=(0, NUMBER_TICK), xticks=np.linspace(0, NUMBER_TICK, 9),
-                        yticks=np.linspace(0, 100, 10))
+        cls._legends["age"] = [ mpatches.Patch(color='darkorchid', label='Oldest'),
+                                mpatches.Patch(color='m', label='Mean'),
+                                mpatches.Patch(color='orchid', label='Median'),
+                                ]
+        cls._age_ax.set(xlim=(0, NUMBER_TICK), xticks=np.linspace(0, NUMBER_TICK, 10),
+                        yticks=np.linspace(0, 100, 100))
 
         ani = animation.FuncAnimation(cls._fig, cls.update_graph, interval=45)
 
@@ -85,7 +90,7 @@ class Displayer():
         m = max(max(aggr.count_stat_pop), max(aggr.count_stat_plant))
         high_point = m - m % 10 + 10
         cls._pop_ax.legend(handles=cls._legends["pop"])
-        cls._pop_ax.set(xlim=(0, NUMBER_TICK), xticks=np.linspace(0, NUMBER_TICK, 9),
+        cls._pop_ax.set(xlim=(0, NUMBER_TICK), xticks=np.linspace(0, NUMBER_TICK, 11),
                         yticks=np.linspace(0, high_point, 10))
         cls._pop_ax.set_title('Population',
                               loc='center', )
@@ -112,13 +117,16 @@ class Displayer():
 
         # age of oldest
         cls._age_ax.clear()
-        cls._age_ax.plot(cls._horizontal_ticks[:len(aggr.max_age_stat_pop)], aggr.max_age_stat_pop, 'y')
+        cls._age_ax.legend(handles=cls._legends["age"])
+        cls._age_ax.plot(cls._horizontal_ticks[:len(aggr.max_age_stat_pop)], aggr.max_age_stat_pop, 'darkorchid')
+        cls._age_ax.plot(cls._horizontal_ticks[:len(aggr.mean_age_stat_pop)], aggr.mean_age_stat_pop, 'm')
+        cls._age_ax.plot(cls._horizontal_ticks[:len(aggr.median_age_stat_pop)], aggr.median_age_stat_pop, 'orchid')
 
         m = max(aggr.max_age_stat_pop)
         high_point = m - m % 10 + 10
-        cls._age_ax.set(xlim=(0, NUMBER_TICK), xticks=np.linspace(0, NUMBER_TICK, 9),
+        cls._age_ax.set(xlim=(0, NUMBER_TICK), xticks=np.linspace(0, NUMBER_TICK, 11),
                         yticks=np.linspace(0, high_point, 10))
-        cls._age_ax.set_title('Age of oldest codekaryote',
+        cls._age_ax.set_title('Age',
                               loc='center', )
 
 
@@ -140,6 +148,8 @@ class Aggregator(object):
         self.count_stat_pop = Buffer(maxlen=NUMBER_TICK)
         self.count_stat_plant = Buffer(maxlen=NUMBER_TICK)
         self.max_age_stat_pop = Buffer(maxlen=NUMBER_TICK)
+        self.median_age_stat_pop = Buffer(maxlen=NUMBER_TICK)
+        self.mean_age_stat_pop = Buffer(maxlen=NUMBER_TICK)
         self.count_gen_stat_pop = Counter()
         self.count_gen_stat_plant = Counter()
 
@@ -159,7 +169,10 @@ class Aggregator(object):
             self.count_gen_stat_pop = Counter([o.ancestry.generation for o in snapshot_pop])
             #self.count_gen_stat_plant = Counter([o.ancestry.generation for o in snapshot_plant])  #reactivate with plant evolution
 
-            self.max_age_stat_pop.put(max([o.ancestry.age for o in snapshot_pop]))
+            age = [o.ancestry.age for o in snapshot_pop]
+            self.max_age_stat_pop.put(max(age))
+            self.mean_age_stat_pop.put(np.mean(age))
+            self.median_age_stat_pop.put(np.median(age))
 
             conn.send(self)
     # end while

@@ -56,7 +56,7 @@ class World:
         self._tick_gen = 0
         self._space = pm.Space()
         self._space.gravity = (0, 0)
-        self._space.damping = 0.9
+        self._space.damping = param.DAMPENING
         self._ch = self._space.add_collision_handler(0, 0)
         self._ch_eyes = self._space.add_collision_handler(3, 0)
         self._ch.post_solve = collision_post_resolve

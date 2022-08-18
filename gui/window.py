@@ -36,6 +36,7 @@ class Window:
         self.draw_options.transform = pymunk.Transform.scaling(factor)
         self.draw_options.shape_outline_color = (255,0,0,255)
         self._ticks= 0.0
+        self._debug_display = False
 
     # def __init__
 
@@ -73,10 +74,14 @@ class Window:
                     save()
                 pygame.quit()
                 sys.exit()
+            if event.type == pygame.locals.KEYUP:
+                if event.key == pygame.locals.K_F3:
+                    self._debug_display = not self._debug_display
 
         self._surface.fill(Color(0, 0, 0))
 
-        # world._space.debug_draw(self.draw_options)
+        if self._debug_display:
+            world._space.debug_draw(self.draw_options)
 
         for c in world.organisms:
             draw_organism(self._surface, c, self._factor)
