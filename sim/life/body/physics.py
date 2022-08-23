@@ -4,6 +4,8 @@ from sim.world import World
 from sim.parameters import body as param
 import pymunk as pm
 
+from utils import scale_between, dist
+
 world = World()
 
 
@@ -101,23 +103,33 @@ class Movement(AbstractEnergyConsumer):
 
         self.need_reset = True
 
+        self._multiplier_base = scale_between(genome[0], param.SPEED_FACTOR_LOWEST, param.SPEED_FACTOR_HIGH)
         self._forward = 0
         self._torque = 0
+        self._multiplier_signal = 1
         self._energy_rate = param.ENERGY_MOVEMENT_RATE
+        self._travelled = 0
+        self._last_position = organism.position
+
     # end def __init__
 
     # -------------------Methods--------------------
 
+    # noinspection PyUnresolvedReferences
     def update(self):
-        self._active = not (self._forward == 0)
-        super().update()
-        self.organism.physical_body.apply_force_at_local_point((self._forward,0))
-        self.organism.physical_body.torque = self._torque
+        self._travelled += dist(self.organism,self._last_position)
+        self._last_position = self.organism.position
+        actual_forward = self._forward*self._multiplier_signal*self._multiplier_base
+        actual_torque = self._forward*self._multiplier_signal*self._multiplier_base
+        self._organism.energy_storage.current_energy -= self._energy_rate*(abs(actual_torque)+abs(actual_forward))
+        self._organism.physical_body.apply_force_at_local_point((actual_forward, 0))
+        self._organism.physical_body.torque = actual_torque
     # end def update
 
     def reset(self):
         self._forward = 0
         self._torque = 0
+        self._multiplier_signal = 1
 
     def move_forward(self, ratio):
 
@@ -129,15 +141,21 @@ class Movement(AbstractEnergyConsumer):
     # end def move_down
 
     def turn_right(self, ratio):
-        #self._forward[0] += ratio
         self._torque += ratio
     # end def move_right
 
     def turn_left(self, ratio):
-        #self._forward[0] -= ratio
         self._torque -= ratio
     # end def move_left
 
+    def multiplier(self, val):
+        self._multiplier_signal = val
+    # end def
+    
+    @property
+    def travelled(self):
+        return self._travelled
+    # end def travelled
     # -----------------Properties------------------
 
     @property
@@ -172,10 +190,7 @@ class Touch(BaseModule):
     def touch_update(self, other, points):
         self._touch += 1
 
-        for point in points.points:
-            # noinspection PyUnresolvedReferences
-            local = self._organism.physical_body.world_to_local(point.point_a)
-            # TODO manage with rotation
+        # TODO manage with rotation
         self._touch_forward = 1
         self._organism_touching = other
 

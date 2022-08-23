@@ -7,18 +7,12 @@ import pymunk
 from sim.life.common.energy import AbstractEnergyConsumer
 from sim.world import World
 from sim.parameters import body as param
+from utils import dist, angle
 
 world = World()
 
 N_SEGMENT_CONE = 5
 
-def dist(organism, pos):
-    pos2 = organism.position
-    return math.sqrt((pos2.x-pos.x)**2+(pos2.y-pos.y)**2)
-
-def angle(organism, pos):
-    pos2 = organism.position
-    return math.atan2(pos2.y-pos.y, pos2.x-pos.x)
 
 class Eyes(AbstractEnergyConsumer):
 
@@ -143,9 +137,9 @@ class Eyes(AbstractEnergyConsumer):
         if self.num_seen_creatures == 0:
             return -1
         elif self.num_seen_creatures == 1:
-            return dist(self._seen_creatures[0],self._organism.position)
+            return dist(self._seen_creatures[0], self._organism.position)
 
-        dists = map(dist,self._seen_creatures,itertools.repeat(self._organism.position))
+        dists = map(dist, self._seen_creatures, itertools.repeat(self._organism.position))
         return min(list(dists))
     # end def closest_creature_dist
 
@@ -167,12 +161,12 @@ class Eyes(AbstractEnergyConsumer):
         if self.num_seen_creatures == 0:
             return 0
         elif self.num_seen_creatures == 1:
-            return angle(self._seen_creatures[0], self._organism.position)-self._organism.angle
+            return angle(self._seen_creatures[0], self._organism.position) - self._organism.angle
 
         dists = list(map(dist, self._seen_creatures, itertools.repeat(self._organism.position)))
         min_val = min(dists)
         index = np.where(dists == np.amin(dists))[0][0]
-        return angle(self._seen_creatures[index], self._organism.position)-self._organism.angle
+        return angle(self._seen_creatures[index], self._organism.position) - self._organism.angle
 
     # end def closest_creature_angle
 

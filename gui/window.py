@@ -89,7 +89,7 @@ class Window:
         display.flip()
         if self._export_video:
             take_capture()
-        self._clock.tick()
+        self._clock.tick(60)
         self._ticks += 1
 
     # end def redraw

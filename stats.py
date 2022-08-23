@@ -56,6 +56,7 @@ class Displayer():
         cls._legends["age"] = [ mpatches.Patch(color='darkorchid', label='Oldest'),
                                 mpatches.Patch(color='m', label='Mean'),
                                 mpatches.Patch(color='orchid', label='Median'),
+                                mpatches.Patch(color='r', label='Historical high'),
                                 ]
         cls._age_ax.set(xlim=(0, NUMBER_TICK), xticks=np.linspace(0, NUMBER_TICK, 10),
                         yticks=np.linspace(0, 100, 100))
@@ -69,8 +70,6 @@ class Displayer():
     def update_graph(cls, _=None):
         """
         create a graph and update it
-        :param aggr: the aggregator
-        :type aggr: ``Aggregator``
         :param _: ignored
         :type _: ``object``
         """
@@ -121,6 +120,7 @@ class Displayer():
         cls._age_ax.plot(cls._horizontal_ticks[:len(aggr.max_age_stat_pop)], aggr.max_age_stat_pop, 'darkorchid')
         cls._age_ax.plot(cls._horizontal_ticks[:len(aggr.mean_age_stat_pop)], aggr.mean_age_stat_pop, 'm')
         cls._age_ax.plot(cls._horizontal_ticks[:len(aggr.median_age_stat_pop)], aggr.median_age_stat_pop, 'orchid')
+        cls._age_ax.plot(cls._horizontal_ticks[:len(aggr.all_time_max_age_stat_pop)], aggr.all_time_max_age_stat_pop, 'r')
 
         m = max(aggr.max_age_stat_pop)
         high_point = m - m % 10 + 10
@@ -150,11 +150,13 @@ class Aggregator(object):
         self.max_age_stat_pop = Buffer(maxlen=NUMBER_TICK)
         self.median_age_stat_pop = Buffer(maxlen=NUMBER_TICK)
         self.mean_age_stat_pop = Buffer(maxlen=NUMBER_TICK)
+        self.all_time_max_age_stat_pop = Buffer(maxlen=NUMBER_TICK)
         self.count_gen_stat_pop = Counter()
         self.count_gen_stat_plant = Counter()
 
     # noinspection PyUnresolvedReferences
     def run(self):
+        self.all_time_max_age_stat_pop.put(0)
         while True:
             time.sleep(self._time)
             snapshot_pop = world.creature.copy()
@@ -173,6 +175,8 @@ class Aggregator(object):
             self.max_age_stat_pop.put(max(age))
             self.mean_age_stat_pop.put(np.mean(age))
             self.median_age_stat_pop.put(np.median(age))
+
+            self.all_time_max_age_stat_pop.put(max(self.all_time_max_age_stat_pop[-1], self.max_age_stat_pop[-1]))
 
             conn.send(self)
     # end while
@@ -204,6 +208,7 @@ class Buffer(deque):
     # -----------------Properties------------------
 
 
+
 def start_thread():
     global conn, world
     world = World()
@@ -215,5 +220,5 @@ def start_thread():
     thread = threading.Thread(target=Aggregator.run, args=(agg,))
     thread.start()
     process.start()
-
 # end def start_thread
+

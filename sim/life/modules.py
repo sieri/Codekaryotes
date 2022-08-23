@@ -5,7 +5,7 @@ from sim.life.common.aesthetic import Color
 from sim.life.common.ancestry import Ancestry
 from sim.life.common.energy import EnergySource, EnergyStorage
 from sim.life.genome.body_generators import generate_eyes, generate_organism_color, generate_energy_storage, \
-    generate_size
+    generate_size, generate_movement
 from sim.life.genome.brain_generator import generate_brain
 from sim.life.genome.plant_generator import generate_plant, generate_plant_color
 from sim.life.mind.brain import Brain
@@ -39,7 +39,7 @@ def generate_random_creature_full_genome():
         "body_active_circle": generate_size(),
         "eyes": generate_eyes(),
         "touch": [],
-        "movement": [],
+        "movement": generate_movement(),
         "color": generate_organism_color(),
         "energy_storage": generate_energy_storage(),
         "eating": [],

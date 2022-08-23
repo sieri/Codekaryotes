@@ -1,3 +1,7 @@
+import math
+
+MAX32 = (2**32)-1
+
 
 def test_bit(val, index):
     """
@@ -106,3 +110,27 @@ def clamp(n, smallest, largest):
     """
     return max(smallest, min(n, largest))
 # end def clamp
+
+def scale_between(n, smallest, largest, initial_smallest=0, initial_largest=MAX32):
+    """
+    clamp between two values, by scaling between them the input
+    :param n: the number to clamp
+    :type n: ``float`` or ``int``
+    :param smallest: the smaller number
+    :type smallest: ``float`` or ``int``
+    :param largest: the bigger number
+    :type largest: ``float`` or ``int``
+    :return: the number clamped
+    :rtype: ``float``
+    """
+    factor = float(initial_largest-initial_smallest)/float(largest-smallest)
+    return (n-initial_smallest)/factor + smallest
+# end def clamp
+def dist(organism, pos):
+    pos2 = organism.position
+    return math.sqrt((pos2.x-pos.x)**2+(pos2.y-pos.y)**2)
+
+
+def angle(organism, pos):
+    pos2 = organism.position
+    return math.atan2(pos2.y-pos.y, pos2.x-pos.x)

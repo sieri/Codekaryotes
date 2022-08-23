@@ -1,5 +1,7 @@
 import math
 import random
+
+import utils
 from sim.parameters import evolution as para_ev
 from utils import toggle_bit
 import pymunk as pm
@@ -42,7 +44,7 @@ class Codekaryote:
         # noinspection PyUnresolvedReferences
         self.physical_body.position = starting_position
         # noinspection PyUnresolvedReferences
-        self.physical_body.angle = random.random()*2*math.pi
+        utils.angle = random.random() * 2 * math.pi
     # end def __init__
 
     # -------------------Methods--------------------
@@ -95,7 +97,7 @@ class Codekaryote:
     @property
     def angle(self):
         # noinspection PyUnresolvedReferences
-        return self.physical_body.angle
+        return utils.angle
     # end def angle
 
     @property

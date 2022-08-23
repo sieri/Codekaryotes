@@ -1,6 +1,21 @@
 from sim.life.mind.neuron import NeuronExit
 from utils import clamp
 
+class ForceMultiplierNeuron(NeuronExit):
+    def __init__(self, activation, organism):
+        super().__init__(activation, organism.movement)
+
+    def update(self):
+        y = self._interface_output[self._interface_index]
+
+        self._module.multiplier(clamp(y, 0, 1))
+
+    # end def update
+    def output(self, value):
+        y = clamp(value, 0, 1)
+
+        self._module.multiplier(clamp(y, 0, 1))
+
 class MoveForwardNeuron(NeuronExit):
 
     def __init__(self, activation, organism):

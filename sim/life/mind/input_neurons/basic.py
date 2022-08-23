@@ -1,3 +1,4 @@
+import utils
 from sim.life.mind.neuron import NeuronInput
 
 THRESHOlD = 0.5
@@ -78,7 +79,7 @@ class AngleNeuron(NeuronInput):
     # -------------------Methods--------------------
 
     def prepare(self):
-        self._inputs = [self._module.angle, ]
+        self._inputs = [utils.angle, ]
         return super().prepare()
     # end def prepare
 # end class AngleNeuron

@@ -3,8 +3,8 @@ import random
 import sys
 from concurrent import futures
 
+import pymunk
 import pymunk as pm
-import numpy as np
 
 from sim.life.codekaryote import Codekaryote
 from gui.window import redraw, end
@@ -13,7 +13,7 @@ from sim.parameters import world as param
 
 class World:
     """
-    Contain all the elements that create the sim, for now is a simple 2D grid
+    Contain all the elements that create the sim
     """
 
     _width = None
@@ -35,6 +35,9 @@ class World:
     _dt = 1.0 / 60.0
     _ch = None
     _constraints = None
+
+    _kickstarting = False
+    _deads = []
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, 'instance'):
@@ -93,6 +96,8 @@ class World:
             self.add_organism(Codekaryote(self.pos_from_index(i)))
         for i in sample[count_creature:]:
             self.add_organism(Codekaryote(self.pos_from_index(i), genome_generator=generate_random_plant_genome))
+
+        self.append_organisms()
     # end def populate_randomly
 
     def populate_new_generation(self, count=10):
@@ -121,10 +126,12 @@ class World:
 
         sample_positions = random.sample(range(self.width*self.height), count)
 
-        self._creature.clear()
+        self._to_remove_creature = self._creature.copy()
+        self.remove_organisms()
+
         for (pos, genome) in zip(sample_positions, new_genome+old_genome):
             self.add_organism(Codekaryote(self.pos_from_index(pos), genome))
-
+        self.append_organisms()
     # end def populate_new_generation
 
     @staticmethod
@@ -149,13 +156,38 @@ class World:
         # end for
 
         self._creature = temp
-
     # end def kill_right_screen
 
+    def kickstart_world(self):
+        """
+        Help the creatures to start by automatically respawning the fittest of them all on
+        """
+        self._kickstarting = True
+        print_options = pymunk.SpaceDebugDrawOptions()
+        self.populate_randomly(param.START_CREATURE_COUNT, param.START_PLANT_COUNT)
+        self.loop_generation()
+        while len(self._creature) == 0:
+            self._deads.sort(key=lambda c: c.ancestry.age**3 * c.movement.travelled)
+            for i in range(int(math.floor(param.KICKSTART_RESPAWN_PERCENT * len(self._deads)))):
+                self.add_organism(self._deads[i])
+           # self._space.debug_draw(print_options)
+            self._space.step(0.1)
+           # self._space.debug_draw(print_options)
+            self.append_organisms()
+            self.populate_new_generation(param.START_CREATURE_COUNT)
+            self.loop_generation()
+
+
+        self._kickstarting = False
+        self.loop_infinite()
+
+
     def loop_generation(self):
-        print(f"generation: {self._generation}")
+        print(f"Looped generation: {self._generation}")
         for _ in range(param.GENERATION_TIME):
             self.loop_iteration()
+            if len(self._creature) == 0:
+                break
         # end for
         self._generation += 1
     # end def loop_generation
@@ -170,40 +202,24 @@ class World:
         for c in self.creature:
             c.update()
 
-        for remove in self._to_remove_creature:
-            self._creature.remove(remove)
-            self._space.remove(remove.physical_body, remove.shape, *remove.vision_cone)
-            self._creature_shape.pop(remove.shape)
-        self._to_remove_creature.clear()
+        self.remove_organisms()
+        self.append_organisms()
 
-        for remove in self._to_remove_plant:
-            self._plant.remove(remove)
-            self._space.remove(remove.physical_body, remove.shape)
-            self._plant_shape.pop(remove.shape)
-        self._to_remove_plant.clear()
-
-        for add in self._to_add_creature:
-            self._space.add(add.physical_body, add.shape, *add.vision_cone)
-            self._creature_shape[add.shape] = add
-        self._creature += self._to_add_creature
-        self._to_add_creature.clear()
-
-        for add in self._to_add_plant:
-            self._space.add(add.physical_body, add.shape)
-            self._plant_shape[add.shape] = add
-        self._plant += self._to_add_plant
-        self._to_add_plant.clear()
-
-        if param.CHEAT_ANTI_EXTINCTION:
-            if len(self._creature) < param.ANTI_EXTINCTION_THRESHOLD:
-                if param.ANTI_EXTINCTION_BONCE_BACK_WITH_SURVIVOR:
-                    self.populate_new_generation(param.ANTI_EXTINCTION_BONCE_BACK - len(self._creature))
-                else:
-                    self.populate_randomly(param.ANTI_EXTINCTION_BONCE_BACK - len(self._creature), count_plant=0)
-        elif len(self._creature) == 0:
-            print("Extinction Event")
-            end()
-            sys.exit()
+        if not self._kickstarting:
+            if param.CHEAT_ANTI_EXTINCTION:
+                if len(self._creature) < param.ANTI_EXTINCTION_THRESHOLD:
+                    if param.ANTI_EXTINCTION_BONCE_BACK_WITH_SURVIVOR:
+                        self.populate_new_generation(param.ANTI_EXTINCTION_BONCE_BACK - len(self._creature))
+                    else:
+                        if param.ANTI_EXTINCTION_BOUNCE_TREE_TOO:
+                            self.populate_randomly(param.ANTI_EXTINCTION_BONCE_BACK - len(self._creature),
+                                                   count_plant=param.START_PLANT_COUNT-len(self._plant))
+                        else:
+                            self.populate_randomly(param.ANTI_EXTINCTION_BONCE_BACK - len(self._creature), count_plant=0)
+            elif len(self._creature) == 0:
+                print("Extinction Event")
+                end()
+                sys.exit()
 
         if param.PLANT_SPAWN:
             self._plant_cycle += 1
@@ -214,11 +230,39 @@ class World:
         self._space.step(self._dt)
 
         redraw(self)
+
+    def append_organisms(self):
+
+        for add in self._to_add_creature:
+            self._space.add(add.physical_body, add.shape, *add.vision_cone)
+            self._creature_shape[add.shape] = add
+        self._creature += self._to_add_creature
+        self._to_add_creature.clear()
+        for add in self._to_add_plant:
+            self._space.add(add.physical_body, add.shape)
+            self._plant_shape[add.shape] = add
+        self._plant += self._to_add_plant
+        self._to_add_plant.clear()
+
+    def remove_organisms(self):
+        for remove in self._to_remove_creature:
+            self._creature.remove(remove)
+            self._space.remove(remove.physical_body, remove.shape, *remove.vision_cone)
+            self._creature_shape.pop(remove.shape)
+        self._to_remove_creature.clear()
+        for remove in self._to_remove_plant:
+            self._plant.remove(remove)
+            self._space.remove(remove.physical_body, remove.shape)
+            self._plant_shape.pop(remove.shape)
+        self._to_remove_plant.clear()
+
     # end def loop_iteration
 
     def remove_organism(self, organism):
         if hasattr(organism,  "movement"):
             self._to_remove_creature.append(organism)
+            if self._kickstarting:
+                self._deads.append(organism)
         else:
             self._to_remove_plant.append(organism)
     # end def remove_organism

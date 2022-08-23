@@ -19,3 +19,6 @@ def generate_energy_storage():
 
 def generate_size():
     return [randint(0, MAX_32), ]
+
+def generate_movement():
+    return [randint(0, MAX_32)]
