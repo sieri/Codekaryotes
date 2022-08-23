@@ -1,15 +1,11 @@
 #![allow(dead_code)]
-mod brain;
 
-use crate::brain::{Activation, Brain, LinkDefinition, NeuronDefinition, Position};
+mod codekaryotes;
+mod life;
+
+use life::brain::{Activation, Brain, LinkDefinition, NeuronDefinition, Position};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-
-/// Formats the sum of two numbers as string.
-#[pyfunction]
-fn brain_update() {
-    print!("Calling rust");
-}
 
 #[pyfunction]
 fn get_brain() -> Brain {
@@ -31,7 +27,6 @@ fn acc_from_int(val: usize) -> PyResult<Activation> {
 /// A Python module implemented in Rust.
 #[pymodule]
 fn codekaryotes(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(brain_update, m)?)?;
     m.add_function(wrap_pyfunction!(get_brain, m)?)?;
     m.add_function(wrap_pyfunction!(acc_from_int, m)?)?;
     m.add_class::<Brain>()?;
