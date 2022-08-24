@@ -1,4 +1,8 @@
 extern crate pyo3;
+use crate::codekaryotes::Creature;
+use crate::life::common_parts::Module;
+use crate::life::creature_parts::CreatureModule;
+use crate::life::genome::{Chromonsone, CreatureGenome};
 use pyo3::prelude::*;
 use std::fmt::{Display, Formatter, Result};
 
@@ -329,3 +333,23 @@ impl Brain {
         Ok(())
     }
 }
+
+impl Module<Creature, CreatureGenome> for Brain {
+    fn by_box(self: Box<Self>) {
+        todo!()
+    }
+
+    fn update(&self, organism: Creature) {
+        todo!()
+    }
+
+    fn reset(&self, organism: Creature) {
+        todo!()
+    }
+
+    fn evolve(&self) -> Chromonsone {
+        todo!()
+    }
+}
+
+impl CreatureModule for Brain {}

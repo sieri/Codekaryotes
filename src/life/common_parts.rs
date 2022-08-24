@@ -13,7 +13,8 @@ where
     fn evolve(&self) -> Chromonsone;
 }
 
-pub struct Color{
+#[derive(Debug, Clone)]
+pub struct Color {
     //For Module
     genome: Chromonsone,
     mutation_rate: usize,
@@ -23,7 +24,8 @@ pub struct Color{
     b: u8,
 }
 
-pub struct Ancestry{
+#[derive(Debug, Clone)]
+pub struct Ancestry {
     //For Module
     genome: Chromonsone,
     mutation_rate: usize,

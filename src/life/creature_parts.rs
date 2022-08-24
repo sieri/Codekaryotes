@@ -1,13 +1,14 @@
-use crate::codekaryotes::{Codekaryote, Creature, Plant, Pos};
-use crate::life::common_parts::Module;
+use crate::codekaryotes::{Codekaryote, Creature, Plant, Pos, Seen};
+use crate::life::common_parts::{Ancestry, Color, Module};
 use crate::life::genome::{Chromonsone, CreatureGenome};
-use pyo3::ffi::PyObject;
+use crate::Brain;
+use pyo3::PyObject;
 use std::borrow::BorrowMut;
 
 pub trait CreatureModule: Module<Creature, CreatureGenome> {}
 
 pub trait ActiveModule {
-    fn consume_energy(&self, organism: Creature) {
+    fn consume_energy(&self, mut organism: Creature) {
         let mut es = organism.energy_storage();
         es.energy += self.get_energy_rate()
     }
@@ -15,6 +16,7 @@ pub trait ActiveModule {
     fn get_energy_rate(&self) -> f64;
 }
 
+#[derive(Debug, Clone)]
 pub struct CreatureBody {
     //For Module
     genome: Chromonsone,
@@ -25,7 +27,7 @@ pub struct CreatureBody {
     mass: usize,
     circle: PyObject,
 }
-
+#[derive(Debug, Clone)]
 pub struct Movement {
     //For Module
     genome: Chromonsone,
@@ -39,7 +41,7 @@ pub struct Movement {
     travelled: f64,
     last_pos: Pos,
 }
-
+#[derive(Debug, Clone)]
 pub struct Touch {
     //For Module
     genome: Chromonsone,
@@ -61,10 +63,10 @@ pub struct Eyes {
     fov: usize,
     range: usize,
     shape: PyObject,
-    seen_creatures: Box<Creature>,
-    seen_plants: Box<Plant>,
+    seen_creatures: Vec<Seen>,
+    seen_plants: Vec<Seen>,
 }
-
+#[derive(Debug, Clone)]
 pub struct Eating {
     //For Module
     genome: Chromonsone,
@@ -73,13 +75,13 @@ pub struct Eating {
     ticks: usize,
     can_eat: bool,
 }
-
+#[derive(Debug, Clone)]
 pub struct Reproducer {
     //For Module
     genome: Chromonsone,
     mutation_rate: usize,
 }
-
+#[derive(Debug, Clone)]
 pub struct EnergyStorage {
     //For Module
     genome: Chromonsone,
@@ -107,6 +109,46 @@ impl Module<Creature, CreatureGenome> for CreatureBody {
         todo!()
     }
 }
+
+impl Module<Creature, CreatureGenome> for Color {
+    fn by_box(self: Box<Self>) {
+        todo!()
+    }
+
+    fn update(&self, organism: Creature) {
+        todo!()
+    }
+
+    fn reset(&self, organism: Creature) {
+        todo!()
+    }
+
+    fn evolve(&self) -> Chromonsone {
+        todo!()
+    }
+}
+
+impl Module<Creature, CreatureGenome> for Ancestry {
+    fn by_box(self: Box<Self>) {
+        todo!()
+    }
+
+    fn update(&self, organism: Creature) {
+        todo!()
+    }
+
+    fn reset(&self, organism: Creature) {
+        todo!()
+    }
+
+    fn evolve(&self) -> Chromonsone {
+        todo!()
+    }
+}
+
+impl CreatureModule for Ancestry {}
+
+impl CreatureModule for Color {}
 
 impl CreatureModule for CreatureBody {}
 

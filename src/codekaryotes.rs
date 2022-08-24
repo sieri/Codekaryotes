@@ -1,9 +1,18 @@
-use crate::life;
-use crate::life::creature_parts::EnergyStorage;
+use crate::life::common_parts::{Ancestry, Color};
+use crate::life::creature_parts::{
+    CreatureBody, Eating, EnergyStorage, Eyes, Movement, Reproducer, Touch,
+};
 use crate::life::genome::{CreatureGenome, PlantGenome};
+use crate::life::plant_parts::{EnergySource, PlantBody};
+use crate::{life, Brain};
 use life::common_parts::Module;
 use life::genome;
+use pyo3::intern;
+use std::borrow::{Borrow, BorrowMut};
+use std::marker::PhantomData;
+use std::ops::Mul;
 
+#[derive(Debug, Copy, Clone)]
 pub struct Pos {
     x: f64,
     y: f64,
@@ -16,29 +25,20 @@ pub trait Codekaryote<G: genome::Genome> {
     fn reproduce(&self, pos: Pos) -> ();
 }
 
-const CREATURE_BODY_INDEX: usize = 0;
-const CREATURE_EYES_INDEX: usize = 1;
-const CREATURE_TOUCH_INDEX: usize = 2;
-const CREATURE_MOVEMENT_INDEX: usize = 3;
-const CREATURE_COLOR_INDEX: usize = 4;
-const CREATURE_ENERGY_STORAGE_INDEX: usize = 5;
-const CREATURE_EATING_INDEX: usize = 6;
-const CREATURE_REPRODUCER_INDEX: usize = 7;
-const CREATURE_ANCESTRY_INDEX: usize = 8;
-const CREATURE_BRAIN_INDEX: usize = 9;
+pub struct Creature(
+    CreatureBody,
+    Eyes,
+    Touch,
+    Movement,
+    Color,
+    EnergyStorage,
+    Eating,
+    Reproducer,
+    Ancestry,
+    Brain,
+);
 
-pub struct Creature {
-    modules: [Box<dyn Module<Creature, CreatureGenome>>; 9],
-}
-
-const PLANT_BODY_INDEX: usize = 0;
-const PLANT_ENERGY_SOURCE_INDEX: usize = 1;
-const PLANT_COLOR_INDEX: usize = 2;
-const PLANT_ANCESTRY_INDEX: usize = 3;
-
-pub struct Plant {
-    modules: [Box<dyn Module<Creature, PlantGenome>>; 4],
-}
+pub struct Plant(PlantBody, EnergySource, Color, Ancestry);
 
 impl Codekaryote<CreatureGenome> for Creature {
     fn update(&self) -> () {
@@ -76,9 +76,31 @@ impl Codekaryote<PlantGenome> for Plant {
     }
 }
 
+enum Kind {
+    Creature,
+    Plant,
+}
+
+pub struct Seen {
+    pos: Pos,
+    kind: Kind,
+}
+
 impl Plant {
     pub fn new() -> Self {
         todo!()
+    }
+    pub fn body(&mut self) -> &mut PlantBody {
+        &mut self.0
+    }
+    pub fn energy_source(&mut self) -> &mut EnergySource {
+        &mut self.1
+    }
+    pub fn color(&mut self) -> &mut Color {
+        &mut self.2
+    }
+    pub fn ancestry(&mut self) -> &mut Ancestry {
+        &mut self.3
     }
 }
 
@@ -87,7 +109,34 @@ impl Creature {
         todo!()
     }
 
-    pub fn energy_storage(&self) -> &mut EnergyStorage {
-        self.modules[CREATURE_ENERGY_STORAGE_INDEX].into()
+    pub fn body(&mut self) -> &mut CreatureBody {
+        &mut self.0
+    }
+    pub fn eyes(&mut self) -> &mut Eyes {
+        &mut self.1
+    }
+    pub fn touch(&mut self) -> &mut Touch {
+        &mut self.2
+    }
+    pub fn movement(&mut self) -> &mut Movement {
+        &mut self.3
+    }
+    pub fn color(&mut self) -> &mut Color {
+        &mut self.4
+    }
+    pub fn energy_storage(&mut self) -> &mut EnergyStorage {
+        &mut self.5
+    }
+    pub fn eating(&mut self) -> &mut Eating {
+        &mut self.6
+    }
+    pub fn reproducer(&mut self) -> &mut Reproducer {
+        &mut self.7
+    }
+    pub fn ancestry(&mut self) -> &mut Ancestry {
+        &mut self.8
+    }
+    pub fn brain(&mut self) -> &mut Brain {
+        &mut self.9
     }
 }
