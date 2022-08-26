@@ -8,7 +8,7 @@ use std::borrow::BorrowMut;
 pub trait CreatureModule: Module<Creature, CreatureGenome> {}
 
 pub trait ActiveModule {
-    fn consume_energy(&self, mut organism: Creature) {
+    fn consume_energy<'a>(&'a self, organism: &mut Creature) {
         let mut es = organism.energy_storage();
         es.energy += self.get_energy_rate()
     }
@@ -97,11 +97,11 @@ impl Module<Creature, CreatureGenome> for CreatureBody {
         todo!()
     }
 
-    fn update(&self, organism: Creature) {
+    fn update(&self, organism: &mut Creature) {
         todo!()
     }
 
-    fn reset(&self, organism: Creature) {
+    fn reset(&self, organism: &mut Creature) {
         todo!()
     }
 
@@ -115,11 +115,11 @@ impl Module<Creature, CreatureGenome> for Color {
         todo!()
     }
 
-    fn update(&self, organism: Creature) {
+    fn update(&self, organism: &mut Creature) {
         todo!()
     }
 
-    fn reset(&self, organism: Creature) {
+    fn reset(&self, organism: &mut Creature) {
         todo!()
     }
 
@@ -133,11 +133,11 @@ impl Module<Creature, CreatureGenome> for Ancestry {
         todo!()
     }
 
-    fn update(&self, organism: Creature) {
+    fn update(&self, organism: &mut Creature) {
         todo!()
     }
 
-    fn reset(&self, organism: Creature) {
+    fn reset(&self, organism: &mut Creature) {
         todo!()
     }
 
@@ -163,11 +163,11 @@ impl Module<Creature, CreatureGenome> for Movement {
         todo!()
     }
 
-    fn update(&self, organism: Creature) {
+    fn update(&self, organism: &mut Creature) {
         todo!()
     }
 
-    fn reset(&self, organism: Creature) {
+    fn reset(&self, organism: &mut Creature) {
         todo!()
     }
 
@@ -189,11 +189,11 @@ impl Module<Creature, CreatureGenome> for Touch {
         todo!()
     }
 
-    fn update(&self, organism: Creature) {
+    fn update(&self, organism: &mut Creature) {
         todo!()
     }
 
-    fn reset(&self, organism: Creature) {
+    fn reset(&self, organism: &mut Creature) {
         todo!()
     }
 
@@ -215,11 +215,11 @@ impl Module<Creature, CreatureGenome> for Eyes {
         todo!()
     }
 
-    fn update(&self, organism: Creature) {
+    fn update(&self, organism: &mut Creature) {
         todo!()
     }
 
-    fn reset(&self, organism: Creature) {
+    fn reset(&self, organism: &mut Creature) {
         todo!()
     }
 
@@ -241,11 +241,11 @@ impl Module<Creature, CreatureGenome> for Eating {
         todo!()
     }
 
-    fn update(&self, organism: Creature) {
+    fn update(&self, organism: &mut Creature) {
         todo!()
     }
 
-    fn reset(&self, organism: Creature) {
+    fn reset(&self, organism: &mut Creature) {
         todo!()
     }
 
@@ -261,11 +261,11 @@ impl Module<Creature, CreatureGenome> for Reproducer {
         todo!()
     }
 
-    fn update(&self, organism: Creature) {
+    fn update(&self, organism: &mut Creature) {
         todo!()
     }
 
-    fn reset(&self, organism: Creature) {
+    fn reset(&self, organism: &mut Creature) {
         todo!()
     }
 
@@ -281,11 +281,11 @@ impl Module<Creature, CreatureGenome> for EnergyStorage {
         todo!()
     }
 
-    fn update(&self, organism: Creature) {
+    fn update(&self, organism: &mut Creature) {
         todo!()
     }
 
-    fn reset(&self, organism: Creature) {
+    fn reset(&self, organism: &mut Creature) {
         todo!()
     }
 

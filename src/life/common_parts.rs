@@ -8,8 +8,8 @@ where
     G: Genome,
 {
     fn by_box(self: Box<Self>);
-    fn update(&self, organism: T);
-    fn reset(&self, organism: T);
+    fn update(&self, organism: &mut T);
+    fn reset(&self, organism: &mut T);
     fn evolve(&self) -> Chromonsone;
 }
 

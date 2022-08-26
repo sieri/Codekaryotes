@@ -284,7 +284,7 @@ impl Brain {
         Ok(())
     }
 
-    pub fn update(&mut self) -> PyResult<()> {
+    pub fn update_py(&mut self) -> PyResult<()> {
         let gil = Python::acquire_gil();
         let &py = &gil.python();
 
@@ -339,11 +339,11 @@ impl Module<Creature, CreatureGenome> for Brain {
         todo!()
     }
 
-    fn update(&self, organism: Creature) {
+    fn update(&self, organism: &mut Creature) {
         todo!()
     }
 
-    fn reset(&self, organism: Creature) {
+    fn reset(&self, organism: &mut Creature) {
         todo!()
     }
 

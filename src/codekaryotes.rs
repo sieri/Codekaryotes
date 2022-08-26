@@ -19,7 +19,7 @@ pub struct Pos {
 }
 
 pub trait Codekaryote<G: genome::Genome> {
-    fn update(&self) -> ();
+    fn update(&mut self) -> ();
     fn reproduce_genome(&self) -> G;
     fn die(&self) -> ();
     fn reproduce(&self, pos: Pos) -> ();
@@ -41,8 +41,17 @@ pub struct Creature(
 pub struct Plant(PlantBody, EnergySource, Color, Ancestry);
 
 impl Codekaryote<CreatureGenome> for Creature {
-    fn update(&self) -> () {
-        todo!()
+    fn update(&mut self) -> () {
+        self.0.update(self);
+        self.1.update(self);
+        self.2.update(self);
+        self.3.update(self);
+        self.4.update(self);
+        self.5.update(self);
+        self.6.update(self);
+        self.7.update(self);
+        self.8.update(self);
+        self.9.update(self);
     }
 
     fn reproduce_genome(&self) -> CreatureGenome {
