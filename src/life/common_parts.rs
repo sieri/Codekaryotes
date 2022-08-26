@@ -1,22 +1,21 @@
 use crate::codekaryotes::Codekaryote;
 use crate::life;
-use crate::life::genome::{Chromonsone, Genome};
+use crate::life::genome::{Chromosome, Genome};
 
 pub trait Module<T, G>
 where
     T: Codekaryote<G>,
     G: Genome,
 {
-    fn by_box(self: Box<Self>);
-    fn update(&self, organism: &mut T);
-    fn reset(&self, organism: &mut T);
-    fn evolve(&self) -> Chromonsone;
+    fn update(organism: &mut T);
+    fn reset(organism: &mut T);
+    fn evolve(&self) -> Chromosome;
 }
 
 #[derive(Debug, Clone)]
 pub struct Color {
     //For Module
-    genome: Chromonsone,
+    genome: Chromosome,
     mutation_rate: usize,
     //unique
     r: u8,
@@ -27,9 +26,9 @@ pub struct Color {
 #[derive(Debug, Clone)]
 pub struct Ancestry {
     //For Module
-    genome: Chromonsone,
+    genome: Chromosome,
     mutation_rate: usize,
     //unique
     generation: usize,
-    age: f64,
+    pub(crate) age: f64,
 }

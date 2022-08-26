@@ -1,9 +1,9 @@
-use crate::life::genome::Chromonsone;
+use crate::life::genome::Chromosome;
 use pyo3::PyObject;
 
 pub struct EnergySource {
     //For Module
-    genome: Chromonsone,
+    genome: Chromosome,
     mutation_rate: usize,
     //unique
     energy: f64,
@@ -11,7 +11,7 @@ pub struct EnergySource {
 
 pub struct PlantBody {
     //For Module
-    genome: Chromonsone,
+    genome: Chromosome,
     mutation_rate: usize,
     //unique
     mass: usize,

@@ -1,25 +1,21 @@
 use crate::codekaryotes::{Codekaryote, Creature, Plant, Pos, Seen};
 use crate::life::common_parts::{Ancestry, Color, Module};
-use crate::life::genome::{Chromonsone, CreatureGenome};
+use crate::life::genome::{Chromosome, CreatureGenome};
 use crate::Brain;
+use pyo3::number::or;
 use pyo3::PyObject;
 use std::borrow::BorrowMut;
 
 pub trait CreatureModule: Module<Creature, CreatureGenome> {}
 
 pub trait ActiveModule {
-    fn consume_energy<'a>(&'a self, organism: &mut Creature) {
-        let mut es = organism.energy_storage();
-        es.energy += self.get_energy_rate()
-    }
-
     fn get_energy_rate(&self) -> f64;
 }
 
 #[derive(Debug, Clone)]
 pub struct CreatureBody {
     //For Module
-    genome: Chromonsone,
+    genome: Chromosome,
     mutation_rate: usize,
     //For active
     energy_rate: f64,
@@ -27,16 +23,28 @@ pub struct CreatureBody {
     mass: usize,
     circle: PyObject,
 }
+
+impl CreatureBody {
+    pub(crate) fn push(&self, force: f64) {
+        todo!()
+    }
+    pub(crate) fn rotate(&self, torque: f64) {
+        todo!()
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Movement {
     //For Module
-    genome: Chromonsone,
+    genome: Chromosome,
     mutation_rate: usize,
     //For active
     energy_rate: f64,
     //Unique
+    energy_rate_base: f64,
     forward: f64,
     torque: f64,
+    multiplier_base: f64,
     multiplier_signal: f64,
     travelled: f64,
     last_pos: Pos,
@@ -44,7 +52,7 @@ pub struct Movement {
 #[derive(Debug, Clone)]
 pub struct Touch {
     //For Module
-    genome: Chromonsone,
+    genome: Chromosome,
     mutation_rate: usize,
     //For active
     energy_rate: f64,
@@ -55,7 +63,7 @@ pub struct Touch {
 
 pub struct Eyes {
     //For Module
-    genome: Chromonsone,
+    genome: Chromosome,
     mutation_rate: usize,
     //For active
     energy_rate: f64,
@@ -69,7 +77,7 @@ pub struct Eyes {
 #[derive(Debug, Clone)]
 pub struct Eating {
     //For Module
-    genome: Chromonsone,
+    genome: Chromosome,
     mutation_rate: usize,
     //Unique
     ticks: usize,
@@ -78,70 +86,65 @@ pub struct Eating {
 #[derive(Debug, Clone)]
 pub struct Reproducer {
     //For Module
-    genome: Chromonsone,
+    genome: Chromosome,
     mutation_rate: usize,
 }
 #[derive(Debug, Clone)]
 pub struct EnergyStorage {
     //For Module
-    genome: Chromonsone,
+    genome: Chromosome,
     mutation_rate: usize,
     //For active
-    energy_rate: f64,
+    energy_max: f64,
     //Unique
-    energy: f64,
+    pub(crate) energy: f64,
 }
 
 impl Module<Creature, CreatureGenome> for CreatureBody {
-    fn by_box(self: Box<Self>) {
-        todo!()
+    fn update(organism: &mut Creature) {
+        let s = organism.body();
     }
 
-    fn update(&self, organism: &mut Creature) {
+    fn reset(organism: &mut Creature) {}
+
+    fn evolve(&self) -> Chromosome {
         todo!()
     }
+}
 
-    fn reset(&self, organism: &mut Creature) {
-        todo!()
+impl ActiveModule for CreatureBody {
+    fn get_energy_rate(&self) -> f64 {
+        self.energy_rate
     }
+}
 
-    fn evolve(&self) -> Chromonsone {
+impl CreatureModule for CreatureBody {}
+
+impl CreatureBody {
+    pub fn get_position(&self) -> Pos {
         todo!()
     }
 }
 
 impl Module<Creature, CreatureGenome> for Color {
-    fn by_box(self: Box<Self>) {
-        todo!()
-    }
+    fn update(organism: &mut Creature) {}
 
-    fn update(&self, organism: &mut Creature) {
-        todo!()
-    }
+    fn reset(organism: &mut Creature) {}
 
-    fn reset(&self, organism: &mut Creature) {
-        todo!()
-    }
-
-    fn evolve(&self) -> Chromonsone {
+    fn evolve(&self) -> Chromosome {
         todo!()
     }
 }
 
 impl Module<Creature, CreatureGenome> for Ancestry {
-    fn by_box(self: Box<Self>) {
-        todo!()
+    fn update(organism: &mut Creature) {
+        let s = organism.ancestry();
+        s.age += 1f64;
     }
 
-    fn update(&self, organism: &mut Creature) {
-        todo!()
-    }
+    fn reset(organism: &mut Creature) {}
 
-    fn reset(&self, organism: &mut Creature) {
-        todo!()
-    }
-
-    fn evolve(&self) -> Chromonsone {
+    fn evolve(&self) -> Chromosome {
         todo!()
     }
 }
@@ -150,28 +153,28 @@ impl CreatureModule for Ancestry {}
 
 impl CreatureModule for Color {}
 
-impl CreatureModule for CreatureBody {}
-
-impl ActiveModule for CreatureBody {
-    fn get_energy_rate(&self) -> f64 {
-        self.energy_rate
-    }
-}
-
 impl Module<Creature, CreatureGenome> for Movement {
-    fn by_box(self: Box<Self>) {
-        todo!()
+    fn update(organism: &mut Creature) {
+        let current_post = organism.get_position();
+        let s = organism.movement();
+        s.travelled += s.last_pos.dist(current_post);
+        s.last_pos = current_post;
+        let actual_forward = s.forward * s.multiplier_base * s.multiplier_signal;
+        let actual_torque = s.torque * s.multiplier_base * s.multiplier_signal;
+        s.energy_rate = s.energy_rate_base * (actual_forward.abs() + actual_torque.abs());
+        let body = organism.body();
+        body.push(actual_forward);
+        body.rotate(actual_torque);
     }
 
-    fn update(&self, organism: &mut Creature) {
-        todo!()
+    fn reset(organism: &mut Creature) {
+        let s = organism.movement();
+        s.forward = 0f64;
+        s.torque = 0f64;
+        s.multiplier_signal = 0f64;
     }
 
-    fn reset(&self, organism: &mut Creature) {
-        todo!()
-    }
-
-    fn evolve(&self) -> Chromonsone {
+    fn evolve(&self) -> Chromosome {
         todo!()
     }
 }
@@ -185,19 +188,15 @@ impl ActiveModule for Movement {
 }
 
 impl Module<Creature, CreatureGenome> for Touch {
-    fn by_box(self: Box<Self>) {
-        todo!()
+    fn update(organism: &mut Creature) {}
+
+    fn reset(organism: &mut Creature) {
+        let s = organism.touch();
+        s.touch = 0;
+        s.touch_forward = 0;
     }
 
-    fn update(&self, organism: &mut Creature) {
-        todo!()
-    }
-
-    fn reset(&self, organism: &mut Creature) {
-        todo!()
-    }
-
-    fn evolve(&self) -> Chromonsone {
+    fn evolve(&self) -> Chromosome {
         todo!()
     }
 }
@@ -211,19 +210,17 @@ impl ActiveModule for Touch {
 }
 
 impl Module<Creature, CreatureGenome> for Eyes {
-    fn by_box(self: Box<Self>) {
-        todo!()
+    fn update(organism: &mut Creature) {
+        let s = organism.eyes();
     }
 
-    fn update(&self, organism: &mut Creature) {
-        todo!()
+    fn reset(organism: &mut Creature) {
+        let s = organism.eyes();
+        s.seen_creatures.clear();
+        s.seen_plants.clear();
     }
 
-    fn reset(&self, organism: &mut Creature) {
-        todo!()
-    }
-
-    fn evolve(&self) -> Chromonsone {
+    fn evolve(&self) -> Chromosome {
         todo!()
     }
 }
@@ -237,19 +234,22 @@ impl ActiveModule for Eyes {
 }
 
 impl Module<Creature, CreatureGenome> for Eating {
-    fn by_box(self: Box<Self>) {
-        todo!()
+    fn update(organism: &mut Creature) {
+        let s = organism.eating();
+        if !s.can_eat {
+            s.ticks += 1;
+            if s.ticks >= 50
+            //TODO:introduce parameter
+            {
+                s.can_eat = true;
+                s.ticks = 0;
+            }
+        }
     }
 
-    fn update(&self, organism: &mut Creature) {
-        todo!()
-    }
+    fn reset(organism: &mut Creature) {}
 
-    fn reset(&self, organism: &mut Creature) {
-        todo!()
-    }
-
-    fn evolve(&self) -> Chromonsone {
+    fn evolve(&self) -> Chromosome {
         todo!()
     }
 }
@@ -257,19 +257,19 @@ impl Module<Creature, CreatureGenome> for Eating {
 impl CreatureModule for Eating {}
 
 impl Module<Creature, CreatureGenome> for Reproducer {
-    fn by_box(self: Box<Self>) {
-        todo!()
+    fn update(organism: &mut Creature) {
+        let s = organism.reproducer();
+        let energy_storage = organism.energy_storage();
+        if energy_storage.get_level() > 0.8
+        //TODO: Make parameters
+        {
+            organism.reproduce(organism.get_position())
+        }
     }
 
-    fn update(&self, organism: &mut Creature) {
-        todo!()
-    }
+    fn reset(organism: &mut Creature) {}
 
-    fn reset(&self, organism: &mut Creature) {
-        todo!()
-    }
-
-    fn evolve(&self) -> Chromonsone {
+    fn evolve(&self) -> Chromosome {
         todo!()
     }
 }
@@ -277,19 +277,14 @@ impl Module<Creature, CreatureGenome> for Reproducer {
 impl CreatureModule for Reproducer {}
 
 impl Module<Creature, CreatureGenome> for EnergyStorage {
-    fn by_box(self: Box<Self>) {
-        todo!()
+    fn update(organism: &mut Creature) {
+        let s = organism.energy_storage();
+        s.energy -= s.get_energy_rate();
     }
 
-    fn update(&self, organism: &mut Creature) {
-        todo!()
-    }
+    fn reset(organism: &mut Creature) {}
 
-    fn reset(&self, organism: &mut Creature) {
-        todo!()
-    }
-
-    fn evolve(&self) -> Chromonsone {
+    fn evolve(&self) -> Chromosome {
         todo!()
     }
 }
@@ -298,6 +293,19 @@ impl CreatureModule for EnergyStorage {}
 
 impl ActiveModule for EnergyStorage {
     fn get_energy_rate(&self) -> f64 {
-        self.energy_rate
+        self.energy_max
+    }
+}
+
+impl EnergyStorage {
+    fn get_level(&self) -> f64 {
+        self.energy / self.energy_max
+    }
+    
+    pub fn consume(&mut self, energy: f64) -> bool
+    {
+        self.energy -= energy;
+        
+        energy > 0f64
     }
 }

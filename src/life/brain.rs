@@ -1,8 +1,9 @@
 extern crate pyo3;
 use crate::codekaryotes::Creature;
 use crate::life::common_parts::Module;
-use crate::life::creature_parts::CreatureModule;
-use crate::life::genome::{Chromonsone, CreatureGenome};
+use crate::life::creature_parts::{ActiveModule, CreatureModule};
+use crate::life::genome::{Chromosome, CreatureGenome};
+use pyo3::number::or;
 use pyo3::prelude::*;
 use std::fmt::{Display, Formatter, Result};
 
@@ -335,21 +336,22 @@ impl Brain {
 }
 
 impl Module<Creature, CreatureGenome> for Brain {
-    fn by_box(self: Box<Self>) {
-        todo!()
+    fn update(organism: &mut Creature) {
+        let s = organism.brain();
+        s.update_py();
     }
 
-    fn update(&self, organism: &mut Creature) {
-        todo!()
-    }
+    fn reset(organism: &mut Creature) {}
 
-    fn reset(&self, organism: &mut Creature) {
-        todo!()
-    }
-
-    fn evolve(&self) -> Chromonsone {
+    fn evolve(&self) -> Chromosome {
         todo!()
     }
 }
 
 impl CreatureModule for Brain {}
+
+impl ActiveModule for Brain {
+    fn get_energy_rate(&self) -> f64 {
+        self.links.len() as f64
+    }
+}

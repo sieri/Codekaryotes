@@ -1,6 +1,6 @@
 use crate::life::common_parts::{Ancestry, Color};
 use crate::life::creature_parts::{
-    CreatureBody, Eating, EnergyStorage, Eyes, Movement, Reproducer, Touch,
+    ActiveModule, CreatureBody, Eating, EnergyStorage, Eyes, Movement, Reproducer, Touch,
 };
 use crate::life::genome::{CreatureGenome, PlantGenome};
 use crate::life::plant_parts::{EnergySource, PlantBody};
@@ -23,6 +23,8 @@ pub trait Codekaryote<G: genome::Genome> {
     fn reproduce_genome(&self) -> G;
     fn die(&self) -> ();
     fn reproduce(&self, pos: Pos) -> ();
+
+    fn get_position(&self) -> Pos;
 }
 
 pub struct Creature(
@@ -42,16 +44,42 @@ pub struct Plant(PlantBody, EnergySource, Color, Ancestry);
 
 impl Codekaryote<CreatureGenome> for Creature {
     fn update(&mut self) -> () {
-        self.0.update(self);
-        self.1.update(self);
-        self.2.update(self);
-        self.3.update(self);
-        self.4.update(self);
-        self.5.update(self);
-        self.6.update(self);
-        self.7.update(self);
-        self.8.update(self);
-        self.9.update(self);
+        CreatureBody::update(self);
+        Eyes::update(self);
+        Touch::update(self);
+        Movement::update(self);
+        Color::update(self);
+        EnergyStorage::update(self);
+        Eating::update(self);
+        Reproducer::update(self);
+        Ancestry::update(self);
+        Brain::update(self);
+
+        //Tally the energy consumption
+        let energy_consumption = self.0.get_energy_rate()
+            + self.1.get_energy_rate()
+            + self.3.get_energy_rate()
+            + self.5.get_energy_rate()
+            + self.9.get_energy_rate();
+
+        let still_alive = self.5.consume(energy_consumption);
+
+        if !still_alive {
+            self.die();
+            return;
+        }
+
+        //reset the modules
+        CreatureBody::reset(self);
+        Eyes::reset(self);
+        Touch::reset(self);
+        Movement::reset(self);
+        Color::reset(self);
+        EnergyStorage::reset(self);
+        Eating::reset(self);
+        Reproducer::reset(self);
+        Ancestry::reset(self);
+        Brain::reset(self);
     }
 
     fn reproduce_genome(&self) -> CreatureGenome {
@@ -65,10 +93,15 @@ impl Codekaryote<CreatureGenome> for Creature {
     fn reproduce(&self, pos: Pos) -> () {
         todo!()
     }
+
+    fn get_position(&self) -> Pos {
+        let body = &self.0;
+        body.get_position()
+    }
 }
 
 impl Codekaryote<PlantGenome> for Plant {
-    fn update(&self) -> () {
+    fn update(self: &mut Plant) -> () {
         todo!()
     }
 
@@ -81,6 +114,10 @@ impl Codekaryote<PlantGenome> for Plant {
     }
 
     fn reproduce(&self, pos: Pos) -> () {
+        todo!()
+    }
+
+    fn get_position(&self) -> Pos {
         todo!()
     }
 }
@@ -147,5 +184,11 @@ impl Creature {
     }
     pub fn brain(&mut self) -> &mut Brain {
         &mut self.9
+    }
+}
+
+impl Pos {
+    pub(crate) fn dist(&self, other: Self) -> f64 {
+        ((self.x - other.x).powi(2) + (self.x - other.x).powi(2)).sqrt()
     }
 }
