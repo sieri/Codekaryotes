@@ -1,4 +1,3 @@
-from sim.life.body.eyes import Eyes
 from sim.life.body.lifecycle import Eating, Reproducer
 from sim.life.body.physics import Movement, Touch, BodyPassiveCircle, BodyActiveCircle
 from sim.life.common.aesthetic import Color
@@ -14,7 +13,6 @@ possible_modules = {
             "body_active_circle": BodyActiveCircle,
             "body_passive_circle": BodyPassiveCircle,
             "movement": Movement,
-            "eyes": Eyes,
             "touch": Touch,
             "brain": Brain,
             "color": Color,

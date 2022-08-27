@@ -2,10 +2,12 @@ extern crate pyo3;
 use crate::codekaryotes::Creature;
 use crate::life::common_parts::Module;
 use crate::life::creature_parts::{ActiveModule, CreatureModule};
+use crate::life::genome::Mutating;
 use crate::life::genome::{Chromosome, CreatureGenome};
 use pyo3::number::or;
 use pyo3::prelude::*;
 use std::fmt::{Display, Formatter, Result};
+use pyo3::types::IntoPyDict;
 
 #[derive(Debug, Clone, Copy)]
 #[pyclass(module = "codekaryotes.codekaryotes")]
@@ -85,6 +87,9 @@ pub struct Brain {
 
     neurons_id_input: Vec<usize>,
     neurons_id_output: Vec<usize>,
+    //For Module
+    genome: Chromosome,
+    mutation_rate: usize,
 }
 
 #[pymethods]
@@ -197,7 +202,7 @@ impl LinkDefinition {
 #[pymethods]
 impl Brain {
     #[staticmethod]
-    pub fn new() -> Brain {
+    pub fn new_py() -> Brain {
         Brain {
             inputs: vec![],
             internals: vec![],
@@ -209,6 +214,8 @@ impl Brain {
 
             neurons_id_input: vec![],
             neurons_id_output: vec![],
+            genome: vec![],
+            mutation_rate: 3, //TODO: Make parameter
         }
     }
 
@@ -336,6 +343,35 @@ impl Brain {
 }
 
 impl Module<Creature, CreatureGenome> for Brain {
+    fn new(chromosome: Chromosome) -> Self {
+        //set parameters
+        const NUM_INPUT: u32 = 18;
+        const NUM_OUTPUT: u32 = 4;
+        const INTERNAL_NEURON: u32 = 42;
+        const LINKS: u32 = 70;
+       
+        
+        let brain = Brain{
+            inputs: vec![],
+            internals: vec![],
+            outputs: vec![],
+            links_def: vec![],
+            links: vec![],
+            neurons: vec![],
+            neurons_id_input: vec![],
+            neurons_id_output: vec![],
+            genome: vec![],
+            mutation_rate: 4
+        };
+        
+        //initialize brain
+        let gil = Python::acquire_gil();
+        let &py = &gil.python();
+
+        brain
+        
+    }
+
     fn update(organism: &mut Creature) {
         let s = organism.brain();
         s.update_py();
@@ -344,7 +380,7 @@ impl Module<Creature, CreatureGenome> for Brain {
     fn reset(organism: &mut Creature) {}
 
     fn evolve(&self) -> Chromosome {
-        todo!()
+        self.genome.mutate(self.mutation_rate)
     }
 }
 
@@ -352,6 +388,7 @@ impl CreatureModule for Brain {}
 
 impl ActiveModule for Brain {
     fn get_energy_rate(&self) -> f64 {
-        self.links.len() as f64
+        const ENERGY_PER_LINK: f64 = 0.0004;
+        self.links.len() as f64 * ENERGY_PER_LINK
     }
 }

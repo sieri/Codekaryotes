@@ -1,9 +1,10 @@
 use crate::codekaryotes::{Codekaryote, Creature, Plant, Pos, Seen};
 use crate::life::common_parts::{Ancestry, Color, Module};
-use crate::life::genome::{Chromosome, CreatureGenome};
+use crate::life::genome::{Chromosome, CreatureGenome, Mutating};
 use crate::Brain;
 use pyo3::number::or;
-use pyo3::PyObject;
+use pyo3::types::IntoPyDict;
+use pyo3::{PyObject, Python};
 use std::borrow::BorrowMut;
 
 pub trait CreatureModule: Module<Creature, CreatureGenome> {}
@@ -20,7 +21,8 @@ pub struct CreatureBody {
     //For active
     energy_rate: f64,
     //Unique
-    mass: usize,
+    size: f64,
+    mass: f64,
     circle: PyObject,
 }
 
@@ -54,8 +56,6 @@ pub struct Touch {
     //For Module
     genome: Chromosome,
     mutation_rate: usize,
-    //For active
-    energy_rate: f64,
     //Unique
     touch: usize,
     touch_forward: usize,
@@ -68,8 +68,8 @@ pub struct Eyes {
     //For active
     energy_rate: f64,
     //Unique
-    fov: usize,
-    range: usize,
+    fov: u32,
+    range: u32,
     shape: PyObject,
     seen_creatures: Vec<Seen>,
     seen_plants: Vec<Seen>,
@@ -101,6 +101,35 @@ pub struct EnergyStorage {
 }
 
 impl Module<Creature, CreatureGenome> for CreatureBody {
+    fn new(chromosome: Chromosome) -> CreatureBody {
+        //TODO: Set Params
+        const FACTOR: f64 = u32::MAX as f64 / ((1.2 - 0.8) * 10000.0);
+        const BODY_MASS_UNIT: f64 = 1f64;
+        let size: f64 = (((chromosome[0] as f64) / FACTOR) / 10000.0);
+        let mass: f64 = size.powi(2) * BODY_MASS_UNIT;
+
+        //get circle
+        let gil = Python::acquire_gil();
+        let &py = &gil.python();
+        let locals = [("pm", py.import("pymunk").unwrap())].into_py_dict(py);
+        println!("{:?}", locals);
+        let code = format!(
+            "pm.Body({}, pm.moment_for_circle({}, 0, {}, (0, 0)))",
+            mass, mass, size
+        );
+
+        let circle = py.eval(code.as_str(), None, Some(&locals));
+        println!("Circle, {:?}", circle);
+        CreatureBody {
+            genome: chromosome.to_vec(),
+            mutation_rate: 1,
+            energy_rate: 0.0,
+            size: size,
+            mass: mass,
+            circle: PyObject::from(circle.unwrap()),
+        }
+    }
+
     fn update(organism: &mut Creature) {
         let s = organism.body();
     }
@@ -108,7 +137,7 @@ impl Module<Creature, CreatureGenome> for CreatureBody {
     fn reset(organism: &mut Creature) {}
 
     fn evolve(&self) -> Chromosome {
-        todo!()
+        self.genome.mutate(self.mutation_rate)
     }
 }
 
@@ -127,16 +156,35 @@ impl CreatureBody {
 }
 
 impl Module<Creature, CreatureGenome> for Color {
+    fn new(chromosome: Chromosome) -> Self {
+        Color {
+            genome: chromosome.to_vec(),
+            mutation_rate: 0,
+            r: chromosome[0] as u8,
+            g: chromosome[1] as u8,
+            b: chromosome[2] as u8,
+        }
+    }
+
     fn update(organism: &mut Creature) {}
 
     fn reset(organism: &mut Creature) {}
 
     fn evolve(&self) -> Chromosome {
-        todo!()
+        self.genome.to_vec()
     }
 }
 
 impl Module<Creature, CreatureGenome> for Ancestry {
+    fn new(chromosome: Chromosome) -> Self {
+        Ancestry {
+            genome: chromosome.to_vec(),
+            mutation_rate: 0,
+            generation: chromosome[0],
+            age: 0.0,
+        }
+    }
+
     fn update(organism: &mut Creature) {
         let s = organism.ancestry();
         s.age += 1f64;
@@ -145,7 +193,7 @@ impl Module<Creature, CreatureGenome> for Ancestry {
     fn reset(organism: &mut Creature) {}
 
     fn evolve(&self) -> Chromosome {
-        todo!()
+        vec![self.generation, 0]
     }
 }
 
@@ -154,6 +202,23 @@ impl CreatureModule for Ancestry {}
 impl CreatureModule for Color {}
 
 impl Module<Creature, CreatureGenome> for Movement {
+    fn new(chromosome: Chromosome) -> Self {
+        const ENERGY_MOVEMENT_RATE: f64 = 0.0005;
+
+        Movement {
+            genome: chromosome.to_vec(),
+            mutation_rate: 2,
+            energy_rate: 0.0,
+            energy_rate_base: ENERGY_MOVEMENT_RATE,
+            forward: 0.0,
+            torque: 0.0,
+            multiplier_base: 0.0,
+            multiplier_signal: 1.0,
+            travelled: 0.0,
+            last_pos: Pos { x: 0.0, y: 0.0 },
+        }
+    }
+
     fn update(organism: &mut Creature) {
         let current_post = organism.get_position();
         let s = organism.movement();
@@ -175,7 +240,7 @@ impl Module<Creature, CreatureGenome> for Movement {
     }
 
     fn evolve(&self) -> Chromosome {
-        todo!()
+        self.genome.mutate(self.mutation_rate)
     }
 }
 
@@ -188,6 +253,15 @@ impl ActiveModule for Movement {
 }
 
 impl Module<Creature, CreatureGenome> for Touch {
+    fn new(chromosome: Chromosome) -> Self {
+        Touch {
+            genome: chromosome.to_vec(),
+            mutation_rate: 0,
+            touch: 0,
+            touch_forward: 0,
+        }
+    }
+
     fn update(organism: &mut Creature) {}
 
     fn reset(organism: &mut Creature) {
@@ -203,13 +277,36 @@ impl Module<Creature, CreatureGenome> for Touch {
 
 impl CreatureModule for Touch {}
 
-impl ActiveModule for Touch {
-    fn get_energy_rate(&self) -> f64 {
-        self.energy_rate
-    }
-}
-
 impl Module<Creature, CreatureGenome> for Eyes {
+    fn new(chromosome: Chromosome) -> Self {
+        //TODO: Set parameters
+        const EYE_RANGE_LIMIT: u32 = 75;
+        const ENERGY_EYES_RATE: f64 = 0.005;
+
+        let fov = (chromosome[0] % 360) + 1;
+        let range = chromosome[1] % EYE_RANGE_LIMIT;
+        let energy_rate: f64 = ((fov as f64) / 180.0 * (range as f64)) * ENERGY_EYES_RATE;
+
+        //get shape
+        let gil = Python::acquire_gil();
+        let &py = &gil.python();
+        let locals = [("eyes", py.import("sim.life.body.eyes").unwrap())].into_py_dict(py);
+        let code = format!("eyes.method_name({},{})", fov, range);
+
+        let shape = py.eval(code.as_str(), None, Some(&locals));
+        println!("Shape, {:?}", shape);
+        Eyes {
+            genome: chromosome.to_vec(),
+            mutation_rate: 1,
+            energy_rate,
+            fov,
+            range,
+            shape: PyObject::from(shape.unwrap()),
+            seen_creatures: vec![],
+            seen_plants: vec![],
+        }
+    }
+
     fn update(organism: &mut Creature) {
         let s = organism.eyes();
     }
@@ -221,7 +318,7 @@ impl Module<Creature, CreatureGenome> for Eyes {
     }
 
     fn evolve(&self) -> Chromosome {
-        todo!()
+        self.genome.mutate(self.mutation_rate)
     }
 }
 
@@ -234,6 +331,15 @@ impl ActiveModule for Eyes {
 }
 
 impl Module<Creature, CreatureGenome> for Eating {
+    fn new(chromosome: Chromosome) -> Self {
+        Eating {
+            genome: chromosome.to_vec(),
+            mutation_rate: 0,
+            ticks: 0,
+            can_eat: true,
+        }
+    }
+
     fn update(organism: &mut Creature) {
         let s = organism.eating();
         if !s.can_eat {
@@ -250,13 +356,20 @@ impl Module<Creature, CreatureGenome> for Eating {
     fn reset(organism: &mut Creature) {}
 
     fn evolve(&self) -> Chromosome {
-        todo!()
+        vec![]
     }
 }
 
 impl CreatureModule for Eating {}
 
 impl Module<Creature, CreatureGenome> for Reproducer {
+    fn new(chromosome: Chromosome) -> Self {
+        Reproducer {
+            genome: chromosome.to_vec(),
+            mutation_rate: 0,
+        }
+    }
+
     fn update(organism: &mut Creature) {
         let s = organism.reproducer();
         let energy_storage = organism.energy_storage();
@@ -270,13 +383,26 @@ impl Module<Creature, CreatureGenome> for Reproducer {
     fn reset(organism: &mut Creature) {}
 
     fn evolve(&self) -> Chromosome {
-        todo!()
+        vec![]
     }
 }
 
 impl CreatureModule for Reproducer {}
 
 impl Module<Creature, CreatureGenome> for EnergyStorage {
+    fn new(chromosome: Chromosome) -> Self {
+        const ENERGY_STORAGE_MAX: f64 = 2048.0;
+        const FACTOR: f64 = u32::MAX as f64 / ENERGY_STORAGE_MAX;
+        let energy_max = chromosome[0] as f64 / FACTOR;
+        let energy = energy_max / 2.0;
+        EnergyStorage {
+            genome: chromosome.to_vec(),
+            mutation_rate: 1,
+            energy_max,
+            energy,
+        }
+    }
+
     fn update(organism: &mut Creature) {
         let s = organism.energy_storage();
         s.energy -= s.get_energy_rate();
@@ -285,7 +411,7 @@ impl Module<Creature, CreatureGenome> for EnergyStorage {
     fn reset(organism: &mut Creature) {}
 
     fn evolve(&self) -> Chromosome {
-        todo!()
+        self.genome.mutate(self.mutation_rate)
     }
 }
 
@@ -301,11 +427,10 @@ impl EnergyStorage {
     fn get_level(&self) -> f64 {
         self.energy / self.energy_max
     }
-    
-    pub fn consume(&mut self, energy: f64) -> bool
-    {
+
+    pub fn consume(&mut self, energy: f64) -> bool {
         self.energy -= energy;
-        
+
         energy > 0f64
     }
 }

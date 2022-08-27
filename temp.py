@@ -1,6 +1,6 @@
 import os
 import pygame
-
+from codekaryotes.codekaryotes import test
 from gui import window
 from sim.parameters.settings import Settings
 settings = Settings()
@@ -9,7 +9,10 @@ from sim.world import World
 
 os.environ["RUST_BACKTRACE"] = "full"
 
+
 if __name__ == '__main__':
+    test()
+    print("Tested!")
     world = World()
     world.initiate(10, 10)
     pygame.init()

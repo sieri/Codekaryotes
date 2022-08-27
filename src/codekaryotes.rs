@@ -14,8 +14,8 @@ use std::ops::Mul;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Pos {
-    x: f64,
-    y: f64,
+    pub(crate) x: f64,
+    pub(crate) y: f64,
 }
 
 pub trait Codekaryote<G: genome::Genome> {
@@ -83,7 +83,15 @@ impl Codekaryote<CreatureGenome> for Creature {
     }
 
     fn reproduce_genome(&self) -> CreatureGenome {
-        todo!()
+        CreatureGenome {
+            body: self.0.evolve(),
+            eyes: self.1.evolve(),
+            movement: self.3.evolve(),
+            color: self.4.evolve(),
+            energy_storage: self.5.evolve(),
+            ancestry: self.8.evolve(),
+            brain: self.9.evolve(),
+        }
     }
 
     fn die(&self) -> () {
@@ -151,8 +159,24 @@ impl Plant {
 }
 
 impl Creature {
-    pub fn new() -> Self {
-        todo!()
+    pub fn new(genome: CreatureGenome, pos: Pos) -> Self {
+        println!("New!");
+        Creature {
+            0: CreatureBody::new(genome.body),
+            1: Eyes::new(genome.eyes),
+            2: Touch::new(vec![]),
+            3: Movement::new(genome.movement),
+            4: Color::new(genome.color),
+            5: EnergyStorage::new(genome.energy_storage),
+            6: Eating::new(vec![]),
+            7: Reproducer::new(vec![]),
+            8: Ancestry::new(genome.ancestry),
+            9: Brain::new(genome.brain),
+        }
+    }
+
+    pub fn new_rand(pos: Pos) -> Self {
+        Self::new(CreatureGenome::new(), pos)
     }
 
     pub fn body(&mut self) -> &mut CreatureBody {

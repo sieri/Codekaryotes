@@ -1,4 +1,4 @@
-from codekaryotes.codekaryotes import brain_update, get_brain, Brain, Activation, Position, \
+from codekaryotes.codekaryotes import get_brain, Brain, Activation, Position, \
     acc_from_int
 from codekaryotes.codekaryotes import NeuronDefinition as nd
 from codekaryotes.codekaryotes import LinkDefinition
@@ -392,7 +392,7 @@ else:
 
         def update(self):
             super().update()
-            self._rust_brain.update()
+            self._rust_brain.update_py()
         # end def __init__
 
         def output(self):
