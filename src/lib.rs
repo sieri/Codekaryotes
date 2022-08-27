@@ -39,6 +39,7 @@ fn codekaryotes(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(acc_from_int, m)?)?;
     m.add_function(wrap_pyfunction!(test, m)?)?;
     m.add_class::<Brain>()?;
+    m.add_class::<Creature>()?;
     m.add_class::<NeuronDefinition>()?;
     m.add_class::<Activation>()?;
     m.add_class::<Position>()?;

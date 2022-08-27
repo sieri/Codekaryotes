@@ -1,6 +1,6 @@
 import math
 import random
-
+from codekaryotes.codekaryotes import Creature
 import utils
 from sim.parameters import evolution as para_ev
 from utils import toggle_bit
@@ -18,75 +18,58 @@ class Codekaryote:
         :param genome_generator: function generating a genome, to create another style of Codekaryotic life - OPTIONAL
         :type genome_generator: ``funct``
         """
-
-        self._alive = True
-        self._modules = []
-        self._modules_reset = []
-
-        if genome_generator is None:
-            from sim.life.modules import generate_random_creature_full_genome
-            genome_generator = generate_random_creature_full_genome
-
-        if genomes is None:
-            genomes = genome_generator()
-        # end if
-
-        self._genome = genomes
-
-        from sim.life.modules import possible_modules
-        for key, genome in genomes.items():
-            m = possible_modules[key](self, genome)
-            self._modules.append(m)
-            if m.need_reset:
-                self._modules_reset.append(m)
-        # end for
-
-        # noinspection PyUnresolvedReferences
-        self.physical_body.position = starting_position
-        # noinspection PyUnresolvedReferences
-        utils.angle = random.random() * 2 * math.pi
+        self._rust = Creature(starting_position[0], starting_position[1])
     # end def __init__
 
     # -------------------Methods--------------------
 
     def update(self):
-        self.brain.output() # if plants need to be updated, split the class
-
-        for m in self._modules:
-            m.update()
-        # end def for
-
-        for m in self._modules_reset:
-            m.reset()
-        # end def for
+        self._rust.update_py()
     # end def update
 
     def reproduce_genome(self):
-        new_genome = dict()
-        for m in self._modules:
-            new_genome[m.name] = m.evolve()
-        # end def for
-
-        return new_genome
+        self._rust.reproduce_py()
     # end def reproduce_genome
 
     def die(self):
         """
         remove the creature
         """
-        from sim.world import World
-        if self._alive:
-            World().remove_organism(self)
-            self._alive = False
+        self._rust.die_py()
     # end def die
 
     def reproduce(self, position):
-        from sim.world import World
-        genome = self.reproduce_genome()
-        World().add_organism(organism=Codekaryote(starting_position=position, genomes=genome))
+        self._rust.reproduce_py()
     # end def reproduce
 
+
+
     # -----------------Properties------------------
+
+    @property
+    def color(self):
+        return self._rust.get_color()
+    # end def Color
+
+    @property
+    def size(self):
+        return self._rust.get_size()
+    # end def size
+
+    @property
+    def physical_body(self):
+        return self._rust.get_physical_body()
+    # end def physical_body
+
+    @property
+    def shape(self):
+        return self._rust.get_shape()
+    # end def shape
+
+    @property
+    def vision_cone(self):
+        return []
+    # end def vision_cone
 
     @property
     def position(self):
@@ -97,13 +80,9 @@ class Codekaryote:
     @property
     def angle(self):
         # noinspection PyUnresolvedReferences
-        return utils.angle
-    # end def angle
+        return self.physical_body.angle
+    #end def angle
 
-    @property
-    def genome(self):
-        return self._genome
-    # end def genome
 # end class Codekaryotes
 
 

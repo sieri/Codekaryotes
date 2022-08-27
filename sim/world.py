@@ -234,7 +234,10 @@ class World:
     def append_organisms(self):
 
         for add in self._to_add_creature:
-            self._space.add(add.physical_body, add.shape, *add.vision_cone)
+            print("Test")
+            print(add.shape)
+            print(add.physical_body)
+            self._space.add(add.physical_body, add.shape) # *add.vision_cone
             self._creature_shape[add.shape] = add
         self._creature += self._to_add_creature
         self._to_add_creature.clear()
@@ -268,10 +271,10 @@ class World:
     # end def remove_organism
 
     def add_organism(self, organism):
-        if hasattr(organism, "movement"):
-            self._to_add_creature.append(organism)
-        else:
-            self._to_add_plant.append(organism)
+        #if hasattr(organism, "movement"):
+        self._to_add_creature.append(organism)
+        #else:
+        #    self._to_add_plant.append(organism)
     # end def add_organism
 
     # -----------------Properties------------------

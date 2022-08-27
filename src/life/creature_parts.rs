@@ -2,10 +2,12 @@ use crate::codekaryotes::{Codekaryote, Creature, Plant, Pos, Seen};
 use crate::life::common_parts::{Ancestry, Color, Module};
 use crate::life::genome::{Chromosome, CreatureGenome, Mutating};
 use crate::Brain;
+use pyo3::impl_::extract_argument::from_py_with;
 use pyo3::number::or;
 use pyo3::types::IntoPyDict;
-use pyo3::{PyObject, Python};
+use pyo3::{PyObject, PyResult, Python};
 use std::borrow::BorrowMut;
+use std::fmt::Error;
 
 pub trait CreatureModule: Module<Creature, CreatureGenome> {}
 
@@ -21,17 +23,23 @@ pub struct CreatureBody {
     //For active
     energy_rate: f64,
     //Unique
-    size: f64,
+    pub(crate) size: f64,
     mass: f64,
-    circle: PyObject,
+    pub(crate) circle: PyObject,
+    pub(crate) body: PyObject,
 }
 
 impl CreatureBody {
     pub(crate) fn push(&self, force: f64) {
-        todo!()
+        let gil = Python::acquire_gil();
+        let &py = &gil.python();
+        self.circle
+            .call_method(py, "apply_force_at_local_point", ((force, 0),), None);
     }
     pub(crate) fn rotate(&self, torque: f64) {
-        todo!()
+        let gil = Python::acquire_gil();
+        let &py = &gil.python();
+        self.circle.call_method(py, "torque", (torque,), None);
     }
 }
 
@@ -111,22 +119,26 @@ impl Module<Creature, CreatureGenome> for CreatureBody {
         //get circle
         let gil = Python::acquire_gil();
         let &py = &gil.python();
-        let locals = [("pm", py.import("pymunk").unwrap())].into_py_dict(py);
+        let locals = [("phy", py.import("sim.life.body.physics").unwrap())].into_py_dict(py);
         println!("{:?}", locals);
-        let code = format!(
-            "pm.Body({}, pm.moment_for_circle({}, 0, {}, (0, 0)))",
-            mass, mass, size
-        );
+        let code = format!("phy.Body_generator({})", size);
 
-        let circle = py.eval(code.as_str(), None, Some(&locals));
-        println!("Circle, {:?}", circle);
+        let result = py.eval(code.as_str(), None, Some(&locals));
+        println!("result, {:?}", result);
+        let bod_generator = result.unwrap();
+        let r = bod_generator.getattr("body");
+        let body = r.unwrap();
+        let r = bod_generator.getattr("shape");
+        let shape = r.unwrap();
+
         CreatureBody {
             genome: chromosome.to_vec(),
             mutation_rate: 1,
             energy_rate: 0.0,
             size: size,
             mass: mass,
-            circle: PyObject::from(circle.unwrap()),
+            circle: PyObject::from(shape),
+            body: PyObject::from(body),
         }
     }
 
@@ -151,7 +163,23 @@ impl CreatureModule for CreatureBody {}
 
 impl CreatureBody {
     pub fn get_position(&self) -> Pos {
-        todo!()
+        let gil = Python::acquire_gil();
+        let &py = &gil.python();
+        let r = self.body.getattr(py, "position").unwrap();
+
+        let x: PyResult<f64> = match r.getattr(py, "x") {
+            Ok(x) => x.extract(py),
+            Err(_) => panic!("Cant get Attr"),
+        };
+        let y: PyResult<f64> = match r.getattr(py, "y") {
+            Ok(y) => y.extract(py),
+            Err(_) => panic!("Cant get Attr"),
+        };
+
+        Pos {
+            x: x.unwrap(),
+            y: y.unwrap(),
+        }
     }
 }
 

@@ -17,5 +17,5 @@ def draw_organism(surface, organism, factor):
     """
     pos = organism.position * factor
     # noinspection PyUnresolvedReferences
-    circle(surface, Color(organism.color.color), pos, int(organism.body.size*factor), 2)
+    circle(surface, Color(organism.color), pos, int(organism.size*factor), 2)
 # end def draw_organism

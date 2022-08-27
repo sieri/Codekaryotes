@@ -8,6 +8,14 @@ from utils import scale_between, dist
 
 world = World()
 
+class Body_generator:
+
+    def __init__(self, size):
+        mass = (size ** 2) * param.BODY_MASS_UNIT
+        inertia = pm.moment_for_circle(mass, 0, size, (0, 0))
+        self.body = pm.Body(mass, inertia)
+        self.shape = pm.Circle(self.body, size, (0, 0))
+
 
 class AbstractBody:
     """

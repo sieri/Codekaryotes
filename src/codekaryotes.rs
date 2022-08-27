@@ -8,6 +8,8 @@ use crate::{life, Brain};
 use life::common_parts::Module;
 use life::genome;
 use pyo3::intern;
+use pyo3::number::or;
+use pyo3::prelude::*;
 use std::borrow::{Borrow, BorrowMut};
 use std::marker::PhantomData;
 use std::ops::Mul;
@@ -27,6 +29,7 @@ pub trait Codekaryote<G: genome::Genome> {
     fn get_position(&self) -> Pos;
 }
 
+#[pyclass(module = "codekaryotes.codekaryotes")]
 pub struct Creature(
     CreatureBody,
     Eyes,
@@ -214,5 +217,45 @@ impl Creature {
 impl Pos {
     pub(crate) fn dist(&self, other: Self) -> f64 {
         ((self.x - other.x).powi(2) + (self.x - other.x).powi(2)).sqrt()
+    }
+}
+
+#[pymethods]
+impl Creature {
+    #[new]
+    fn new_py(x: f64, y: f64) -> Self {
+        Creature::new_rand(Pos { x: x, y: y })
+    }
+
+    fn update_py(&mut self) {
+        self.update();
+    }
+
+    fn reproduce_py(&self) {
+        self.reproduce(self.get_position())
+    }
+
+    fn die_py(&self) {
+        self.die()
+    }
+
+    fn get_physical_body(&self) -> &PyObject {
+        let body = &self.0.body;
+        body
+    }
+
+    fn get_shape(&self) -> &PyObject {
+        let circle = &self.0.circle;
+        circle
+    }
+
+    fn get_size(&self) -> f64 {
+        let size = self.0.size;
+        size
+    }
+
+    fn get_color(&self) -> (u8, u8, u8) {
+        let color = &self.4;
+        (color.r, color.g, color.b)
     }
 }
