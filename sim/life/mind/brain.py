@@ -1,7 +1,3 @@
-from codekaryotes.codekaryotes import get_brain, Brain, Activation, Position, \
-    acc_from_int
-from codekaryotes.codekaryotes import NeuronDefinition as nd
-from codekaryotes.codekaryotes import LinkDefinition
 from sim.parameters.settings import Settings
 
 import numpy as np

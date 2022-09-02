@@ -65,8 +65,8 @@ pub struct Touch {
     genome: Chromosome,
     mutation_rate: usize,
     //Unique
-    touch: usize,
-    touch_forward: usize,
+    pub(crate) touch: usize,
+    pub(crate) touch_forward: usize,
 }
 
 pub struct Eyes {
@@ -79,8 +79,8 @@ pub struct Eyes {
     fov: u32,
     range: u32,
     shape: PyObject,
-    seen_creatures: Vec<Seen>,
-    seen_plants: Vec<Seen>,
+    pub(crate) seen_creatures: Vec<Seen>,
+    pub(crate) seen_plants: Vec<Seen>,
 }
 #[derive(Debug, Clone)]
 pub struct Eating {
@@ -143,7 +143,7 @@ impl Module<Creature, CreatureGenome> for CreatureBody {
     }
 
     fn update(organism: &mut Creature) {
-        let s = organism.body();
+        let s = organism.body_mut();
     }
 
     fn reset(organism: &mut Creature) {}
@@ -181,6 +181,44 @@ impl CreatureBody {
             y: y.unwrap(),
         }
     }
+
+    pub fn get_angle(&self) -> f64 {
+        let gil = Python::acquire_gil();
+        let &py = &gil.python();
+        let angle: f64 = match self.body.getattr(py, "angle") {
+            Ok(x) => x.extract(py).unwrap(),
+            Err(_) => panic!("Can't get angle"),
+        };
+
+        angle
+    }
+
+    pub fn get_speed(&self) -> f64 {
+        let gil = Python::acquire_gil();
+        let &py = &gil.python();
+        let velocity = match self.body.getattr(py, "velocity") {
+            Ok(x) => x,
+            Err(_) => panic!("Can't get velocity"),
+        };
+
+        let vel: f64 = match velocity.getattr(py, "length") {
+            Ok(x) => x.extract(py).unwrap(),
+            Err(_) => panic!("Can't get length"),
+        };
+
+        vel
+    }
+
+    pub fn get_speed_rotation(&self) -> f64 {
+        let gil = Python::acquire_gil();
+        let &py = &gil.python();
+        let angular_velocity: f64 = match self.body.getattr(py, "angular_velocity") {
+            Ok(x) => x.extract(py).unwrap(),
+            Err(_) => panic!("Can't get angular_velocity"),
+        };
+
+        angular_velocity
+    }
 }
 
 impl Module<Creature, CreatureGenome> for Color {
@@ -214,7 +252,7 @@ impl Module<Creature, CreatureGenome> for Ancestry {
     }
 
     fn update(organism: &mut Creature) {
-        let s = organism.ancestry();
+        let s = organism.ancestry_mut();
         s.age += 1f64;
     }
 
@@ -249,19 +287,19 @@ impl Module<Creature, CreatureGenome> for Movement {
 
     fn update(organism: &mut Creature) {
         let current_post = organism.get_position();
-        let s = organism.movement();
+        let s = organism.movement_mut();
         s.travelled += s.last_pos.dist(current_post);
         s.last_pos = current_post;
         let actual_forward = s.forward * s.multiplier_base * s.multiplier_signal;
         let actual_torque = s.torque * s.multiplier_base * s.multiplier_signal;
         s.energy_rate = s.energy_rate_base * (actual_forward.abs() + actual_torque.abs());
-        let body = organism.body();
+        let body = organism.body_mut();
         body.push(actual_forward);
         body.rotate(actual_torque);
     }
 
     fn reset(organism: &mut Creature) {
-        let s = organism.movement();
+        let s = organism.movement_mut();
         s.forward = 0f64;
         s.torque = 0f64;
         s.multiplier_signal = 0f64;
@@ -293,7 +331,7 @@ impl Module<Creature, CreatureGenome> for Touch {
     fn update(organism: &mut Creature) {}
 
     fn reset(organism: &mut Creature) {
-        let s = organism.touch();
+        let s = organism.touch_mut();
         s.touch = 0;
         s.touch_forward = 0;
     }
@@ -336,11 +374,11 @@ impl Module<Creature, CreatureGenome> for Eyes {
     }
 
     fn update(organism: &mut Creature) {
-        let s = organism.eyes();
+        let s = organism.eyes_mut();
     }
 
     fn reset(organism: &mut Creature) {
-        let s = organism.eyes();
+        let s = organism.eyes_mut();
         s.seen_creatures.clear();
         s.seen_plants.clear();
     }
@@ -358,6 +396,68 @@ impl ActiveModule for Eyes {
     }
 }
 
+impl Eyes {
+    pub fn closest_creature_dist(&self, organism: &mut Creature) -> f64 {
+        if self.seen_creatures.len() == 0 {
+            return -1.0;
+        } else if self.seen_creatures.len() == 1 {
+            return organism
+                .body_mut()
+                .get_position()
+                .dist(self.seen_creatures[0].pos);
+        }
+        let pos = organism.body_mut().get_position();
+
+        let mut dists: Vec<f64> = vec![];
+        for x in self.seen_creatures.iter() {
+            dists.push(x.pos.dist(pos))
+        }
+
+        *dists.iter().min_by(|a, b| (a.total_cmp(b))).unwrap()
+    }
+
+    pub fn closest_plant_dist(&self, organism: &mut Creature) -> f64 {
+        if self.seen_plants.len() == 0 {
+            return -1.0;
+        } else if self.seen_plants.len() == 1 {
+            return organism
+                .body_mut()
+                .get_position()
+                .dist(self.seen_plants[0].pos);
+        }
+        let pos = organism.body_mut().get_position();
+
+        let mut dists: Vec<f64> = vec![];
+        for x in self.seen_plants.iter() {
+            dists.push(x.pos.dist(pos))
+        }
+
+        *dists.iter().min_by(|a, b| (a.total_cmp(b))).unwrap()
+    }
+
+    pub fn closest_creature_angle(&self, organism: &Creature) -> f64 {
+        if self.seen_creatures.len() == 0 {
+            return 0.0;
+        } else if self.seen_creatures.len() == 1 {
+            return organism.get_position().angle(self.seen_creatures[0].pos);
+        }
+
+        //TODO: FIX ME TO FIND CLOSEST SORRY FUTURE SYLV I'M LAZY
+        organism.get_position().angle(self.seen_creatures[0].pos)
+    }
+
+    pub fn closest_plant_angle(&self, organism: &Creature) -> f64 {
+        if self.seen_plants.len() == 0 {
+            return 0.0;
+        } else if self.seen_plants.len() == 1 {
+            return organism.get_position().angle(self.seen_plants[0].pos);
+        }
+
+        //TODO: FIX ME TO FIND CLOSEST SORRY FUTURE SYLV I'M LAZY
+        organism.get_position().angle(self.seen_plants[0].pos)
+    }
+}
+
 impl Module<Creature, CreatureGenome> for Eating {
     fn new(chromosome: Chromosome) -> Self {
         Eating {
@@ -369,7 +469,7 @@ impl Module<Creature, CreatureGenome> for Eating {
     }
 
     fn update(organism: &mut Creature) {
-        let s = organism.eating();
+        let s = organism.eating_mut();
         if !s.can_eat {
             s.ticks += 1;
             if s.ticks >= 50
@@ -399,8 +499,8 @@ impl Module<Creature, CreatureGenome> for Reproducer {
     }
 
     fn update(organism: &mut Creature) {
-        let s = organism.reproducer();
-        let energy_storage = organism.energy_storage();
+        let s = organism.reproducer_mut();
+        let energy_storage = organism.energy_storage_mut();
         if energy_storage.get_level() > 0.8
         //TODO: Make parameters
         {
@@ -432,7 +532,7 @@ impl Module<Creature, CreatureGenome> for EnergyStorage {
     }
 
     fn update(organism: &mut Creature) {
-        let s = organism.energy_storage();
+        let s = organism.energy_storage_mut();
         s.energy -= s.get_energy_rate();
     }
 

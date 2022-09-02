@@ -133,13 +133,15 @@ impl Codekaryote<PlantGenome> for Plant {
     }
 }
 
+#[derive(Clone)]
 enum Kind {
     Creature,
     Plant,
 }
 
+#[derive(Clone)]
 pub struct Seen {
-    pos: Pos,
+    pub(crate) pos: Pos,
     kind: Kind,
 }
 
@@ -182,41 +184,80 @@ impl Creature {
         Self::new(CreatureGenome::new(), pos)
     }
 
-    pub fn body(&mut self) -> &mut CreatureBody {
+    pub fn body_mut(&mut self) -> &mut CreatureBody {
         &mut self.0
     }
-    pub fn eyes(&mut self) -> &mut Eyes {
+    pub fn eyes_mut(&mut self) -> &mut Eyes {
         &mut self.1
     }
-    pub fn touch(&mut self) -> &mut Touch {
+    pub fn touch_mut(&mut self) -> &mut Touch {
         &mut self.2
     }
-    pub fn movement(&mut self) -> &mut Movement {
+    pub fn movement_mut(&mut self) -> &mut Movement {
         &mut self.3
     }
-    pub fn color(&mut self) -> &mut Color {
+    pub fn color_mut(&mut self) -> &mut Color {
         &mut self.4
     }
-    pub fn energy_storage(&mut self) -> &mut EnergyStorage {
+    pub fn energy_storage_mut(&mut self) -> &mut EnergyStorage {
         &mut self.5
     }
-    pub fn eating(&mut self) -> &mut Eating {
+    pub fn eating_mut(&mut self) -> &mut Eating {
         &mut self.6
     }
-    pub fn reproducer(&mut self) -> &mut Reproducer {
+    pub fn reproducer_mut(&mut self) -> &mut Reproducer {
         &mut self.7
     }
-    pub fn ancestry(&mut self) -> &mut Ancestry {
+    pub fn ancestry_mut(&mut self) -> &mut Ancestry {
         &mut self.8
     }
-    pub fn brain(&mut self) -> &mut Brain {
+    pub fn brain_mut(&mut self) -> &mut Brain {
         &mut self.9
+    }
+
+    pub fn body(&self) -> &CreatureBody {
+        &self.0
+    }
+    pub fn eyes(&self) -> &Eyes {
+        &self.1
+    }
+    pub fn touch(&self) -> &Touch {
+        &self.2
+    }
+    pub fn movement(&self) -> &Movement {
+        &self.3
+    }
+    pub fn color(&self) -> &Color {
+        &self.4
+    }
+    pub fn energy_storage(&self) -> &EnergyStorage {
+        &self.5
+    }
+    pub fn eating(&self) -> &Eating {
+        &self.6
+    }
+    pub fn reproducer(&self) -> &Reproducer {
+        &self.7
+    }
+    pub fn ancestry(&self) -> &Ancestry {
+        &self.8
+    }
+    pub fn brain(&self) -> &Brain {
+        &self.9
+    }
+
+    fn get_position(&self) -> Pos {
+        self.0.get_position()
     }
 }
 
 impl Pos {
     pub(crate) fn dist(&self, other: Self) -> f64 {
         ((self.x - other.x).powi(2) + (self.x - other.x).powi(2)).sqrt()
+    }
+
+    pub(crate) fn angle(&self, other: Self) -> f64 {
+        (other.y - self.y).atan2(other.x - self.x)
     }
 }
 
