@@ -18,7 +18,9 @@ use pyo3::ffi::newfunc;
 use pyo3::number::or;
 use pyo3::prelude::*;
 use pyo3::types::IntoPyDict;
-use std::collections::HashMap;
+use rand::distributions::Slice;
+use std::collections::{HashMap, HashSet};
+use std::fmt::{format, Write};
 use std::fmt::{Display, Formatter, Result};
 use std::ops::Range;
 use Position::{Internal, Output};
@@ -63,7 +65,7 @@ struct NeuronDefinition {
     pub act: Activation,
 }
 
-#[derive(Clone, PartialEq, Copy)]
+#[derive(Clone, PartialEq, Copy, Debug)]
 pub struct LinkDefinition {
     pub weight: f64,
     pub input: usize,
@@ -198,7 +200,7 @@ impl LinkDefinition {
         };
 
         let input = match input_type {
-            Input => bit_range(c, 24, 7) % NUM_OUTPUT as u32,
+            Input => bit_range(c, 24, 7) % NUM_INPUT as u32,
             Output => panic!("This shouldn't happen"),
             Internal => INTERNAL_PREFIX as u32 + (bit_range(c, 24, 7) % INTERNAL_NEURON as u32),
         } as usize;
@@ -302,7 +304,7 @@ impl Module<Creature, CreatureGenome> for Brain {
             genome: vec![],
             mutation_rate: 4,
         };
-
+        println!("Chromosome {:?}", chromosome);
         //initialize brain
         //Get definitions
         let mut index = 0;
@@ -313,6 +315,9 @@ impl Module<Creature, CreatureGenome> for Brain {
 
         let links: [LinkDefinition; LINKS] =
             arr![LinkDefinition::new(chromosome[{index+=1; index-1}]); 70];
+
+        println!("Original Links {:?}", links);
+        graph_def(&links);
 
         //clean links
         let list_of_output_link: Vec<&LinkDefinition> =
@@ -452,4 +457,35 @@ impl ActiveModule for Brain {
         const ENERGY_PER_LINK: f64 = 0.0004;
         self.links.len() as f64 * ENERGY_PER_LINK
     }
+}
+
+fn graph_def(defs: &[LinkDefinition]) {
+    let mut b = String::new();
+    b += "===============================================\ndigraph G {";
+    let mut i = HashSet::new();
+    let mut o = HashSet::new();
+    for def in defs {
+        b += &*format!("    {}->{};", def.input, def.output);
+        if def.input_type == Input {
+            i.insert(def.input);
+        }
+        if def.output_type == Output {
+            o.insert(def.output);
+        }
+    }
+
+    b += "\tsubgraph cluster_0{";
+    for v in i {
+        b += &*format!("\t{};", v);
+    }
+
+    b += "\tstyle=filled;\tcolor=lightgrey;label=\"inputs\"}";
+    b += "\tsubgraph cluster_1{";
+    for v in o {
+        b += &*format!("\t{};", v);
+    }
+    b += "\tstyle=filled;\tcolor=lightgrey;label=\"outputs\"}";
+    b += "}\n===============================================\n";
+
+    println!("{}", b);
 }

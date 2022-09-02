@@ -1,3 +1,4 @@
+use arr_macro::arr;
 use rand::Rng;
 
 pub trait Genome {}
@@ -32,8 +33,8 @@ impl CreatureGenome {
         const OUTPUT_COUNT: usize = 4usize;
         const LINKS_COUNT: usize = 70usize;
 
-        let brain =
-            [mutator.gen_range(0..m); INTERNAL_COUNT + OUTPUT_COUNT + INPUT_COUNT + LINKS_COUNT];
+        let brain: [u32; INTERNAL_COUNT + OUTPUT_COUNT + INPUT_COUNT + LINKS_COUNT] =
+            arr![mutator.gen_range(0..m); 134];
 
         CreatureGenome {
             body: vec![mutator.gen_range(0..m)],

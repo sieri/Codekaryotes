@@ -7,14 +7,13 @@ from sim.life.genome.body_generators import generate_eyes, generate_organism_col
     generate_size, generate_movement
 from sim.life.genome.brain_generator import generate_brain
 from sim.life.genome.plant_generator import generate_plant, generate_plant_color
-from sim.life.mind.brain import Brain
+
 
 possible_modules = {
             "body_active_circle": BodyActiveCircle,
             "body_passive_circle": BodyPassiveCircle,
             "movement": Movement,
             "touch": Touch,
-            "brain": Brain,
             "color": Color,
             "energy_source": EnergySource,
             "energy_storage": EnergyStorage,
