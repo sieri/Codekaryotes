@@ -1,5 +1,5 @@
-mod inputs;
-mod output;
+pub mod inputs;
+pub mod output;
 
 extern crate pyo3;
 
@@ -20,6 +20,7 @@ use pyo3::prelude::*;
 use pyo3::types::IntoPyDict;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter, Result};
+use std::ops::Range;
 use Position::{Internal, Output};
 
 //TODO: set parameters
@@ -51,8 +52,8 @@ pub struct Neuron {
     pub id: usize,
     pub out_val: f64,
     pub in_val: f64,
-    pub input: Option<InputCallback>,
-    pub output: Option<OutputCallback>,
+    pub input: Option<usize>,
+    pub output: Option<usize>,
     pub act: Activation,
 }
 
@@ -79,7 +80,7 @@ struct Link {
 
 pub struct Brain {
     links: Vec<Link>,
-    neurons: Vec<Neuron>,
+    pub neurons: Vec<Neuron>,
     neurons_input_count: usize,
     neurons_internal_count: usize,
     neurons_output_count: usize,
@@ -101,7 +102,7 @@ impl Neuron {
         }
     }
 
-    fn new_input(id: usize, act: Activation, input: InputCallback) -> Neuron {
+    fn new_input(id: usize, act: Activation, input: usize) -> Neuron {
         Neuron {
             id,
             out_val: 0.0,
@@ -112,7 +113,7 @@ impl Neuron {
         }
     }
 
-    fn new_output(id: usize, act: Activation, output: OutputCallback) -> Neuron {
+    fn new_output(id: usize, act: Activation, output: usize) -> Neuron {
         Neuron {
             id,
             out_val: 0.0,
@@ -121,14 +122,6 @@ impl Neuron {
             output: Some(output),
             act,
         }
-    }
-
-    fn update_neural_input(&self) {
-        todo!()
-    }
-
-    fn update_neural_output(&self) {
-        todo!()
     }
 
     fn write_in(&mut self, val: f64) {
@@ -237,55 +230,12 @@ fn to_signed(number: u32, length_of_range: u32) -> f64 {
 }
 
 impl Brain {
-    pub fn update_py(&mut self) -> PyResult<()> {
-        let gil = Python::acquire_gil();
-        let &py = &gil.python();
-
-        //feed links
-        //println!("----------Feed Link----------");
-        self.links.iter().for_each(|x| -> () {
-            let new_val = self.neurons[x.input].out_val * x.weight;
-            self.neurons[x.output].write_in(new_val);
-            //println!("new_val={}, written in {}", new_val, self.neurons[x.output]);
-        });
-
-        // acquire inputs
-        for inp in 0..self.neurons_input_count {
-            self.neurons[inp].update_neural_input();
-        }
-
-        //activate neurons
-        //println!("----------Activation----------");
-        self.neurons.iter_mut().for_each(|n| -> () {
-            match n.act {
-                Activation::Linear => n.out_val = n.in_val,
-                Activation::BinaryStep => {
-                    if n.in_val > 0.0 {
-                        n.out_val = 1.0;
-                    } else {
-                        n.out_val = 0.0;
-                    }
-                }
-                Activation::Logistic => n.out_val = 1.0 / (1.0 + (-n.in_val).exp()),
-                Activation::Tanh => n.out_val = n.in_val.tanh(),
-                Activation::Gaussian => n.out_val = (-(n.in_val.powi(2))).exp(),
-            };
-            //println!("{}", n);
-        });
-
-        Ok(())
+    pub fn out_range(&self) -> Range<usize> {
+        (self.neurons_input_count + self.neurons_internal_count)..self.neurons_output_count
     }
 
-    pub fn output(&mut self) -> PyResult<()> {
-        let gil = Python::acquire_gil();
-        let &py = &gil.python();
-        let range =
-            (self.neurons_input_count + self.neurons_internal_count)..self.neurons_output_count;
-        for x in range {
-            self.neurons[x].update_neural_output();
-        }
-
-        Ok(())
+    pub fn in_range(&self) -> Range<usize> {
+        0..self.neurons_input_count
     }
 }
 
@@ -406,11 +356,9 @@ impl Module<Creature, CreatureGenome> for Brain {
         println!("Inputs");
         for (i, v) in input_map.iter().enumerate() {
             println!("{}: neuron {}", i, v.1);
-            brain.neurons.push(Neuron::new_input(
-                id_counter,
-                inputs[*v.1].act,
-                get_input_callback(*v.1),
-            ));
+            brain
+                .neurons
+                .push(Neuron::new_input(id_counter, inputs[*v.1].act, *v.1));
             inputs_ids.insert(*v.1, id_counter);
             id_counter += 1;
         }
@@ -432,7 +380,7 @@ impl Module<Creature, CreatureGenome> for Brain {
             brain.neurons.push(Neuron::new_output(
                 id_counter,
                 outputs[*v.1 - OUTPUT_PREFIX].act,
-                get_output_callback(*v.1),
+                *v.1,
             ));
             outputs_ids.insert(*v.1, id_counter);
             id_counter += 1;
@@ -446,7 +394,7 @@ impl Module<Creature, CreatureGenome> for Brain {
                 Internal => internals_ids.entry(l.input),
             }
             .or_default();
-            let o = *match l.input_type {
+            let o = *match l.output_type {
                 Input => panic!("This shouldn't happen"),
                 Output => outputs_ids.entry(l.output),
                 Internal => internals_ids.entry(l.output),
@@ -460,7 +408,34 @@ impl Module<Creature, CreatureGenome> for Brain {
 
     fn update(organism: &mut Creature) {
         let s = organism.brain_mut();
-        s.update_py();
+
+        //feed links
+
+        //println!("----------Feed Link----------");
+        s.links.iter().for_each(|x| -> () {
+            let new_val = s.neurons[x.input].out_val * x.weight;
+            s.neurons[x.output].write_in(new_val);
+            //println!("new_val={}, written in {}", new_val, s.neurons[x.output]);
+        });
+
+        //activate neurons
+        //println!("----------Activation----------");
+        s.neurons.iter_mut().for_each(|n| -> () {
+            match n.act {
+                Activation::Linear => n.out_val = n.in_val,
+                Activation::BinaryStep => {
+                    if n.in_val > 0.0 {
+                        n.out_val = 1.0;
+                    } else {
+                        n.out_val = 0.0;
+                    }
+                }
+                Activation::Logistic => n.out_val = 1.0 / (1.0 + (-n.in_val).exp()),
+                Activation::Tanh => n.out_val = n.in_val.tanh(),
+                Activation::Gaussian => n.out_val = (-(n.in_val.powi(2))).exp(),
+            };
+            //println!("{}", n);
+        });
     }
 
     fn reset(organism: &mut Creature) {}

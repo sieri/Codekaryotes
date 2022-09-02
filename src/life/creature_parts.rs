@@ -52,10 +52,10 @@ pub struct Movement {
     energy_rate: f64,
     //Unique
     energy_rate_base: f64,
-    forward: f64,
-    torque: f64,
+    pub(crate) forward: f64,
+    pub(crate) torque: f64,
     multiplier_base: f64,
-    multiplier_signal: f64,
+    pub(crate) multiplier_signal: f64,
     travelled: f64,
     last_pos: Pos,
 }

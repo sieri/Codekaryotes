@@ -1,3 +1,5 @@
+use crate::life::brain::inputs::{get_input_callback, InputCallback};
+use crate::life::brain::output::{get_output_callback, OutputCallback};
 use crate::life::common_parts::{Ancestry, Color};
 use crate::life::creature_parts::{
     ActiveModule, CreatureBody, Eating, EnergyStorage, Eyes, Movement, Reproducer, Touch,
@@ -47,6 +49,14 @@ pub struct Plant(PlantBody, EnergySource, Color, Ancestry);
 
 impl Codekaryote<CreatureGenome> for Creature {
     fn update(&mut self) -> () {
+        let in_range = self.9.in_range().clone();
+        //output the brain
+        for i in in_range {
+            let n = self.9.neurons[i].input.unwrap();
+            let v = get_input_callback(i)(self);
+            self.9.neurons[i].in_val = v;
+        }
+
         CreatureBody::update(self);
         Eyes::update(self);
         Touch::update(self);
@@ -70,6 +80,14 @@ impl Codekaryote<CreatureGenome> for Creature {
         if !still_alive {
             self.die();
             return;
+        }
+
+        let out_range = self.9.out_range().clone();
+        //output the brain
+        for i in out_range {
+            let n = self.9.neurons[i].output.unwrap();
+            let v = self.9.neurons[i].out_val;
+            get_output_callback(n)(self, v);
         }
 
         //reset the modules
