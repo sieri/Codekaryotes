@@ -6,9 +6,11 @@ fn force_multiplier_neuron(organism: &mut Creature, arg: f64) {
     organism.movement_mut().multiplier_signal += arg
 }
 fn move_forward_neuron(organism: &mut Creature, arg: f64) {
+    println!("forward {}", arg);
     organism.movement_mut().forward += arg
 }
 fn move_backward_neuron(organism: &mut Creature, arg: f64) {
+    println!("Backward {}", arg);
     organism.movement_mut().forward -= arg
 }
 fn turn_right_neuron(organism: &mut Creature, arg: f64) {

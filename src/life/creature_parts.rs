@@ -33,13 +33,22 @@ impl CreatureBody {
     pub(crate) fn push(&self, force: f64) {
         let gil = Python::acquire_gil();
         let &py = &gil.python();
-        self.circle
+
+        self.body
             .call_method(py, "apply_force_at_local_point", ((force, 0),), None);
     }
     pub(crate) fn rotate(&self, torque: f64) {
         let gil = Python::acquire_gil();
         let &py = &gil.python();
-        self.circle.call_method(py, "torque", (torque,), None);
+        let force = torque / self.size;
+        println!("Force: {}", force);
+        self.body.call_method(
+            //TODO: Doesn't work will need to change physics engine
+            py,
+            "apply_force_at_local_point",
+            ((force, 0), (self.size, 0)),
+            None,
+        );
     }
 }
 
@@ -267,10 +276,33 @@ impl CreatureModule for Ancestry {}
 
 impl CreatureModule for Color {}
 
+fn scale_between(
+    n: f64,
+    smallest: f64,
+    largest: f64,
+    initial_smallest: Option<f64>,
+    initial_biggest: Option<f64>,
+) -> f64 {
+    let initial_smallest = initial_smallest.unwrap_or(0.0);
+    let initial_biggest = initial_biggest.unwrap_or(u32::MAX as f64);
+
+    let factor = (initial_biggest - initial_smallest) / (largest - smallest);
+    (n - initial_smallest) / factor + smallest
+}
+
+const SPEED_FACTOR_LOWEST: f64 = 100.0;
+const SPEED_FACTOR_HIGHEST: f64 = 200.0;
+
 impl Module<Creature, CreatureGenome> for Movement {
     fn new(chromosome: Chromosome) -> Self {
         const ENERGY_MOVEMENT_RATE: f64 = 0.0005;
-
+        let multiplier_base = scale_between(
+            chromosome[0] as f64,
+            SPEED_FACTOR_LOWEST,
+            SPEED_FACTOR_HIGHEST,
+            None,
+            None,
+        );
         Movement {
             genome: chromosome.to_vec(),
             mutation_rate: 2,
@@ -278,7 +310,7 @@ impl Module<Creature, CreatureGenome> for Movement {
             energy_rate_base: ENERGY_MOVEMENT_RATE,
             forward: 0.0,
             torque: 0.0,
-            multiplier_base: 0.0,
+            multiplier_base,
             multiplier_signal: 1.0,
             travelled: 0.0,
             last_pos: Pos { x: 0.0, y: 0.0 },
@@ -293,6 +325,10 @@ impl Module<Creature, CreatureGenome> for Movement {
         let actual_forward = s.forward * s.multiplier_base * s.multiplier_signal;
         let actual_torque = s.torque * s.multiplier_base * s.multiplier_signal;
         s.energy_rate = s.energy_rate_base * (actual_forward.abs() + actual_torque.abs());
+        println!(
+            "F{}, t{}, s{}",
+            actual_forward, actual_torque, s.multiplier_signal
+        );
         let body = organism.body_mut();
         body.push(actual_forward);
         body.rotate(actual_torque);
@@ -302,7 +338,7 @@ impl Module<Creature, CreatureGenome> for Movement {
         let s = organism.movement_mut();
         s.forward = 0f64;
         s.torque = 0f64;
-        s.multiplier_signal = 0f64;
+        s.multiplier_signal = 1f64;
     }
 
     fn evolve(&self) -> Chromosome {
@@ -337,7 +373,7 @@ impl Module<Creature, CreatureGenome> for Touch {
     }
 
     fn evolve(&self) -> Chromosome {
-        todo!()
+        self.genome.to_vec()
     }
 }
 

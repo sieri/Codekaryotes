@@ -50,12 +50,6 @@ pub struct Plant(PlantBody, EnergySource, Color, Ancestry);
 impl Codekaryote<CreatureGenome> for Creature {
     fn update(&mut self) -> () {
         let in_range = self.9.in_range().clone();
-        //output the brain
-        for i in in_range {
-            let n = self.9.neurons[i].input.unwrap();
-            let v = get_input_callback(i)(self);
-            self.9.neurons[i].in_val = v;
-        }
 
         CreatureBody::update(self);
         Eyes::update(self);
@@ -66,6 +60,13 @@ impl Codekaryote<CreatureGenome> for Creature {
         Eating::update(self);
         Reproducer::update(self);
         Ancestry::update(self);
+
+        //input the brain
+        for i in in_range {
+            let n = self.9.neurons[i].input.unwrap();
+            let v = get_input_callback(i)(self);
+            self.9.neurons[i].in_val = v;
+        }
         Brain::update(self);
 
         //Tally the energy consumption
@@ -82,14 +83,6 @@ impl Codekaryote<CreatureGenome> for Creature {
             return;
         }
 
-        let out_range = self.9.out_range().clone();
-        //output the brain
-        for i in out_range {
-            let n = self.9.neurons[i].output.unwrap();
-            let v = self.9.neurons[i].out_val;
-            get_output_callback(n)(self, v);
-        }
-
         //reset the modules
         CreatureBody::reset(self);
         Eyes::reset(self);
@@ -101,6 +94,16 @@ impl Codekaryote<CreatureGenome> for Creature {
         Reproducer::reset(self);
         Ancestry::reset(self);
         Brain::reset(self);
+
+        let out_range = self.9.out_range().clone();
+        let offset = self.9.offset();
+        println!("out range {:?}", out_range);
+        //output the brain
+        for i in out_range {
+            let n = self.9.neurons[i].output.unwrap();
+            let v = self.9.neurons[i].out_val;
+            get_output_callback(n - offset)(self, v);
+        }
     }
 
     fn reproduce_genome(&self) -> CreatureGenome {

@@ -233,11 +233,15 @@ fn to_signed(number: u32, length_of_range: u32) -> f64 {
 
 impl Brain {
     pub fn out_range(&self) -> Range<usize> {
-        (self.neurons_input_count + self.neurons_internal_count)..self.neurons_output_count
+        (self.neurons_input_count + self.neurons_internal_count)
+            ..(self.neurons_input_count + self.neurons_internal_count + self.neurons_output_count)
     }
 
     pub fn in_range(&self) -> Range<usize> {
         0..self.neurons_input_count
+    }
+    pub fn offset(&self) -> usize {
+        NUM_INPUT + INTERNAL_NEURON
     }
 }
 
@@ -390,7 +394,9 @@ impl Module<Creature, CreatureGenome> for Brain {
             outputs_ids.insert(*v.1, id_counter);
             id_counter += 1;
         }
-
+        brain.neurons_input_count = inputs_ids.len();
+        brain.neurons_internal_count = internals_ids.len();
+        brain.neurons_output_count = outputs_ids.len();
         //Links the neurons
         for l in help.finals.iter() {
             let i = *match l.input_type {
