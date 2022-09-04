@@ -1,4 +1,4 @@
-use crate::codekaryotes::Creature;
+use crate::life::codekaryotes::Creature;
 use crate::life::creature_parts::{ActiveModule, Eyes};
 
 pub type InputCallback = fn(organism: &mut Creature) -> f64;

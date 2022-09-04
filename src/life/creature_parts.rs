@@ -1,4 +1,4 @@
-use crate::codekaryotes::{Codekaryote, Creature, Plant, Pos, Seen};
+use crate::life::codekaryotes::{Codekaryote, Creature, Plant, Pos, Seen};
 use crate::life::common_parts::{Ancestry, Color, Module};
 use crate::life::genome::{Chromosome, CreatureGenome, Mutating};
 use crate::life::brain::Brain;

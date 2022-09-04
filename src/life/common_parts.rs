@@ -1,4 +1,4 @@
-use crate::codekaryotes::Codekaryote;
+use crate::life::codekaryotes::Codekaryote;
 use crate::life;
 use crate::life::genome::{Chromosome, Genome};
 

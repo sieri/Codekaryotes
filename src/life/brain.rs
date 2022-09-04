@@ -1,7 +1,7 @@
 pub mod inputs;
 pub mod output;
 
-use crate::codekaryotes::Creature;
+use crate::life::codekaryotes::Creature;
 use crate::life::brain::output::get_output_callback;
 use crate::life::common_parts::Module;
 use crate::life::creature_parts::{ActiveModule, CreatureModule};

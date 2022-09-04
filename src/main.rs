@@ -1,6 +1,12 @@
-mod codekaryotes;
 mod life;
 
+use bevy::prelude::*;
+use crate::life::LifePlugin;
+
 fn main() {
-    println!("Hello, world!");
+    App::new()
+        .add_plugins(DefaultPlugins)
+        .add_plugin(LifePlugin)
+        .run()
 }
+
