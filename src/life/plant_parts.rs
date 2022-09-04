@@ -1,5 +1,4 @@
 use crate::life::genome::Chromosome;
-use pyo3::PyObject;
 
 pub struct EnergySource {
     //For Module
@@ -15,5 +14,5 @@ pub struct PlantBody {
     mutation_rate: usize,
     //unique
     mass: usize,
-    circle: PyObject,
+    circle: Option<()>,
 }

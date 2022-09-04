@@ -1,11 +1,7 @@
 use crate::codekaryotes::{Codekaryote, Creature, Plant, Pos, Seen};
 use crate::life::common_parts::{Ancestry, Color, Module};
 use crate::life::genome::{Chromosome, CreatureGenome, Mutating};
-use crate::Brain;
-use pyo3::impl_::extract_argument::from_py_with;
-use pyo3::number::or;
-use pyo3::types::IntoPyDict;
-use pyo3::{PyObject, PyResult, Python};
+use crate::life::brain::Brain;
 use std::borrow::BorrowMut;
 use std::fmt::Error;
 
@@ -25,30 +21,16 @@ pub struct CreatureBody {
     //Unique
     pub(crate) size: f64,
     mass: f64,
-    pub(crate) circle: PyObject,
-    pub(crate) body: PyObject,
+    pub(crate) circle: Option<()>,
+    pub(crate) body: Option<()>,
 }
 
 impl CreatureBody {
     pub(crate) fn push(&self, force: f64) {
-        let gil = Python::acquire_gil();
-        let &py = &gil.python();
-
-        self.body
-            .call_method(py, "apply_force_at_local_point", ((force, 0),), None);
+        todo!("Push the creature")
     }
     pub(crate) fn rotate(&self, torque: f64) {
-        let gil = Python::acquire_gil();
-        let &py = &gil.python();
-        let force = torque / self.size;
-        println!("Force: {}", force);
-        self.body.call_method(
-            //TODO: Doesn't work will need to change physics engine
-            py,
-            "apply_force_at_local_point",
-            ((force, 0), (self.size, 0)),
-            None,
-        );
+        todo!("Rotate the creature")
     }
 }
 
@@ -87,7 +69,7 @@ pub struct Eyes {
     //Unique
     fov: u32,
     range: u32,
-    shape: PyObject,
+    shape: (),
     pub(crate) seen_creatures: Vec<Seen>,
     pub(crate) seen_plants: Vec<Seen>,
 }
@@ -126,19 +108,7 @@ impl Module<Creature, CreatureGenome> for CreatureBody {
         let mass: f64 = size.powi(2) * BODY_MASS_UNIT;
 
         //get circle
-        let gil = Python::acquire_gil();
-        let &py = &gil.python();
-        let locals = [("phy", py.import("sim.life.body.physics").unwrap())].into_py_dict(py);
-        println!("{:?}", locals);
-        let code = format!("phy.Body_generator({})", size);
-
-        let result = py.eval(code.as_str(), None, Some(&locals));
-        println!("result, {:?}", result);
-        let bod_generator = result.unwrap();
-        let r = bod_generator.getattr("body");
-        let body = r.unwrap();
-        let r = bod_generator.getattr("shape");
-        let shape = r.unwrap();
+        todo!("Get make the body in the new engine");
 
         CreatureBody {
             genome: chromosome.to_vec(),
@@ -146,8 +116,8 @@ impl Module<Creature, CreatureGenome> for CreatureBody {
             energy_rate: 0.0,
             size: size,
             mass: mass,
-            circle: PyObject::from(shape),
-            body: PyObject::from(body),
+            circle: None,
+            body: None,
         }
     }
 
@@ -172,61 +142,19 @@ impl CreatureModule for CreatureBody {}
 
 impl CreatureBody {
     pub fn get_position(&self) -> Pos {
-        let gil = Python::acquire_gil();
-        let &py = &gil.python();
-        let r = self.body.getattr(py, "position").unwrap();
-
-        let x: PyResult<f64> = match r.getattr(py, "x") {
-            Ok(x) => x.extract(py),
-            Err(_) => panic!("Cant get Attr"),
-        };
-        let y: PyResult<f64> = match r.getattr(py, "y") {
-            Ok(y) => y.extract(py),
-            Err(_) => panic!("Cant get Attr"),
-        };
-
-        Pos {
-            x: x.unwrap(),
-            y: y.unwrap(),
-        }
+        todo!("Make for new engine")
     }
 
     pub fn get_angle(&self) -> f64 {
-        let gil = Python::acquire_gil();
-        let &py = &gil.python();
-        let angle: f64 = match self.body.getattr(py, "angle") {
-            Ok(x) => x.extract(py).unwrap(),
-            Err(_) => panic!("Can't get angle"),
-        };
-
-        angle
+        todo!("Make for new engine")
     }
 
     pub fn get_speed(&self) -> f64 {
-        let gil = Python::acquire_gil();
-        let &py = &gil.python();
-        let velocity = match self.body.getattr(py, "velocity") {
-            Ok(x) => x,
-            Err(_) => panic!("Can't get velocity"),
-        };
-
-        let vel: f64 = match velocity.getattr(py, "length") {
-            Ok(x) => x.extract(py).unwrap(),
-            Err(_) => panic!("Can't get length"),
-        };
-
-        vel
+        todo!("Make for new engine")
     }
 
     pub fn get_speed_rotation(&self) -> f64 {
-        let gil = Python::acquire_gil();
-        let &py = &gil.python();
-        let angular_velocity: f64 = match self.body.getattr(py, "angular_velocity") {
-            Ok(x) => x.extract(py).unwrap(),
-            Err(_) => panic!("Can't get angular_velocity"),
-        };
-
-        angular_velocity
+        todo!("Make for new engine")
     }
 }
 
@@ -390,20 +318,16 @@ impl Module<Creature, CreatureGenome> for Eyes {
         let energy_rate: f64 = ((fov as f64) / 180.0 * (range as f64)) * ENERGY_EYES_RATE;
 
         //get shape
-        let gil = Python::acquire_gil();
-        let &py = &gil.python();
-        let locals = [("eyes", py.import("sim.life.body.eyes").unwrap())].into_py_dict(py);
-        let code = format!("eyes.method_name({},{})", fov, range);
+        todo!("Make for new engine");
 
-        let shape = py.eval(code.as_str(), None, Some(&locals));
-        println!("Shape, {:?}", shape);
+
         Eyes {
             genome: chromosome.to_vec(),
             mutation_rate: 1,
             energy_rate,
             fov,
             range,
-            shape: PyObject::from(shape.unwrap()),
+            shape: todo!("new type"),
             seen_creatures: vec![],
             seen_plants: vec![],
         }

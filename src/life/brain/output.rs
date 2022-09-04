@@ -1,4 +1,4 @@
-use crate::Creature;
+use crate::codekaryotes::Creature;
 
 pub type OutputCallback = fn(organism: &mut Creature, arg: f64);
 

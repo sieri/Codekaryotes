@@ -1,6 +1,5 @@
+use crate::codekaryotes::Creature;
 use crate::life::creature_parts::{ActiveModule, Eyes};
-use crate::Creature;
-use pyo3::number::or;
 
 pub type InputCallback = fn(organism: &mut Creature) -> f64;
 

@@ -1,29 +1,22 @@
 pub mod inputs;
 pub mod output;
 
-extern crate pyo3;
-
 use crate::codekaryotes::Creature;
 use crate::life::brain::output::get_output_callback;
 use crate::life::common_parts::Module;
 use crate::life::creature_parts::{ActiveModule, CreatureModule};
 use crate::life::genome::Mutating;
 use crate::life::genome::{Chromosome, CreatureGenome};
-use crate::Position::Input;
+
 use arr_macro::arr;
 use inputs::{get_input_callback, InputCallback};
 use output::OutputCallback;
-use pyo3::basic::CompareOp::Ne;
-use pyo3::ffi::newfunc;
-use pyo3::number::or;
-use pyo3::prelude::*;
-use pyo3::types::IntoPyDict;
 use rand::distributions::Slice;
 use std::collections::{HashMap, HashSet};
 use std::fmt::{format, Write};
 use std::fmt::{Display, Formatter, Result};
 use std::ops::Range;
-use Position::{Internal, Output};
+use Position::{Internal, Output, Input};
 
 //TODO: set parameters
 const LINKS: usize = 70;
