@@ -3,16 +3,6 @@
 version = 3
 
 [[package]]
-name = "Codekaryotes"
-version = "0.1.0"
-dependencies = [
- "arr_macro",
- "bevy",
- "rand",
- "rapier2d",
-]
-
-[[package]]
 name = "ab_glyph"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1020,6 +1010,16 @@ dependencies = [
  "foreign-types",
  "libc",
  "objc",
+]
+
+[[package]]
+name = "codekaryotes"
+version = "2.0.0"
+dependencies = [
+ "arr_macro",
+ "bevy",
+ "rand",
+ "rapier2d",
 ]
 
 [[package]]
