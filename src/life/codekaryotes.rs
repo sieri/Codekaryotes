@@ -6,8 +6,9 @@ use bevy::{
     time::FixedTimestep,
 };
 
+use crate::life::common_parts::ChromosomalComponent;
 use crate::life::genome::{CreatureGenome, Genome};
-use crate::life::WorldParameters;
+use crate::life::{common_parts, WorldParameters};
 use crate::shape::Circle;
 use crate::Res;
 use rand::Rng;
@@ -21,6 +22,7 @@ pub struct Pos {
 #[derive(Bundle, Clone)]
 pub struct Creature {
     pub(crate) pos: Pos,
+    pub(crate) color: common_parts::Color,
     #[bundle]
     pub mesh_bundle: MaterialMesh2dBundle<ColorMaterial>,
 }
@@ -34,6 +36,7 @@ impl Creature {
     pub fn new(genome: CreatureGenome, pos: Pos) -> Self {
         Creature {
             pos,
+            color: common_parts::Color::new(genome.color),
             mesh_bundle: default(),
         }
     }
@@ -43,8 +46,9 @@ impl Creature {
     }
 
     pub fn create_mesh(&self) -> (Circle, ColorMaterial) {
+        let color = Color::rgb(self.color.r, self.color.g, self.color.b);
         let circle = shape::Circle::new(50.);
-        let material = ColorMaterial::from(Color::PURPLE);
+        let material = ColorMaterial::from(color);
         (circle, material)
     }
 }

@@ -1,30 +1,38 @@
-use crate::life::codekaryotes::Codekaryote;
 use crate::life;
 use crate::life::genome::{Chromosome, Genome};
+use bevy::prelude::*;
 
-pub trait Module<T, G>
-where
-    T: Codekaryote<G>,
-    G: Genome,
-{
-    fn new(chromosome: Chromosome) -> Self;
-    fn update(organism: &mut T);
-    fn reset(organism: &mut T);
-    fn evolve(&self) -> Chromosome;
+pub trait ChromosomalComponent {
+    fn new(c: Chromosome) -> Self;
+    fn get_mutated(&self) -> Chromosome;
 }
 
-#[derive(Debug, Clone)]
+#[derive(Component, Debug, Clone)]
 pub struct Color {
     //For Module
-    pub(crate) genome: Chromosome,
-    pub(crate) mutation_rate: usize,
+    pub(crate) chromosome: Chromosome,
     //unique
-    pub(crate) r: u8,
-    pub(crate) g: u8,
-    pub(crate) b: u8,
+    pub(crate) r: f32,
+    pub(crate) g: f32,
+    pub(crate) b: f32,
 }
 
-#[derive(Debug, Clone)]
+impl ChromosomalComponent for Color {
+    fn new(c: Chromosome) -> Self {
+        Color {
+            chromosome: c.to_vec(),
+            r: (c[0] as f32) / (u32::MAX as f32),
+            g: (c[1] as f32) / (u32::MAX as f32),
+            b: (c[2] as f32) / (u32::MAX as f32),
+        }
+    }
+
+    fn get_mutated(&self) -> Chromosome {
+        self.chromosome.to_vec()
+    }
+}
+
+#[derive(Component, Debug, Clone)]
 pub struct Ancestry {
     //For Module
     pub(crate) genome: Chromosome,

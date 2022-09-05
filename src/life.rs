@@ -12,6 +12,7 @@ pub mod genome;
 //pub mod plant_parts;
 pub mod body;
 pub mod codekaryotes;
+pub mod common_parts;
 
 pub struct LifePlugin;
 
@@ -35,7 +36,8 @@ impl FromWorld for WorldParameters {
 
 impl Plugin for LifePlugin {
     fn build(&self, app: &mut App) {
-        //app;
+        app.init_resource::<WorldParameters>()
+            .add_startup_system(create_world);
     }
 
     fn name(&self) -> &str {

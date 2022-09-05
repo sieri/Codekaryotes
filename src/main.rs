@@ -7,8 +7,7 @@ use rapier2d::crossbeam::channel::after;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .init_resource::<WorldParameters>()
-        .add_startup_system(create_world)
+        .add_plugin(LifePlugin)
         .add_system(bevy::window::close_on_esc)
         .run()
 }
