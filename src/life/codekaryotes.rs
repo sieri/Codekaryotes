@@ -1,9 +1,6 @@
 use crate::life::common_parts::{ChromosomalComponent, CodekaryoteBody, CodekaryoteColor};
-use crate::life::genome::{CreatureGenome, Genome};
-use crate::life::{common_parts, WorldParameters};
+use crate::life::genome::CreatureGenome;
 use crate::shape::Circle;
-use crate::Res;
-use bevy::ecs::schedule::ShouldRun::No;
 use bevy::sprite::MaterialMesh2dBundle;
 use bevy::{
     prelude::*,
@@ -21,7 +18,7 @@ pub struct Pos {
 
 #[derive(Bundle, Clone)]
 pub struct Creature {
-    pub(crate) pos: Pos,
+    pub(crate) starting_pos: Pos,
     pub(crate) color: CodekaryoteColor,
     pub(crate) body: CodekaryoteBody,
     #[bundle]
@@ -36,7 +33,7 @@ pub struct Plant {
 impl Creature {
     pub fn new(genome: CreatureGenome, pos: Pos) -> Self {
         Creature {
-            pos,
+            starting_pos: pos,
             color: CodekaryoteColor::new(genome.color),
             body: CodekaryoteBody::new(genome.body),
             mesh_bundle: default(),
@@ -49,7 +46,7 @@ impl Creature {
 
     pub fn create_mesh(&self) -> (Circle, ColorMaterial) {
         let color = Color::rgb(self.color.r, self.color.g, self.color.b);
-        let circle = shape::Circle::new(self.body.size);
+        let circle = Circle::new(self.body.size);
         let material = ColorMaterial::from(color);
         (circle, material)
     }
