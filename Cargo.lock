@@ -563,6 +563,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9960c19e582b43cebe1894b6679520a4f50802d1cc5b6fa432f8d685ed232f09"
 
 [[package]]
+name = "bevy_rapier2d"
+version = "0.16.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e94ea9324a836efedf4b3673a3c5e2011490fa440478d244fe6b1783557ab4fd"
+dependencies = [
+ "bevy",
+ "bitflags",
+ "log",
+ "nalgebra",
+ "rapier2d",
+]
+
+[[package]]
 name = "bevy_reflect"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1018,8 +1031,8 @@ version = "2.0.0"
 dependencies = [
  "arr_macro",
  "bevy",
+ "bevy_rapier2d",
  "rand",
- "rapier2d",
 ]
 
 [[package]]
@@ -2108,6 +2121,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e9e0a04ce089f9401aac565c740ed30c46291260f27d4911fdbaa6ca65fa3044"
 dependencies = [
  "approx",
+ "glam",
  "matrixmultiply",
  "nalgebra-macros",
  "num-complex",

@@ -11,19 +11,7 @@ pub trait ActiveModule {
     fn get_energy_rate(&self) -> f64;
 }
 
-#[derive(Debug, Clone)]
-pub struct CreatureBody {
-    //For Module
-    genome: Chromosome,
-    mutation_rate: usize,
-    //For active
-    energy_rate: f64,
-    //Unique
-    pub(crate) size: f64,
-    mass: f64,
-    pub(crate) circle: Option<()>,
-    pub(crate) body: Option<()>,
-}
+
 
 impl CreatureBody {
     pub(crate) fn push(&self, force: f64) {
@@ -204,19 +192,7 @@ impl CreatureModule for Ancestry {}
 
 impl CreatureModule for Color {}
 
-fn scale_between(
-    n: f64,
-    smallest: f64,
-    largest: f64,
-    initial_smallest: Option<f64>,
-    initial_biggest: Option<f64>,
-) -> f64 {
-    let initial_smallest = initial_smallest.unwrap_or(0.0);
-    let initial_biggest = initial_biggest.unwrap_or(u32::MAX as f64);
 
-    let factor = (initial_biggest - initial_smallest) / (largest - smallest);
-    (n - initial_smallest) / factor + smallest
-}
 
 const SPEED_FACTOR_LOWEST: f64 = 100.0;
 const SPEED_FACTOR_HIGHEST: f64 = 200.0;

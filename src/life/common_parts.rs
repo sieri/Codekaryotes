@@ -1,5 +1,6 @@
 use crate::life;
-use crate::life::genome::{Chromosome, Genome};
+use crate::life::genome::{Chromosome, Genome, Mutating};
+use crate::utils::scale_between;
 use bevy::prelude::*;
 
 pub trait ChromosomalComponent {
@@ -8,7 +9,7 @@ pub trait ChromosomalComponent {
 }
 
 #[derive(Component, Debug, Clone)]
-pub struct Color {
+pub struct CodekaryoteColor {
     //For Module
     pub(crate) chromosome: Chromosome,
     //unique
@@ -17,9 +18,9 @@ pub struct Color {
     pub(crate) b: f32,
 }
 
-impl ChromosomalComponent for Color {
+impl ChromosomalComponent for CodekaryoteColor {
     fn new(c: Chromosome) -> Self {
-        Color {
+        CodekaryoteColor {
             chromosome: c.to_vec(),
             r: (c[0] as f32) / (u32::MAX as f32),
             g: (c[1] as f32) / (u32::MAX as f32),
@@ -39,5 +40,34 @@ pub struct Ancestry {
     pub(crate) mutation_rate: usize,
     //unique
     pub(crate) generation: u32,
-    pub(crate) age: f64,
+    pub(crate) age: f32,
+}
+
+#[derive(Component, Debug, Clone)]
+pub struct CodekaryoteBody {
+    //For Module
+    chromosome: Chromosome,
+    //Unique
+    pub(crate) size: f32,
+    pub(crate) mass: f32,
+}
+
+impl ChromosomalComponent for CodekaryoteBody {
+    fn new(c: Chromosome) -> Self {
+        const MIN: f32 = 10.0;
+        const MAX: f32 = 40.0;
+        const BODY_MASS_UNIT: f32 = 1f32;
+        let size: f32 = scale_between(c[0] as f32, MIN, MAX, None, None);
+        let mass: f32 = size.powi(2) * BODY_MASS_UNIT;
+
+        CodekaryoteBody {
+            chromosome: c.to_vec(),
+            size,
+            mass,
+        }
+    }
+
+    fn get_mutated(&self) -> Chromosome {
+        self.chromosome.mutate(1)
+    }
 }

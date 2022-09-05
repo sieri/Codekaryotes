@@ -1,6 +1,7 @@
 use bevy::app::Plugin;
 
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy_rapier2d::prelude::*;
 
 use crate::life::codekaryotes::Creature;
 use crate::{App, Commands, FromWorld, World};
@@ -10,7 +11,6 @@ use crate::{App, Commands, FromWorld, World};
 //pub mod creature_parts;
 pub mod genome;
 //pub mod plant_parts;
-pub mod body;
 pub mod codekaryotes;
 pub mod common_parts;
 
@@ -37,6 +37,7 @@ impl FromWorld for WorldParameters {
 impl Plugin for LifePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WorldParameters>()
+            .add_startup_system(setup_graphics)
             .add_startup_system(create_world);
     }
 
@@ -45,13 +46,22 @@ impl Plugin for LifePlugin {
     }
 }
 
+fn setup_graphics(mut commands: Commands) {
+    // Add a camera so we can see the debug-render.
+    commands.spawn_bundle(Camera2dBundle::default());
+}
+
 pub fn create_world(
     mut commands: Commands,
     world_parameters: Res<WorldParameters>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    commands.spawn_bundle(Camera2dBundle::default());
+    /* Create the ground. */
+    commands
+        .spawn()
+        .insert(Collider::cuboid(500.0, 50.0))
+        .insert_bundle(TransformBundle::from(Transform::from_xyz(0.0, -100.0, 0.0)));
 
     let initial_creatures = world_parameters.initial_creature;
     let limits = (world_parameters.width, world_parameters.height);
@@ -59,13 +69,18 @@ pub fn create_world(
     for _ in 0..initial_creatures {
         let mut creature = Creature::new_rand(limits);
         let mesh_param = creature.create_mesh();
+        let body_param = creature.create_body();
         creature.mesh_bundle = MaterialMesh2dBundle {
             mesh: meshes.add(mesh_param.0.into()).into(),
             material: materials.add(mesh_param.1),
             transform: Transform::from_translation(Vec3::new(creature.pos.x, creature.pos.y, 0.)),
             ..default()
         };
-        commands.spawn_bundle(creature);
+
+        commands
+            .spawn_bundle(creature)
+            .insert(body_param.0)
+            .insert(body_param.1);
     }
     println!("Done!")
 }
