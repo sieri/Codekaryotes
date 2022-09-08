@@ -1,5 +1,5 @@
 use crate::life::common_parts::{ChromosomalComponent, CodekaryoteBody, CodekaryoteColor};
-use crate::life::genome::CreatureGenome;
+use crate::life::genome::{CreatureGenome, PlantGenome};
 use crate::shape::Circle;
 use bevy::sprite::MaterialMesh2dBundle;
 use bevy::{
@@ -23,11 +23,6 @@ pub struct Creature {
     pub(crate) body: CodekaryoteBody,
     #[bundle]
     pub mesh_bundle: MaterialMesh2dBundle<ColorMaterial>,
-}
-
-#[derive(Bundle, Clone)]
-pub struct Plant {
-    pos: Pos,
 }
 
 impl Creature {
@@ -56,6 +51,40 @@ impl Creature {
     }
 }
 
+#[derive(Bundle, Clone)]
+pub struct Plant {
+    pub(crate) starting_pos: Pos,
+    pub(crate) color: CodekaryoteColor,
+    pub(crate) body: CodekaryoteBody,
+    #[bundle]
+    pub mesh_bundle: MaterialMesh2dBundle<ColorMaterial>,
+}
+
+impl Plant {
+    pub fn new(genome: PlantGenome, pos: Pos) -> Self {
+        Plant {
+            starting_pos: pos,
+            color: CodekaryoteColor::new(genome.color),
+            body: CodekaryoteBody::new(genome.body),
+            mesh_bundle: default(),
+        }
+    }
+
+    pub fn new_rand(limits: (f32, f32)) -> Self {
+        Self::new(PlantGenome::new(), Pos::rand(limits))
+    }
+
+    pub fn create_mesh(&self) -> (Circle, ColorMaterial) {
+        let color = Color::rgb(self.color.r, self.color.g, self.color.b);
+        let circle = Circle::new(self.body.size);
+        let material = ColorMaterial::from(color);
+        (circle, material)
+    }
+
+    pub fn create_body(&self) -> (RigidBody, Collider) {
+        (RigidBody::Dynamic, Collider::ball(self.body.size))
+    }
+}
 impl Pos {
     pub fn rand(limits: (f32, f32)) -> Pos {
         let mut r = rand::thread_rng();

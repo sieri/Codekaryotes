@@ -3,7 +3,7 @@ use bevy::app::Plugin;
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use bevy_rapier2d::prelude::*;
 
-use crate::life::codekaryotes::Creature;
+use crate::life::codekaryotes::{Creature, Plant};
 use crate::{graphics, App, Commands, FromWorld, World};
 
 //pub mod brain;
@@ -40,7 +40,6 @@ impl Plugin for LifePlugin {
             .add_startup_system(graphics::setup_graphics)
             .add_startup_system(create_world);
     }
-
     fn name(&self) -> &str {
         "Life and evolution of Codekaryotes"
     }
@@ -90,6 +89,7 @@ pub fn create_world(
         )));
 
     let initial_creatures = world_parameters.initial_creature;
+    let initial_plants = world_parameters.initial_plant;
     let limits = (world_parameters.width, world_parameters.height);
 
     for _ in 0..initial_creatures {
@@ -109,6 +109,27 @@ pub fn create_world(
 
         commands
             .spawn_bundle(creature)
+            .insert(body_param.0)
+            .insert(body_param.1);
+    }
+
+    for _ in 0..initial_plants {
+        let mut plant = Plant::new_rand(limits);
+        let mesh_param = plant.create_mesh();
+        let body_param = plant.create_body();
+        plant.mesh_bundle = MaterialMesh2dBundle {
+            mesh: meshes.add(mesh_param.0.into()).into(),
+            material: materials.add(mesh_param.1),
+            transform: Transform::from_translation(Vec3::new(
+                plant.starting_pos.x,
+                plant.starting_pos.y,
+                0.,
+            )),
+            ..default()
+        };
+
+        commands
+            .spawn_bundle(plant)
             .insert(body_param.0)
             .insert(body_param.1);
     }

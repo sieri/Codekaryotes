@@ -19,7 +19,10 @@ pub struct CreatureGenome {
     pub(crate) brain: Chromosome,
 }
 
-pub struct PlantGenome {}
+pub struct PlantGenome {
+    pub(crate) color: Chromosome,
+    pub(crate) body: Chromosome,
+}
 
 impl Genome for CreatureGenome {}
 
@@ -48,6 +51,18 @@ impl CreatureGenome {
             energy_storage: vec![mutator.gen_range(0..m)],
             ancestry: vec![0, 0],
             brain: brain.to_vec(),
+        }
+    }
+}
+
+impl PlantGenome {
+    pub(crate) fn new() -> PlantGenome {
+        const m: u32 = u32::MAX;
+        let mut mutator = rand::thread_rng();
+
+        PlantGenome {
+            body: vec![mutator.gen_range(0..m)],
+            color: vec![0, m, 0],
         }
     }
 }
