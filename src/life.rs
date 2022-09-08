@@ -4,6 +4,7 @@ use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use bevy_rapier2d::prelude::*;
 
 use crate::life::codekaryotes::{Creature, Plant};
+use crate::life::systems::system_move_codekaryote;
 use crate::{graphics, App, Commands, FromWorld, World};
 
 //pub mod brain;
@@ -13,6 +14,8 @@ pub mod genome;
 //pub mod plant_parts;
 pub mod codekaryotes;
 pub mod common_parts;
+pub mod creature_parts;
+pub mod systems;
 
 pub struct LifePlugin;
 
@@ -38,7 +41,8 @@ impl Plugin for LifePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WorldParameters>()
             .add_startup_system(graphics::setup_graphics)
-            .add_startup_system(create_world);
+            .add_startup_system(create_world)
+            .add_system(system_move_codekaryote);
     }
     fn name(&self) -> &str {
         "Life and evolution of Codekaryotes"
@@ -54,7 +58,7 @@ pub fn create_world(
 ) {
     rapier_parameter.gravity = Vect::ZERO;
 
-    /* Create the ground. */
+    /* Create the walls. */
     commands
         .spawn()
         .insert(Collider::cuboid(world_parameters.width, 50.0))
@@ -88,6 +92,7 @@ pub fn create_world(
             0.0,
         )));
 
+    /* spawn the creatures. */
     let initial_creatures = world_parameters.initial_creature;
     let initial_plants = world_parameters.initial_plant;
     let limits = (world_parameters.width, world_parameters.height);
@@ -110,7 +115,8 @@ pub fn create_world(
         commands
             .spawn_bundle(creature)
             .insert(body_param.0)
-            .insert(body_param.1);
+            .insert(body_param.1)
+            .insert(body_param.2);
     }
 
     for _ in 0..initial_plants {
