@@ -57,12 +57,12 @@ impl CreatureGenome {
 
 impl PlantGenome {
     pub(crate) fn new() -> PlantGenome {
-        const m: u32 = u32::MAX;
+        const M: u32 = u32::MAX;
         let mut mutator = rand::thread_rng();
 
         PlantGenome {
-            body: vec![mutator.gen_range(0..m)],
-            color: vec![0, m, 0],
+            body: vec![mutator.gen_range(0..M)],
+            color: vec![0, M, 0],
         }
     }
 }

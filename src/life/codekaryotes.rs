@@ -1,3 +1,4 @@
+use crate::life::brain::Brain;
 use crate::life::common_parts::{ChromosomalComponent, CodekaryoteBody, CodekaryoteColor};
 use crate::life::creature_parts::Movement;
 use crate::life::genome::{CreatureGenome, PlantGenome};
@@ -23,6 +24,7 @@ pub struct Creature {
     pub(crate) color: CodekaryoteColor,
     pub(crate) body: CodekaryoteBody,
     pub(crate) movement: Movement,
+    pub(crate) brain: Brain,
     #[bundle]
     pub mesh_bundle: MaterialMesh2dBundle<ColorMaterial>,
 }
@@ -34,6 +36,7 @@ impl Creature {
             color: CodekaryoteColor::new(genome.color),
             body: CodekaryoteBody::new(genome.body),
             movement: Movement::new(genome.movement),
+            brain: Brain::new(genome.brain),
             mesh_bundle: default(),
         }
     }
@@ -49,14 +52,15 @@ impl Creature {
         (circle, material)
     }
 
-    pub fn create_body(&self) -> (RigidBody, Collider, ExternalForce) {
+    pub fn create_body(&self) -> (RigidBody, Collider, ExternalForce, Velocity) {
         (
             RigidBody::Dynamic,
             Collider::ball(self.body.size),
             ExternalForce {
                 force: Vec2::ZERO,
                 torque: 0.0,
-            }
+            },
+            Velocity::zero(),
         )
     }
 }

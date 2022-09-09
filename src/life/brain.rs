@@ -1,26 +1,20 @@
-pub mod inputs;
-pub mod output;
+pub mod systems;
 
 use crate::life::codekaryotes::Creature;
-use crate::life::brain::output::get_output_callback;
-use crate::life::common_parts::Module;
-use crate::life::creature_parts::{ActiveModule, CreatureModule};
-use crate::life::genome::Mutating;
-use crate::life::genome::{Chromosome, CreatureGenome};
-
+use crate::life::common_parts::ChromosomalComponent;
+use crate::life::genome::{Chromosome, Mutating};
 use arr_macro::arr;
-use inputs::{get_input_callback, InputCallback};
-use output::OutputCallback;
+use bevy::prelude::*;
 use rand::distributions::Slice;
 use std::collections::{HashMap, HashSet};
 use std::fmt::{format, Write};
 use std::fmt::{Display, Formatter, Result};
 use std::ops::Range;
-use Position::{Internal, Output, Input};
+use Position::{Input, Internal, Output};
 
 //TODO: set parameters
 const LINKS: usize = 70;
-const NUM_INPUT: usize = 12;
+const NUM_INPUT: usize = 14;
 const NUM_OUTPUT: usize = 4;
 const INTERNAL_NEURON: usize = 42;
 
@@ -43,12 +37,79 @@ pub enum Position {
     Internal,
 }
 
+#[derive(Debug, Clone, PartialEq, Copy)]
+pub enum Inputs {
+    Constant,
+    Touch,
+    TouchForward,
+    Angle,
+    Speed,
+    RotationSpeed,
+    Energy,
+    NumSeen,
+    NumSeenCreature,
+    NumSeenPlant,
+    ClosestCreatureAngle,
+    ClosestCreatureDist,
+    ClosestPlantAngle,
+    ClosestPlantDist,
+}
+
+impl From<usize> for Inputs {
+    fn from(i: usize) -> Self {
+        match i {
+            00 => Inputs::Constant,
+            01 => Inputs::Touch,
+            02 => Inputs::TouchForward,
+            03 => Inputs::Angle,
+            04 => Inputs::Speed,
+            05 => Inputs::RotationSpeed,
+            06 => Inputs::Energy,
+            07 => Inputs::NumSeen,
+            08 => Inputs::NumSeenCreature,
+            09 => Inputs::NumSeenPlant,
+            10 => Inputs::ClosestCreatureAngle,
+            11 => Inputs::ClosestCreatureDist,
+            12 => Inputs::ClosestPlantAngle,
+            13 => Inputs::ClosestPlantDist,
+            _ => {
+                panic!("Unknown input")
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Copy)]
+pub enum Outputs {
+    Multiplier,
+    Forward,
+    Backward,
+    TurnLeft,
+    TurnRight,
+}
+
+impl From<usize> for Outputs {
+    fn from(i: usize) -> Self {
+        match i {
+            0 => Outputs::Multiplier,
+            1 => Outputs::Forward,
+            2 => Outputs::Backward,
+            3 => Outputs::TurnLeft,
+            4 => Outputs::TurnRight,
+            _ => {
+                panic!("Unknown input")
+            }
+        }
+    }
+}
+
+#[derive(Clone)]
 pub struct Neuron {
     pub id: usize,
-    pub out_val: f64,
-    pub in_val: f64,
-    pub input: Option<usize>,
-    pub output: Option<usize>,
+    pub out_val: f32,
+    pub in_val: f32,
+    pub input: Option<Inputs>,
+    pub output: Option<Outputs>,
     pub act: Activation,
 }
 
@@ -60,19 +121,21 @@ struct NeuronDefinition {
 
 #[derive(Clone, PartialEq, Copy, Debug)]
 pub struct LinkDefinition {
-    pub weight: f64,
+    pub weight: f32,
     pub input: usize,
     pub output: usize,
     pub input_type: Position,
     pub output_type: Position,
 }
 
+#[derive(Copy, Clone)]
 struct Link {
     input: usize,
     output: usize,
-    weight: f64,
+    weight: f32,
 }
 
+#[derive(Component, Clone)]
 pub struct Brain {
     links: Vec<Link>,
     pub neurons: Vec<Neuron>,
@@ -81,8 +144,7 @@ pub struct Brain {
     neurons_output_count: usize,
 
     //For Module
-    genome: Chromosome,
-    mutation_rate: usize,
+    chromosome: Chromosome,
 }
 
 impl Neuron {
@@ -97,7 +159,7 @@ impl Neuron {
         }
     }
 
-    fn new_input(id: usize, act: Activation, input: usize) -> Neuron {
+    fn new_input(id: usize, act: Activation, input: Inputs) -> Neuron {
         Neuron {
             id,
             out_val: 0.0,
@@ -108,7 +170,7 @@ impl Neuron {
         }
     }
 
-    fn new_output(id: usize, act: Activation, output: usize) -> Neuron {
+    fn new_output(id: usize, act: Activation, output: Outputs) -> Neuron {
         Neuron {
             id,
             out_val: 0.0,
@@ -119,7 +181,7 @@ impl Neuron {
         }
     }
 
-    fn write_in(&mut self, val: f64) {
+    fn write_in(&mut self, val: f32) {
         self.in_val = val;
     }
 }
@@ -161,7 +223,7 @@ impl Display for Activation {
 }
 
 impl Link {
-    fn new(input: usize, output: usize, weight: f64) -> Self {
+    fn new(input: usize, output: usize, weight: f32) -> Self {
         Link {
             input,
             output,
@@ -216,11 +278,11 @@ impl LinkDefinition {
     }
 }
 
-fn to_signed(number: u32, length_of_range: u32) -> f64 {
+fn to_signed(number: u32, length_of_range: u32) -> f32 {
     if test_bit(number, length_of_range - 1) {
-        return -(bit_range(number, 0, length_of_range - 1) as f64);
+        return -(bit_range(number, 0, length_of_range - 1) as f32);
     } else {
-        return number as f64;
+        return number as f32;
     }
 }
 
@@ -290,7 +352,7 @@ fn connected_to_input(l: &LinkDefinition, help: &mut LinkHelper) -> bool {
     }
 }
 
-impl Module<Creature, CreatureGenome> for Brain {
+impl ChromosomalComponent for Brain {
     fn new(chromosome: Chromosome) -> Self {
         let mut brain = Brain {
             links: vec![],
@@ -298,15 +360,14 @@ impl Module<Creature, CreatureGenome> for Brain {
             neurons_input_count: 0,
             neurons_internal_count: 0,
             neurons_output_count: 0,
-            genome: vec![],
-            mutation_rate: 4,
+            chromosome: chromosome.to_vec(),
         };
         println!("Chromosome {:?}", chromosome);
         //initialize brain
         //Get definitions
         let mut index = 0;
 
-        let inputs: [NeuronDefinition; NUM_INPUT] = arr![NeuronDefinition::new({index+=1; index-1}, Input, Activation::from_chromosome(chromosome[index-1] % 5)); 12];
+        let inputs: [NeuronDefinition; NUM_INPUT] = arr![NeuronDefinition::new({index+=1; index-1}, Input, Activation::from_chromosome(chromosome[index-1] % 5)); 14];
         let internals: [NeuronDefinition; INTERNAL_NEURON] = arr![NeuronDefinition::new({index+=1; INTERNAL_PREFIX+index-1}, Position::Internal, Activation::from_chromosome(chromosome[index-1] % 5)); 42];
         let outputs: [NeuronDefinition; NUM_OUTPUT] = arr![NeuronDefinition::new({index+=1; OUTPUT_PREFIX+index-1}, Position::Output, Activation::from_chromosome(chromosome[index-1] % 5)); 4];
 
@@ -358,9 +419,11 @@ impl Module<Creature, CreatureGenome> for Brain {
         println!("Inputs");
         for (i, v) in input_map.iter().enumerate() {
             println!("{}: neuron {}", i, v.1);
-            brain
-                .neurons
-                .push(Neuron::new_input(id_counter, inputs[*v.1].act, *v.1));
+            brain.neurons.push(Neuron::new_input(
+                id_counter,
+                inputs[*v.1].act,
+                (*v.1).into(),
+            ));
             inputs_ids.insert(*v.1, id_counter);
             id_counter += 1;
         }
@@ -382,7 +445,7 @@ impl Module<Creature, CreatureGenome> for Brain {
             brain.neurons.push(Neuron::new_output(
                 id_counter,
                 outputs[*v.1 - OUTPUT_PREFIX].act,
-                *v.1,
+                (*v.1 - OUTPUT_PREFIX).into(),
             ));
             outputs_ids.insert(*v.1, id_counter);
             id_counter += 1;
@@ -409,52 +472,8 @@ impl Module<Creature, CreatureGenome> for Brain {
 
         brain
     }
-
-    fn update(organism: &mut Creature) {
-        let s = organism.brain_mut();
-
-        //feed links
-
-        //println!("----------Feed Link----------");
-        s.links.iter().for_each(|x| -> () {
-            let new_val = s.neurons[x.input].out_val * x.weight;
-            s.neurons[x.output].write_in(new_val);
-            //println!("new_val={}, written in {}", new_val, s.neurons[x.output]);
-        });
-
-        //activate neurons
-        //println!("----------Activation----------");
-        s.neurons.iter_mut().for_each(|n| -> () {
-            match n.act {
-                Activation::Linear => n.out_val = n.in_val,
-                Activation::BinaryStep => {
-                    if n.in_val > 0.0 {
-                        n.out_val = 1.0;
-                    } else {
-                        n.out_val = 0.0;
-                    }
-                }
-                Activation::Logistic => n.out_val = 1.0 / (1.0 + (-n.in_val).exp()),
-                Activation::Tanh => n.out_val = n.in_val.tanh(),
-                Activation::Gaussian => n.out_val = (-(n.in_val.powi(2))).exp(),
-            };
-            //println!("{}", n);
-        });
-    }
-
-    fn reset(organism: &mut Creature) {}
-
-    fn evolve(&self) -> Chromosome {
-        self.genome.mutate(self.mutation_rate)
-    }
-}
-
-impl CreatureModule for Brain {}
-
-impl ActiveModule for Brain {
-    fn get_energy_rate(&self) -> f64 {
-        const ENERGY_PER_LINK: f64 = 0.0004;
-        self.links.len() as f64 * ENERGY_PER_LINK
+    fn get_mutated(&self) -> Chromosome {
+        self.chromosome.mutate(5)
     }
 }
 
