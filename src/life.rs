@@ -2,7 +2,9 @@ use bevy::app::Plugin;
 
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use bevy_rapier2d::prelude::*;
+use bevy_rapier2d::rapier::crossbeam::channel::after;
 
+use crate::life::brain::systems::*;
 use crate::life::codekaryotes::{Creature, Plant};
 use crate::life::systems::system_move_codekaryote;
 use crate::{graphics, App, Commands, FromWorld, World};
@@ -12,6 +14,7 @@ use crate::{graphics, App, Commands, FromWorld, World};
 //pub mod creature_parts;
 pub mod genome;
 //pub mod plant_parts;
+mod brain;
 pub mod codekaryotes;
 pub mod common_parts;
 pub mod creature_parts;
@@ -42,6 +45,10 @@ impl Plugin for LifePlugin {
         app.init_resource::<WorldParameters>()
             .add_startup_system(graphics::setup_graphics)
             .add_startup_system(create_world)
+            .add_system(brain_input_system)
+            .add_system(brain_push_links_system.after(brain_input_system))
+            .add_system(brain_activate_system.after(brain_push_links_system))
+            .add_system(brain_output_system.after(brain_activate_system))
             .add_system(system_move_codekaryote);
     }
     fn name(&self) -> &str {
@@ -116,7 +123,8 @@ pub fn create_world(
             .spawn_bundle(creature)
             .insert(body_param.0)
             .insert(body_param.1)
-            .insert(body_param.2);
+            .insert(body_param.2)
+            .insert(body_param.3);
     }
 
     for _ in 0..initial_plants {

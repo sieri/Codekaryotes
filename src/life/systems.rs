@@ -10,9 +10,12 @@ pub fn system_move_codekaryote(mut query: Query<(&mut ExternalForce, &mut Moveme
         movement.travelled += movement.last_pos.distance(current_pos);
         movement.last_pos = current_pos;
         let actual_forward =
-            movement.forward * movement.multiplier_base * movement.multiplier_signal + 1.0;
+            movement.forward * movement.multiplier_base * movement.multiplier_signal;
         let actual_torque = movement.torque * movement.multiplier_base * movement.multiplier_signal;
         force.force = transform.local_x().truncate() * actual_forward;
         force.torque = actual_torque;
+
+        movement.forward = 0.0;
+        movement.torque = 0.0;
     }
 }
