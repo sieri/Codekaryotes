@@ -1,6 +1,6 @@
 use crate::life::brain::Brain;
 use crate::life::common_parts::{ChromosomalComponent, CodekaryoteBody, CodekaryoteColor};
-use crate::life::creature_parts::Movement;
+use crate::life::creature_parts::{Eyes, Movement};
 use crate::life::genome::{CreatureGenome, PlantGenome};
 use crate::shape::Circle;
 use bevy::sprite::MaterialMesh2dBundle;
@@ -24,9 +24,16 @@ pub struct Creature {
     pub(crate) color: CodekaryoteColor,
     pub(crate) body: CodekaryoteBody,
     pub(crate) movement: Movement,
+    pub(crate) eyes: Eyes,
     pub(crate) brain: Brain,
     #[bundle]
     pub mesh_bundle: MaterialMesh2dBundle<ColorMaterial>,
+}
+
+#[derive(Bundle)]
+pub struct EyeBundle {
+    coll: Collider,
+    sens: Sensor,
 }
 
 impl Creature {
@@ -36,6 +43,7 @@ impl Creature {
             color: CodekaryoteColor::new(genome.color),
             body: CodekaryoteBody::new(genome.body),
             movement: Movement::new(genome.movement),
+            eyes: Eyes::new(genome.eyes),
             brain: Brain::new(genome.brain),
             mesh_bundle: default(),
         }
@@ -52,7 +60,7 @@ impl Creature {
         (circle, material)
     }
 
-    pub fn create_body(&self) -> (RigidBody, Collider, ExternalForce, Velocity) {
+    pub fn create_body(&self) -> (RigidBody, Collider, ExternalForce, Velocity, Damping) {
         (
             RigidBody::Dynamic,
             Collider::ball(self.body.size),
@@ -61,7 +69,27 @@ impl Creature {
                 torque: 0.0,
             },
             Velocity::zero(),
+            Damping {
+                linear_damping: 0.5,
+                angular_damping: 0.9,
+            },
         )
+    }
+
+    pub fn create_eye_sensors(&self) -> Collider {
+        let range = self.eyes.range;
+        let mut vertex = vec![Vec2::ZERO];
+        let fov = self.eyes.fov;
+        let half_fov = fov / 2.0;
+        let num_seg = 20;
+        for i in 0..=num_seg {
+            let angle = ((i as f32) * fov / num_seg as f32) - half_fov;
+            let vec = range * Vec2::new(angle.cos(), angle.sin());
+
+            vertex.push(vec)
+        }
+        let mut coll = Collider::convex_polyline(vertex).unwrap();
+        coll
     }
 }
 

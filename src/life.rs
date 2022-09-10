@@ -6,6 +6,7 @@ use bevy_rapier2d::rapier::crossbeam::channel::after;
 
 use crate::life::brain::systems::*;
 use crate::life::codekaryotes::{Creature, Plant};
+use crate::life::creature_parts::Seen;
 use crate::life::systems::system_move_codekaryote;
 use crate::{graphics, App, Commands, FromWorld, World};
 
@@ -71,7 +72,7 @@ pub fn create_world(
         .insert(Collider::cuboid(world_parameters.width, 50.0))
         .insert_bundle(TransformBundle::from(Transform::from_xyz(
             0.0,
-            -world_parameters.height / 2.0,
+            -world_parameters.height,
             0.0,
         )));
     commands
@@ -79,14 +80,14 @@ pub fn create_world(
         .insert(Collider::cuboid(world_parameters.width, 50.0))
         .insert_bundle(TransformBundle::from(Transform::from_xyz(
             0.0,
-            world_parameters.height / 2.0,
+            world_parameters.height,
             0.0,
         )));
     commands
         .spawn()
         .insert(Collider::cuboid(50.0, world_parameters.height))
         .insert_bundle(TransformBundle::from(Transform::from_xyz(
-            -world_parameters.width / 2.0,
+            -world_parameters.width,
             0.0,
             0.0,
         )));
@@ -94,7 +95,7 @@ pub fn create_world(
         .spawn()
         .insert(Collider::cuboid(50.0, world_parameters.height))
         .insert_bundle(TransformBundle::from(Transform::from_xyz(
-            world_parameters.width / 2.0,
+            world_parameters.width,
             0.0,
             0.0,
         )));
@@ -106,8 +107,12 @@ pub fn create_world(
 
     for _ in 0..initial_creatures {
         let mut creature = Creature::new_rand(limits);
+        let x = creature.starting_pos.x;
+        let y = creature.starting_pos.y;
         let mesh_param = creature.create_mesh();
         let body_param = creature.create_body();
+        let eyes_collider = creature.create_eye_sensors();
+
         creature.mesh_bundle = MaterialMesh2dBundle {
             mesh: meshes.add(mesh_param.0.into()).into(),
             material: materials.add(mesh_param.1),
@@ -119,12 +124,30 @@ pub fn create_world(
             ..default()
         };
 
-        commands
+        let creature_entity = commands
             .spawn_bundle(creature)
             .insert(body_param.0)
             .insert(body_param.1)
             .insert(body_param.2)
-            .insert(body_param.3);
+            .insert(body_param.3)
+            .insert(body_param.4)
+            .id();
+
+        let joint = FixedJointBuilder::new().local_anchor1(Vec2::new(0.0, 0.0));
+        let eyes_entity = [commands
+            .spawn()
+            .insert(ImpulseJoint::new(creature_entity, joint))
+            //.insert(RigidBody::Dynamic)
+            .insert(eyes_collider)
+            .insert(ColliderMassProperties::Mass(0.0))
+            .insert(Sensor)
+            .id()];
+
+        commands
+            .entity(creature_entity)
+            .insert_children(0, &eyes_entity);
+
+        //.insert(eyes_collider);
     }
 
     for _ in 0..initial_plants {

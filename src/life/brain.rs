@@ -362,7 +362,6 @@ impl ChromosomalComponent for Brain {
             neurons_output_count: 0,
             chromosome: chromosome.to_vec(),
         };
-        println!("Chromosome {:?}", chromosome);
         //initialize brain
         //Get definitions
         let mut index = 0;
@@ -373,9 +372,6 @@ impl ChromosomalComponent for Brain {
 
         let links: [LinkDefinition; LINKS] =
             arr![LinkDefinition::new(chromosome[{index+=1; index-1}]); 70];
-
-        println!("Original Links {:?}", links);
-        graph_def(&links);
 
         //clean links
         let list_of_output_link: Vec<&LinkDefinition> =
@@ -416,9 +412,7 @@ impl ChromosomalComponent for Brain {
         //Put the neurons in the brain, and give them a continuous id
         let mut id_counter = 0;
         let mut inputs_ids = HashMap::new();
-        println!("Inputs");
         for (i, v) in input_map.iter().enumerate() {
-            println!("{}: neuron {}", i, v.1);
             brain.neurons.push(Neuron::new_input(
                 id_counter,
                 inputs[*v.1].act,
@@ -428,9 +422,7 @@ impl ChromosomalComponent for Brain {
             id_counter += 1;
         }
         let mut internals_ids = HashMap::new();
-        println!("Internals");
         for (i, v) in internal_map.iter().enumerate() {
-            println!("{}: neuron {}", i, v.1);
             brain.neurons.push(Neuron::new(
                 id_counter,
                 internals[*v.1 - INTERNAL_PREFIX].act,
@@ -439,9 +431,7 @@ impl ChromosomalComponent for Brain {
             id_counter += 1;
         }
         let mut outputs_ids = HashMap::new();
-        println!("Outputs");
         for (i, v) in output_map.iter().enumerate() {
-            println!("{}: neuron {}", i, v.1);
             brain.neurons.push(Neuron::new_output(
                 id_counter,
                 outputs[*v.1 - OUTPUT_PREFIX].act,
