@@ -28,7 +28,7 @@ impl Genome for CreatureGenome {}
 
 impl CreatureGenome {
     pub(crate) fn new() -> CreatureGenome {
-        let m = u32::MAX;
+        const M :u32 = u32::MAX;
         let mut mutator = rand::thread_rng();
 
         const INPUT_COUNT: usize = 18usize;
@@ -37,18 +37,18 @@ impl CreatureGenome {
         const LINKS_COUNT: usize = 70usize;
 
         let brain: [u32; INTERNAL_COUNT + OUTPUT_COUNT + INPUT_COUNT + LINKS_COUNT] =
-            arr![mutator.gen_range(0..m); 134];
+            arr![mutator.gen_range(0..M); 134];
 
         CreatureGenome {
-            body: vec![mutator.gen_range(0..m)],
-            eyes: vec![mutator.gen_range(0..m), mutator.gen_range(0..m)],
-            movement: vec![mutator.gen_range(0..m)],
+            body: vec![mutator.gen_range(0..M)],
+            eyes: vec![mutator.gen_range(0..M), mutator.gen_range(0..M)],
+            movement: vec![mutator.gen_range(0..M), mutator.gen_range(0..M)],
             color: vec![
-                mutator.gen_range(0..m),
-                mutator.gen_range(0..m),
-                mutator.gen_range(0..m),
+                mutator.gen_range(0..M),
+                mutator.gen_range(0..M),
+                mutator.gen_range(0..M),
             ],
-            energy_storage: vec![mutator.gen_range(0..m)],
+            energy_storage: vec![mutator.gen_range(0..M)],
             ancestry: vec![0, 0],
             brain: brain.to_vec(),
         }

@@ -18,7 +18,9 @@ pub mod genome;
 mod brain;
 pub mod codekaryotes;
 pub mod common_parts;
+mod creature;
 pub mod creature_parts;
+mod plant;
 pub mod systems;
 
 pub struct LifePlugin;
@@ -33,10 +35,10 @@ pub struct WorldParameters {
 impl FromWorld for WorldParameters {
     fn from_world(_world: &mut World) -> Self {
         WorldParameters {
-            height: 1000.0,
-            width: 1000.0,
-            initial_creature: 10,
-            initial_plant: 10,
+            height: 3000.0,
+            width: 3000.0,
+            initial_creature: 100,
+            initial_plant: 100,
         }
     }
 }
@@ -107,68 +109,11 @@ pub fn create_world(
 
     for _ in 0..initial_creatures {
         let mut creature = Creature::new_rand(limits);
-        let x = creature.starting_pos.x;
-        let y = creature.starting_pos.y;
-        let mesh_param = creature.create_mesh();
-        let body_param = creature.create_body();
-        let eyes_collider = creature.create_eye_sensors();
-
-        creature.mesh_bundle = MaterialMesh2dBundle {
-            mesh: meshes.add(mesh_param.0.into()).into(),
-            material: materials.add(mesh_param.1),
-            transform: Transform::from_translation(Vec3::new(
-                creature.starting_pos.x,
-                creature.starting_pos.y,
-                0.,
-            )),
-            ..default()
-        };
-
-        let creature_entity = commands
-            .spawn_bundle(creature)
-            .insert(body_param.0)
-            .insert(body_param.1)
-            .insert(body_param.2)
-            .insert(body_param.3)
-            .insert(body_param.4)
-            .id();
-
-        let joint = FixedJointBuilder::new().local_anchor1(Vec2::new(0.0, 0.0));
-        let eyes_entity = [commands
-            .spawn()
-            .insert(ImpulseJoint::new(creature_entity, joint))
-            //.insert(RigidBody::Dynamic)
-            .insert(eyes_collider)
-            .insert(ColliderMassProperties::Mass(0.0))
-            .insert(Sensor)
-            .id()];
-
-        commands
-            .entity(creature_entity)
-            .insert_children(0, &eyes_entity);
-
-        //.insert(eyes_collider);
+        creature::spawn_creature(&mut commands, &mut meshes, &mut materials, creature);
     }
 
     for _ in 0..initial_plants {
         let mut plant = Plant::new_rand(limits);
-        let mesh_param = plant.create_mesh();
-        let body_param = plant.create_body();
-        plant.mesh_bundle = MaterialMesh2dBundle {
-            mesh: meshes.add(mesh_param.0.into()).into(),
-            material: materials.add(mesh_param.1),
-            transform: Transform::from_translation(Vec3::new(
-                plant.starting_pos.x,
-                plant.starting_pos.y,
-                0.,
-            )),
-            ..default()
-        };
-
-        commands
-            .spawn_bundle(plant)
-            .insert(body_param.0)
-            .insert(body_param.1);
+        plant::spawn_plant(&mut commands, &mut meshes, &mut materials, plant);
     }
-    println!("Done!")
 }

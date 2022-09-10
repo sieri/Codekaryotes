@@ -7,6 +7,8 @@ use bevy_rapier2d::prelude::*;
 
 const SPEED_FACTOR_LOWEST: f32 = 100.0;
 const SPEED_FACTOR_HIGHEST: f32 = 200.0;
+const ANGULAR_FACTOR_LOWEST: f32 = 1.0;
+const ANGULAR_FACTOR_HIGHEST: f32 = 2.0;
 const ENERGY_MOVEMENT_RATE: f32 = 0.0005;
 
 #[derive(Component, Debug, Clone)]
@@ -17,7 +19,8 @@ pub struct Movement {
     energy_rate_base: f32,
     pub(crate) forward: f32,
     pub(crate) torque: f32,
-    pub(crate) multiplier_base: f32,
+    pub(crate) multiplier_lin_base: f32,
+    pub(crate) multiplier_ang_base: f32,
     pub(crate) multiplier_signal: f32,
     pub(crate) travelled: f32,
     pub(crate) last_pos: Vec3,
@@ -25,10 +28,17 @@ pub struct Movement {
 
 impl ChromosomalComponent for Movement {
     fn new(c: Chromosome) -> Self {
-        let multiplier_base = scale_between(
+        let multiplier_lin_base = scale_between(
             c[0] as f32,
             SPEED_FACTOR_LOWEST,
             SPEED_FACTOR_HIGHEST,
+            None,
+            None,
+        );
+        let multiplier_ang_base = scale_between(
+            c[1] as f32,
+            ANGULAR_FACTOR_LOWEST,
+            ANGULAR_FACTOR_HIGHEST,
             None,
             None,
         );
@@ -37,7 +47,8 @@ impl ChromosomalComponent for Movement {
             energy_rate_base: ENERGY_MOVEMENT_RATE,
             forward: 0.0,
             torque: 0.0,
-            multiplier_base,
+            multiplier_lin_base,
+            multiplier_ang_base,
             multiplier_signal: 1.0,
             travelled: 0.0,
             last_pos: Vec3::ZERO,
