@@ -1,10 +1,11 @@
-use crate::life::codekaryotes::Creature;
+use crate::life::codekaryotes::{Creature, Kind};
 use crate::{
     default, Assets, BuildChildren, ColorMaterial, Commands, Mesh, ResMut, Transform, Vec2, Vec3,
 };
 use bevy::sprite::MaterialMesh2dBundle;
 use bevy_rapier2d::dynamics::{FixedJointBuilder, ImpulseJoint};
-use bevy_rapier2d::geometry::{ColliderMassProperties, Sensor};
+use bevy_rapier2d::geometry::{ActiveEvents, ColliderMassProperties, Sensor};
+use crate::life::common_parts::Parent;
 
 pub fn spawn_creature(
     commands: &mut Commands,
@@ -29,6 +30,7 @@ pub fn spawn_creature(
 
     let creature_entity = commands
         .spawn_bundle(creature)
+        .insert(Kind::Creature)
         .insert(body_param.0)
         .insert(body_param.1)
         .insert(body_param.2)
@@ -44,6 +46,8 @@ pub fn spawn_creature(
         .insert(eyes_collider)
         .insert(ColliderMassProperties::Mass(0.0))
         .insert(Sensor)
+        .insert(ActiveEvents::COLLISION_EVENTS)
+        .insert(Parent{ entity: creature_entity })
         .id()];
 
     commands

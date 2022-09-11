@@ -1,12 +1,11 @@
 use bevy::app::Plugin;
-
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use bevy_rapier2d::rapier::crossbeam::channel::after;
 
 use crate::life::brain::systems::*;
 use crate::life::codekaryotes::{Creature, Plant};
-use crate::life::creature_parts::Seen;
+
+use crate::life::collisions::collision_event_dispatcher;
 use crate::life::systems::system_move_codekaryote;
 use crate::{graphics, App, Commands, FromWorld, World};
 
@@ -17,6 +16,7 @@ pub mod genome;
 //pub mod plant_parts;
 mod brain;
 pub mod codekaryotes;
+mod collisions;
 pub mod common_parts;
 mod creature;
 pub mod creature_parts;
@@ -52,7 +52,8 @@ impl Plugin for LifePlugin {
             .add_system(brain_push_links_system.after(brain_input_system))
             .add_system(brain_activate_system.after(brain_push_links_system))
             .add_system(brain_output_system.after(brain_activate_system))
-            .add_system(system_move_codekaryote);
+            .add_system(system_move_codekaryote.after(brain_output_system))
+            .add_system(collision_event_dispatcher);
     }
     fn name(&self) -> &str {
         "Life and evolution of Codekaryotes"

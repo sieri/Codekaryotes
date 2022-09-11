@@ -1,3 +1,6 @@
+use crate::{Entity, World};
+use bevy::ecs::component::{ComponentId, ComponentInfo};
+
 pub fn scale_between(
     n: f32,
     smallest: f32,

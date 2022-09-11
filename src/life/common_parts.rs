@@ -71,3 +71,8 @@ impl ChromosomalComponent for CodekaryoteBody {
         self.chromosome.mutate(1)
     }
 }
+
+#[derive(Component, Debug, Clone)]
+pub struct Parent {
+    pub(crate) entity: Entity
+}

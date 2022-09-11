@@ -1,9 +1,13 @@
 use crate::life::codekaryotes::Creature;
-use crate::life::common_parts::CodekaryoteBody;
-use crate::life::creature_parts::Movement;
-use crate::{Changed, Query, Transform, Vec2, Vec4, With};
+use crate::life::common_parts::{CodekaryoteBody, Parent};
+use crate::life::creature_parts::{Eyes, Movement};
+use crate::{Changed, EventReader, Query, Transform, Vec2, Vec4, With};
+use bevy::ecs::query::QueryEntityError;
+use bevy::prelude::World;
 use bevy_rapier2d::na::RealField;
-use bevy_rapier2d::prelude::{ExternalForce, RigidBody, Velocity};
+use bevy_rapier2d::prelude::{CollisionEvent, ExternalForce, RigidBody, Velocity};
+use bevy_rapier2d::rapier::prelude::CollisionEventFlags;
+use std::any::{Any, TypeId};
 use std::cmp::max;
 
 pub const MAX_SPEED: f32 = 100.0;

@@ -93,6 +93,12 @@ impl Creature {
     }
 }
 
+#[derive(Component)]
+pub enum Kind{
+    Creature,
+    Plant
+}
+
 #[derive(Bundle, Clone)]
 pub struct Plant {
     pub(crate) starting_pos: Pos,

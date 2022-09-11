@@ -1,4 +1,4 @@
-use crate::life::codekaryotes::Plant;
+use crate::life::codekaryotes::{Kind, Plant};
 use crate::{default, Assets, ColorMaterial, Commands, Mesh, ResMut, Transform, Vec3};
 use bevy::sprite::MaterialMesh2dBundle;
 
@@ -23,6 +23,7 @@ pub fn spawn_plant(
 
     commands
         .spawn_bundle(plant)
+        .insert(Kind::Plant)
         .insert(body_param.0)
         .insert(body_param.1);
 }
