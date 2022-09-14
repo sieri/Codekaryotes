@@ -1,7 +1,7 @@
 pub mod systems;
 
-use crate::life::codekaryotes::Creature;
 use crate::life::common_parts::ChromosomalComponent;
+use crate::life::creature::Creature;
 use crate::life::genome::{Chromosome, Mutating};
 use arr_macro::arr;
 use bevy::prelude::*;
@@ -142,7 +142,7 @@ pub struct Brain {
     neurons_input_count: usize,
     neurons_internal_count: usize,
     neurons_output_count: usize,
-
+    pub energy_rate: f32,
     //For Module
     chromosome: Chromosome,
 }
@@ -360,6 +360,7 @@ impl ChromosomalComponent for Brain {
             neurons_input_count: 0,
             neurons_internal_count: 0,
             neurons_output_count: 0,
+            energy_rate: 0.0,
             chromosome: chromosome.to_vec(),
         };
         //initialize brain
@@ -459,6 +460,9 @@ impl ChromosomalComponent for Brain {
             .or_default();
             brain.links.push(Link::new(i, o, l.weight))
         }
+
+        brain.energy_rate =
+            0.0000001 * brain.links.len().pow(2) as f32 * (brain.neurons.len() as f32).powi(3);
 
         brain
     }

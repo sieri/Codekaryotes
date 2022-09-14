@@ -99,7 +99,7 @@ pub fn collision_event_dispatcher(
                     Err(_) => {}
                 }
             }
-            _ => todo!("That's a new type of contact you need to deal with"),
+            _ => {}
         }
     }
 }

@@ -1,12 +1,13 @@
 use bevy::app::Plugin;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+use creature::Creature;
 
 use crate::life::brain::systems::*;
-use crate::life::codekaryotes::{Creature, Plant};
+use crate::life::codekaryotes::Plant;
 
 use crate::life::collisions::collision_event_dispatcher;
-use crate::life::systems::system_move_codekaryote;
+use crate::life::systems::{system_consume_energy, system_die, system_move_codekaryote};
 use crate::{graphics, App, Commands, FromWorld, World};
 
 //pub mod brain;
@@ -53,6 +54,8 @@ impl Plugin for LifePlugin {
             .add_system(brain_activate_system.after(brain_push_links_system))
             .add_system(brain_output_system.after(brain_activate_system))
             .add_system(system_move_codekaryote.after(brain_output_system))
+            .add_system(system_consume_energy)
+            .add_system(system_die)
             .add_system(collision_event_dispatcher);
     }
     fn name(&self) -> &str {
