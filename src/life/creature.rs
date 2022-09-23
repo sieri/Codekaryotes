@@ -57,7 +57,16 @@ impl Creature {
         (circle, material)
     }
 
-    pub fn create_body(&self) -> (RigidBody, Collider, ExternalForce, Velocity, Damping) {
+    pub fn create_body(
+        &self,
+    ) -> (
+        RigidBody,
+        Collider,
+        ExternalForce,
+        Velocity,
+        Damping,
+        ActiveEvents,
+    ) {
         (
             RigidBody::Dynamic,
             Collider::ball(self.body.size),
@@ -70,6 +79,7 @@ impl Creature {
                 linear_damping: 0.5,
                 angular_damping: 0.9,
             },
+            ActiveEvents::COLLISION_EVENTS,
         )
     }
 
@@ -119,6 +129,7 @@ pub fn spawn_creature(
         .insert(body_param.2)
         .insert(body_param.3)
         .insert(body_param.4)
+        .insert(body_param.5)
         .id();
 
     let joint = FixedJointBuilder::new().local_anchor1(Vec2::new(0.0, 0.0));

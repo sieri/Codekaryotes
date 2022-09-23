@@ -3,7 +3,7 @@ use crate::life::creature_parts::{Eyes, Movement};
 use crate::Query;
 use bevy::prelude::Transform;
 use bevy_rapier2d::na::RealField;
-use bevy_rapier2d::prelude::{RigidBody, Velocity};
+use bevy_rapier2d::prelude::*;
 
 pub fn brain_push_links_system(mut query: Query<&mut Brain>) {
     for mut brain in query.iter_mut() {

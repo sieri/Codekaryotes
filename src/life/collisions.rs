@@ -1,18 +1,19 @@
 use crate::life::codekaryotes::Kind;
-use crate::life::common_parts::{CodekaryoteBody, Parent};
-use crate::life::creature_parts::{Eyes, Seen};
+use crate::life::common_parts::{CodekaryoteBody, Parent, MASS_ENERGY, MASS_ENERGY_RATE};
+use crate::life::creature_parts::{EnergyStorage, Eyes, Seen};
 use crate::KeyCode::Return;
 use crate::{Entity, EventReader, Mut, Query, Transform, World};
 use bevy::ecs::query::QueryEntityError;
-use bevy_rapier2d::pipeline::CollisionEvent;
-use bevy_rapier2d::prelude::Sensor;
-use bevy_rapier2d::rapier::geometry::CollisionEventFlags;
-use bevy_rapier2d::rapier::prelude::BodyPair;
+use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
+use bevy_rapier2d::rapier::prelude::CollisionEventFlags;
 use std::error::Error;
 
 pub fn collision_event_dispatcher(
+    mut commands: Commands,
     mut collision_events: EventReader<CollisionEvent>,
     mut eyes_query: Query<&mut Eyes>,
+    mut energy_query: Query<&mut EnergyStorage>,
     sensor_query: Query<&Parent>,
     body_query: Query<&CodekaryoteBody>,
     transform_query: Query<&Transform>,
@@ -99,7 +100,47 @@ pub fn collision_event_dispatcher(
                     Err(_) => {}
                 }
             }
-            _ => {}
+            CollisionEvent::Started(en1, en2, e) => {
+                match kind_query.get(*en2) {
+                    Ok(k) => match k {
+                        Kind::Creature => {
+                            // do nothing for now, this is where predation will go
+                        }
+                        Kind::Plant => {
+                            //get the bodies
+                            let own_body = match body_query.get(*en1) {
+                                Ok(val) => val,
+                                Err(_) => {
+                                    continue;
+                                }
+                            };
+
+                            let other_body = match body_query.get(*en2) {
+                                Ok(val) => val,
+                                Err(_) => {
+                                    continue;
+                                }
+                            };
+
+                            if own_body.size > other_body.size {
+                                //eat the plant
+
+                                let energy = other_body.mass * MASS_ENERGY;
+                                let mut energy_storage = match energy_query.get_mut(*en1) {
+                                    Ok(mut val) => val,
+                                    Err(_) => {
+                                        continue;
+                                    }
+                                };
+                                energy_storage.add_energy(energy);
+                                commands.entity(*en2).despawn_recursive();
+                            }
+                        }
+                    },
+                    Err(_) => {}
+                }
+            }
+            CollisionEvent::Stopped(en1, en2, e) => {}
         }
     }
 }

@@ -229,4 +229,14 @@ impl EnergyStorage {
         self.energy_max = max_storage;
         self.current_energy = max_storage / 2.0;
     }
+    
+    pub fn add_energy(&mut self, en : f32)
+    {
+        self.current_energy += en;
+        
+        if self.current_energy > self.energy_max
+        {
+            self.current_energy = self.energy_max;
+        }
+    }
 }

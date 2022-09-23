@@ -3,7 +3,7 @@ use crate::life::genome::{Chromosome, Genome, Mutating};
 use crate::utils::scale_between;
 use bevy::prelude::*;
 
-pub const MASS_ENERGY: f32 = 100.0;
+pub const MASS_ENERGY: f32 = 50.0;
 pub const MASS_ENERGY_RATE: f32 = 0.005;
 
 pub trait ChromosomalComponent {
