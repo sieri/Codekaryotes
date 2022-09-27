@@ -18,6 +18,7 @@ use bevy_rapier2d::geometry::{ActiveEvents, Collider, ColliderMassProperties, Se
 #[derive(Bundle, Clone)]
 pub struct Creature {
     pub(crate) starting_pos: Pos,
+    pub(crate) genome: CreatureGenome,
     pub(crate) color: CodekaryoteColor,
     pub(crate) body: CodekaryoteBody,
     pub(crate) movement: Movement,
@@ -32,6 +33,7 @@ impl Creature {
     pub fn new(genome: CreatureGenome, pos: Pos) -> Self {
         let mut c = Creature {
             starting_pos: pos,
+            genome: genome.clone(),
             color: CodekaryoteColor::new(genome.color),
             body: CodekaryoteBody::new(genome.body),
             movement: Movement::new(genome.movement),

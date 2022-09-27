@@ -239,4 +239,9 @@ impl EnergyStorage {
             self.current_energy = self.energy_max;
         }
     }
+    
+    pub fn get_energy_level(&self) -> f32
+    {
+        self.current_energy/self.energy_max
+    }
 }

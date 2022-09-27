@@ -1,16 +1,18 @@
 use crate::life::brain::Brain;
+use crate::life::codekaryotes::Pos;
 use crate::life::common_parts::{CodekaryoteBody, MASS_ENERGY_RATE};
+use crate::life::creature::{spawn_creature, Creature};
 use crate::life::creature_parts::{
     EnergyStorage, Eyes, Movement, ENERGY_MOVEMENT_RATE, ENERGY_TURNING_RATE,
 };
-use crate::{Changed, Entity, EventReader, Query, Transform, Vec2, Vec4, With};
-use bevy::ecs::query::QueryEntityError;
-use bevy::prelude::{Commands, DespawnRecursiveExt, World};
-use bevy_rapier2d::na::RealField;
-use bevy_rapier2d::prelude::{CollisionEvent, ExternalForce, RigidBody, Velocity};
+use crate::life::genome::{CreatureGenome, Genome};
+use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 
 pub const MAX_SPEED: f32 = 100.0;
 pub const MAX_ANGULAR: f32 = 3.0 * std::f32::consts::PI;
+pub const ENERGY_REP_TRESH: f32 = 0.8;
+pub const ENERGY_REP_COST: f32 = 0.3;
 
 pub fn system_move_codekaryote(
     mut query: Query<(&mut ExternalForce, &mut Movement, &Transform, &Velocity)>,
@@ -72,6 +74,25 @@ pub fn system_die(mut commands: Commands, query: Query<(Entity, &EnergyStorage)>
     for (entity, energy) in query.iter() {
         if energy.current_energy <= 0.0 {
             commands.entity(entity).despawn_recursive();
+        }
+    }
+}
+
+pub fn system_reproduce(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut query: Query<(&CreatureGenome, &Transform, &mut EnergyStorage)>,
+) {
+    for (genome, transform, mut energy_storage) in query.iter_mut() {
+        if energy_storage.get_energy_level() >= ENERGY_REP_TRESH {
+            //TODO: Add randomness
+            energy_storage.current_energy -= ENERGY_REP_COST * energy_storage.energy_max;
+            let new_genome = genome.mutate();
+            let x = transform.translation.x;
+            let y = transform.translation.y;
+            let baby = Creature::new(new_genome, Pos { x, y });
+            spawn_creature(&mut commands, &mut meshes, &mut materials, baby);
         }
     }
 }

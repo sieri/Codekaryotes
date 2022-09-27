@@ -1,7 +1,10 @@
 use arr_macro::arr;
+use bevy::prelude::*;
 use rand::Rng;
 
-pub trait Genome {}
+pub trait Genome {
+    fn mutate(&self) -> Self;
+}
 
 pub trait Mutating {
     fn mutate(&self, mutation_rate: usize) -> Self;
@@ -9,6 +12,7 @@ pub trait Mutating {
 
 pub type Chromosome = Vec<u32>;
 
+#[derive(Component, Clone)]
 pub struct CreatureGenome {
     pub(crate) body: Chromosome,
     pub(crate) eyes: Chromosome,
@@ -24,11 +28,23 @@ pub struct PlantGenome {
     pub(crate) body: Chromosome,
 }
 
-impl Genome for CreatureGenome {}
+impl Genome for CreatureGenome {
+    fn mutate(&self) -> Self {
+        CreatureGenome {
+            body: self.body.mutate(1),
+            eyes: self.eyes.mutate(1),
+            movement: self.movement.mutate(1),
+            color: self.color.mutate(1),
+            energy_storage: self.energy_storage.mutate(1),
+            ancestry: self.ancestry.to_vec(),
+            brain: self.brain.mutate(5),
+        }
+    }
+}
 
 impl CreatureGenome {
     pub(crate) fn new() -> CreatureGenome {
-        const M :u32 = u32::MAX;
+        const M: u32 = u32::MAX;
         let mut mutator = rand::thread_rng();
 
         const INPUT_COUNT: usize = 18usize;
@@ -67,7 +83,11 @@ impl PlantGenome {
     }
 }
 
-impl Genome for PlantGenome {}
+impl Genome for PlantGenome {
+    fn mutate(&self) -> Self {
+        todo!()
+    }
+}
 
 fn toggle_bit(val: u32, index: u8) -> u32 {
     let mask: u32 = 1 << index;
