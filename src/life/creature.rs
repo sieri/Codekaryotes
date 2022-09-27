@@ -3,6 +3,7 @@ use crate::life::codekaryotes::{Kind, Pos};
 use crate::life::common_parts::{ChromosomalComponent, CodekaryoteBody, CodekaryoteColor, Parent};
 use crate::life::creature_parts::{EnergyStorage, Eyes, Movement};
 use crate::life::genome::CreatureGenome;
+use crate::parameters::CodekaryoteParameters;
 use crate::shape::Circle;
 use crate::{
     default, Assets, BuildChildren, Color, ColorMaterial, Commands, Mesh, ResMut, Transform, Vec2,
@@ -30,16 +31,16 @@ pub struct Creature {
 }
 
 impl Creature {
-    pub fn new(genome: CreatureGenome, pos: Pos) -> Self {
+    pub fn new(genome: CreatureGenome, pos: Pos, param: CodekaryoteParameters) -> Self {
         let mut c = Creature {
             starting_pos: pos,
             genome: genome.clone(),
-            color: CodekaryoteColor::new(genome.color),
-            body: CodekaryoteBody::new(genome.body),
-            movement: Movement::new(genome.movement),
-            eyes: Eyes::new(genome.eyes),
-            energy_storage: EnergyStorage::new(genome.energy_storage),
-            brain: Brain::new(genome.brain),
+            color: CodekaryoteColor::new(genome.color, param),
+            body: CodekaryoteBody::new(genome.body, param),
+            movement: Movement::new(genome.movement, param),
+            eyes: Eyes::new(genome.eyes, param),
+            energy_storage: EnergyStorage::new(genome.energy_storage, param),
+            brain: Brain::new(genome.brain, param),
             mesh_bundle: default(),
         };
 
@@ -48,8 +49,8 @@ impl Creature {
         c
     }
 
-    pub fn new_rand(limits: (f32, f32)) -> Self {
-        Self::new(CreatureGenome::new(), Pos::rand(limits))
+    pub fn new_rand(limits: (f32, f32), param: CodekaryoteParameters) -> Self {
+        Self::new(CreatureGenome::new(), Pos::rand(limits), param)
     }
 
     pub fn create_mesh(&self) -> (Circle, ColorMaterial) {

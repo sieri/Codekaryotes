@@ -1,11 +1,11 @@
 use crate::life::brain::Brain;
-use crate::life::codekaryotes::Pos;
+use crate::life::codekaryotes::{Plant, Pos};
 use crate::life::common_parts::{CodekaryoteBody, MASS_ENERGY_RATE};
 use crate::life::creature::{spawn_creature, Creature};
-use crate::life::creature_parts::{
-    EnergyStorage, Eyes, Movement, ENERGY_MOVEMENT_RATE, ENERGY_TURNING_RATE,
-};
+use crate::life::creature_parts::{EnergyStorage, Eyes, Movement};
 use crate::life::genome::{CreatureGenome, Genome};
+use crate::life::{plant, PlantSpawnTimer};
+use crate::parameters::{CodekaryoteParameters, WorldParameters};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
@@ -15,6 +15,7 @@ pub const ENERGY_REP_TRESH: f32 = 0.8;
 pub const ENERGY_REP_COST: f32 = 0.3;
 
 pub fn system_move_codekaryote(
+    param: Res<CodekaryoteParameters>,
     mut query: Query<(&mut ExternalForce, &mut Movement, &Transform, &Velocity)>,
 ) {
     for (mut force, mut movement, transform, velocity) in query.iter_mut() {
@@ -36,8 +37,8 @@ pub fn system_move_codekaryote(
         force.force = transform.local_x().truncate() * actual_forward;
         force.torque = actual_torque;
 
-        movement.energy_rate =
-            ENERGY_TURNING_RATE * actual_torque.abs() + actual_forward.abs() * ENERGY_MOVEMENT_RATE;
+        movement.energy_rate = param.energy_turning_rate * actual_torque.abs()
+            + actual_forward.abs() * param.energy_movement_rate;
         movement.forward = 0.0;
         movement.torque = 0.0;
     }
@@ -80,6 +81,7 @@ pub fn system_die(mut commands: Commands, query: Query<(Entity, &EnergyStorage)>
 
 pub fn system_reproduce(
     mut commands: Commands,
+    codekaryote_param: Res<CodekaryoteParameters>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut query: Query<(&CreatureGenome, &Transform, &mut EnergyStorage)>,
@@ -91,8 +93,26 @@ pub fn system_reproduce(
             let new_genome = genome.mutate();
             let x = transform.translation.x;
             let y = transform.translation.y;
-            let baby = Creature::new(new_genome, Pos { x, y });
+            let baby = Creature::new(new_genome, Pos { x, y }, *codekaryote_param);
             spawn_creature(&mut commands, &mut meshes, &mut materials, baby);
+        }
+    }
+}
+
+pub fn system_plant_spawn(
+    mut commands: Commands,
+    world_parameters: Res<WorldParameters>,
+    codekaryote_parameters: Res<CodekaryoteParameters>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    time: Res<Time>,
+    mut timer: ResMut<PlantSpawnTimer>,
+) {
+    if timer.0.tick(time.delta()).just_finished() {
+        let limits = (world_parameters.width, world_parameters.height);
+        for _ in 0..world_parameters.plant_per_seconds {
+            let mut plant = Plant::new_rand(limits, *codekaryote_parameters);
+            plant::spawn_plant(&mut commands, &mut meshes, &mut materials, plant);
         }
     }
 }

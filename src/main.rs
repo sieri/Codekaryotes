@@ -1,11 +1,15 @@
 mod graphics;
 mod life;
+mod parameters;
 mod utils;
+
 #[allow(dead_code, unused)]
-use crate::life::{create_world, LifePlugin, WorldParameters};
+use crate::life::{create_world, LifePlugin};
 use bevy::prelude::*;
 use bevy_pancam::PanCamPlugin;
 use bevy_rapier2d::prelude::*;
+#[allow(dead_code, unused)]
+use parameters::WorldParameters;
 
 fn main() {
     App::new()

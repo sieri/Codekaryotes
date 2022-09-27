@@ -8,8 +8,10 @@ use crate::life::codekaryotes::Plant;
 
 use crate::life::collisions::collision_event_dispatcher;
 use crate::life::systems::{
-    system_consume_energy, system_die, system_move_codekaryote, system_reproduce,
+    system_consume_energy, system_die, system_move_codekaryote, system_plant_spawn,
+    system_reproduce,
 };
+use crate::parameters::{CodekaryoteParameters, WorldParameters};
 use crate::{graphics, App, Commands, FromWorld, World};
 
 //pub mod brain;
@@ -27,28 +29,13 @@ mod plant;
 pub mod systems;
 
 pub struct LifePlugin;
-
-pub struct WorldParameters {
-    height: f32,
-    width: f32,
-    pub initial_creature: usize,
-    pub initial_plant: usize,
-}
-
-impl FromWorld for WorldParameters {
-    fn from_world(_world: &mut World) -> Self {
-        WorldParameters {
-            height: 3000.0,
-            width: 3000.0,
-            initial_creature: 100,
-            initial_plant: 100,
-        }
-    }
-}
+pub struct PlantSpawnTimer(Timer);
 
 impl Plugin for LifePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WorldParameters>()
+            .init_resource::<CodekaryoteParameters>()
+            .insert_resource(PlantSpawnTimer(Timer::from_seconds(1.0, true)))
             .add_startup_system(graphics::setup_graphics)
             .add_startup_system(create_world)
             .add_system(brain_input_system)
@@ -59,6 +46,7 @@ impl Plugin for LifePlugin {
             .add_system(system_consume_energy)
             .add_system(system_die)
             .add_system(system_reproduce)
+            .add_system(system_plant_spawn)
             .add_system(collision_event_dispatcher);
     }
     fn name(&self) -> &str {
@@ -69,6 +57,7 @@ impl Plugin for LifePlugin {
 pub fn create_world(
     mut commands: Commands,
     world_parameters: Res<WorldParameters>,
+    codekaryote_parameters: Res<CodekaryoteParameters>,
     mut rapier_parameter: ResMut<RapierConfiguration>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -115,12 +104,12 @@ pub fn create_world(
     let limits = (world_parameters.width, world_parameters.height);
 
     for _ in 0..initial_creatures {
-        let mut creature = Creature::new_rand(limits);
+        let mut creature = Creature::new_rand(limits, *codekaryote_parameters);
         creature::spawn_creature(&mut commands, &mut meshes, &mut materials, creature);
     }
 
     for _ in 0..initial_plants {
-        let mut plant = Plant::new_rand(limits);
+        let mut plant = Plant::new_rand(limits, *codekaryote_parameters);
         plant::spawn_plant(&mut commands, &mut meshes, &mut materials, plant);
     }
 }

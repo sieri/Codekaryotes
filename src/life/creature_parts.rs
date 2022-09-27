@@ -1,6 +1,7 @@
 use crate::life::common_parts;
 use crate::life::common_parts::{ChromosomalComponent, CodekaryoteBody};
 use crate::life::genome::{Chromosome, Mutating};
+use crate::parameters::CodekaryoteParameters;
 use crate::utils::scale_between;
 use bevy::ecs::schedule::ShouldRun::No;
 use bevy::prelude::*;
@@ -10,15 +11,6 @@ use bevy_rapier2d::na::RealField;
 use bevy_rapier2d::prelude::*;
 use std::cmp::Ordering;
 use std::hash::Hash;
-
-pub const SPEED_FACTOR_LOWEST: f32 = 100.0;
-pub const SPEED_FACTOR_HIGHEST: f32 = 200.0;
-pub const ANGULAR_FACTOR_LOWEST: f32 = 1.0;
-pub const ANGULAR_FACTOR_HIGHEST: f32 = 2.0;
-pub const ENERGY_MOVEMENT_RATE: f32 = 0.0005;
-pub const ENERGY_TURNING_RATE: f32 = 0.05;
-pub const MIN_ENERGY_FACTOR: f32 = 0.1;
-pub const MAX_ENERGY_FACTOR: f32 = 0.8;
 
 #[derive(Component, Debug, Clone)]
 pub struct Movement {
@@ -35,18 +27,18 @@ pub struct Movement {
 }
 
 impl ChromosomalComponent for Movement {
-    fn new(c: Chromosome) -> Self {
+    fn new(c: Chromosome, param: CodekaryoteParameters) -> Self {
         let multiplier_lin_base = scale_between(
             c[0] as f32,
-            SPEED_FACTOR_LOWEST,
-            SPEED_FACTOR_HIGHEST,
+            param.speed_factor_lowest,
+            param.speed_factor_highest,
             None,
             None,
         );
         let multiplier_ang_base = scale_between(
             c[1] as f32,
-            ANGULAR_FACTOR_LOWEST,
-            ANGULAR_FACTOR_HIGHEST,
+            param.angular_factor_lowest,
+            param.angular_factor_highest,
             None,
             None,
         );
@@ -66,10 +58,6 @@ impl ChromosomalComponent for Movement {
     fn get_mutated(&self) -> Chromosome {
         self.chromosome.mutate(1)
     }
-}
-
-impl Movement {
-    pub fn get_energy_consumed(&self) {}
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -128,7 +116,7 @@ pub struct Eyes {
 }
 
 impl ChromosomalComponent for Eyes {
-    fn new(c: Chromosome) -> Self {
+    fn new(c: Chromosome, param: CodekaryoteParameters) -> Self {
         //TODO: Set parameters
         const EYE_RANGE_LIMIT: f32 = 300.0;
         const ENERGY_EYES_RATE: f32 = 0.005;
@@ -179,6 +167,13 @@ impl Eyes {
         }
     }
 
+    pub fn v(&self) -> f32 {
+        match self.seen_creature.values().min() {
+            Some(s) => s.size,
+            None => 0.0,
+        }
+    }
+
     pub fn closest_plant_dist(&self) -> f32 {
         match self.seen_creature.values().min() {
             Some(s) => s.dist,
@@ -189,6 +184,13 @@ impl Eyes {
     pub fn closest_plant_angle(&self) -> f32 {
         match self.seen_plants.values().min() {
             Some(s) => s.angle,
+            None => 0.0,
+        }
+    }
+
+    pub fn closest_plant_size(&self) -> f32 {
+        match self.seen_plants.values().min() {
+            Some(s) => s.size,
             None => 0.0,
         }
     }
@@ -203,15 +205,15 @@ pub struct EnergyStorage {
 }
 
 impl ChromosomalComponent for EnergyStorage {
-    fn new(c: Chromosome) -> Self {
+    fn new(c: Chromosome, param: CodekaryoteParameters) -> Self {
         EnergyStorage {
             chromosome: c.to_vec(),
             current_energy: 0.0,
             energy_max: 0.0,
             size_factor: scale_between(
                 c[0] as f32,
-                MIN_ENERGY_FACTOR,
-                MAX_ENERGY_FACTOR,
+                param.min_energy_storage_factor,
+                param.max_energy_storage_factor,
                 None,
                 None,
             ),
@@ -229,19 +231,16 @@ impl EnergyStorage {
         self.energy_max = max_storage;
         self.current_energy = max_storage / 2.0;
     }
-    
-    pub fn add_energy(&mut self, en : f32)
-    {
+
+    pub fn add_energy(&mut self, en: f32) {
         self.current_energy += en;
-        
-        if self.current_energy > self.energy_max
-        {
+
+        if self.current_energy > self.energy_max {
             self.current_energy = self.energy_max;
         }
     }
-    
-    pub fn get_energy_level(&self) -> f32
-    {
-        self.current_energy/self.energy_max
+
+    pub fn get_energy_level(&self) -> f32 {
+        self.current_energy / self.energy_max
     }
 }

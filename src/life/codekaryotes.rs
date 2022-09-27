@@ -2,6 +2,7 @@ use crate::life::brain::Brain;
 use crate::life::common_parts::{ChromosomalComponent, CodekaryoteBody, CodekaryoteColor};
 use crate::life::creature_parts::{Eyes, Movement};
 use crate::life::genome::{CreatureGenome, PlantGenome};
+use crate::parameters::CodekaryoteParameters;
 use crate::shape::Circle;
 use bevy::sprite::MaterialMesh2dBundle;
 use bevy::{
@@ -19,9 +20,9 @@ pub struct Pos {
 }
 
 #[derive(Component)]
-pub enum Kind{
+pub enum Kind {
     Creature,
-    Plant
+    Plant,
 }
 
 #[derive(Bundle, Clone)]
@@ -34,17 +35,17 @@ pub struct Plant {
 }
 
 impl Plant {
-    pub fn new(genome: PlantGenome, pos: Pos) -> Self {
+    pub fn new(genome: PlantGenome, pos: Pos, param: CodekaryoteParameters) -> Self {
         Plant {
             starting_pos: pos,
-            color: CodekaryoteColor::new(genome.color),
-            body: CodekaryoteBody::new(genome.body),
+            color: CodekaryoteColor::new(genome.color, param),
+            body: CodekaryoteBody::new(genome.body, param),
             mesh_bundle: default(),
         }
     }
 
-    pub fn new_rand(limits: (f32, f32)) -> Self {
-        Self::new(PlantGenome::new(), Pos::rand(limits))
+    pub fn new_rand(limits: (f32, f32), param: CodekaryoteParameters) -> Self {
+        Self::new(PlantGenome::new(), Pos::rand(limits), param)
     }
 
     pub fn create_mesh(&self) -> (Circle, ColorMaterial) {

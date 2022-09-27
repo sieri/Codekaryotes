@@ -1,5 +1,6 @@
 use crate::life::brain::{Activation, Brain, Inputs, Neuron, Outputs};
-use crate::life::creature_parts::{Eyes, Movement};
+use crate::life::common_parts::CodekaryoteBody;
+use crate::life::creature_parts::{EnergyStorage, Eyes, Movement};
 use crate::Query;
 use bevy::prelude::Transform;
 use bevy_rapier2d::na::RealField;
@@ -36,8 +37,17 @@ pub fn brain_activate_system(mut query: Query<&mut Brain>) {
     }
 }
 
-pub fn brain_input_system(mut query: Query<(&mut Brain, &Transform, &Velocity, &Eyes)>) {
-    for (mut brain, transform, velocity, eyes) in query.iter_mut() {
+pub fn brain_input_system(
+    mut query: Query<(
+        &mut Brain,
+        &Transform,
+        &Velocity,
+        &Eyes,
+        &EnergyStorage,
+        &CodekaryoteBody,
+    )>,
+) {
+    for (mut brain, transform, velocity, eyes, energy, body) in query.iter_mut() {
         for i in brain.in_range() {
             let mut in_neuron: &mut Neuron = &mut brain.neurons[i];
             let in_type = in_neuron.input.unwrap();
@@ -48,7 +58,7 @@ pub fn brain_input_system(mut query: Query<(&mut Brain, &Transform, &Velocity, &
                 Inputs::Angle => transform.rotation.to_axis_angle().1 / f32::pi(),
                 Inputs::Speed => velocity.linvel.length() / crate::life::systems::MAX_SPEED,
                 Inputs::RotationSpeed => velocity.angvel / f32::pi(),
-                Inputs::Energy => 0.0,
+                Inputs::Energy => energy.get_energy_level(),
                 Inputs::NumSeen => eyes.num_seen() as f32,
                 Inputs::NumSeenCreature => eyes.num_seen_creature() as f32,
                 Inputs::NumSeenPlant => eyes.num_seen_plant() as f32,
@@ -56,7 +66,8 @@ pub fn brain_input_system(mut query: Query<(&mut Brain, &Transform, &Velocity, &
                 Inputs::ClosestCreatureDist => eyes.closest_creature_angle(),
                 Inputs::ClosestPlantDist => eyes.closest_plant_dist(),
                 Inputs::ClosestPlantAngle => eyes.closest_plant_angle(),
-                //TODO: add size recognition inputs
+                Inputs::ClosestCreatureSizeRatio => eyes.closest_creature_dist() / body.size,
+                Inputs::ClosestPlantSizeRatio => eyes.closest_plant_size() / body.size,
             };
         }
     }

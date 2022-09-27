@@ -3,6 +3,7 @@ pub mod systems;
 use crate::life::common_parts::ChromosomalComponent;
 use crate::life::creature::Creature;
 use crate::life::genome::{Chromosome, Mutating};
+use crate::parameters::CodekaryoteParameters;
 use arr_macro::arr;
 use bevy::prelude::*;
 use rand::distributions::Slice;
@@ -51,8 +52,10 @@ pub enum Inputs {
     NumSeenPlant,
     ClosestCreatureAngle,
     ClosestCreatureDist,
+    ClosestCreatureSizeRatio,
     ClosestPlantAngle,
     ClosestPlantDist,
+    ClosestPlantSizeRatio,
 }
 
 impl From<usize> for Inputs {
@@ -353,7 +356,7 @@ fn connected_to_input(l: &LinkDefinition, help: &mut LinkHelper) -> bool {
 }
 
 impl ChromosomalComponent for Brain {
-    fn new(chromosome: Chromosome) -> Self {
+    fn new(chromosome: Chromosome, param: CodekaryoteParameters) -> Self {
         let mut brain = Brain {
             links: vec![],
             neurons: vec![],
@@ -462,7 +465,7 @@ impl ChromosomalComponent for Brain {
         }
 
         brain.energy_rate =
-            0.0000001 * brain.links.len().pow(2) as f32 * (brain.neurons.len() as f32).powi(3);
+            0.00000001 * brain.links.len().pow(2) as f32 * (brain.neurons.len() as f32).powi(3);
 
         brain
     }

@@ -1,5 +1,6 @@
 use crate::life;
 use crate::life::genome::{Chromosome, Genome, Mutating};
+use crate::parameters::CodekaryoteParameters;
 use crate::utils::scale_between;
 use bevy::prelude::*;
 
@@ -7,7 +8,7 @@ pub const MASS_ENERGY: f32 = 50.0;
 pub const MASS_ENERGY_RATE: f32 = 0.005;
 
 pub trait ChromosomalComponent {
-    fn new(c: Chromosome) -> Self;
+    fn new(c: Chromosome, param: CodekaryoteParameters) -> Self;
     fn get_mutated(&self) -> Chromosome;
 }
 
@@ -22,7 +23,7 @@ pub struct CodekaryoteColor {
 }
 
 impl ChromosomalComponent for CodekaryoteColor {
-    fn new(c: Chromosome) -> Self {
+    fn new(c: Chromosome, param: CodekaryoteParameters) -> Self {
         CodekaryoteColor {
             chromosome: c.to_vec(),
             r: (c[0] as f32) / (u32::MAX as f32),
@@ -56,7 +57,7 @@ pub struct CodekaryoteBody {
 }
 
 impl ChromosomalComponent for CodekaryoteBody {
-    fn new(c: Chromosome) -> Self {
+    fn new(c: Chromosome, param: CodekaryoteParameters) -> Self {
         const MIN: f32 = 10.0;
         const MAX: f32 = 40.0;
         const BODY_MASS_UNIT: f32 = 1f32;
