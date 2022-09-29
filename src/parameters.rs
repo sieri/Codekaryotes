@@ -31,19 +31,37 @@ pub struct CodekaryoteParameters {
     pub energy_turning_rate: f32,
     pub min_energy_storage_factor: f32,
     pub max_energy_storage_factor: f32,
+    pub eye_range_limit: f32,
+    pub energy_eyes_rate: f32,
+    pub energy_rep_tresh: f32,
+    pub energy_rep_cost: f32,
+    pub max_angular: f32,
+    pub max_speed: f32,
 }
 
 impl FromWorld for CodekaryoteParameters {
     fn from_world(_world: &mut World) -> Self {
+        //create default values
         CodekaryoteParameters {
+            //Physics parameters
             speed_factor_lowest: 100.0,
             speed_factor_highest: 200.0,
             angular_factor_lowest: 1.0,
             angular_factor_highest: 2.0,
+            max_speed: 100.0,
+            max_angular: 3.0 * std::f32::consts::PI,
+
+            //Eyes
+            eye_range_limit: 300.0,
+            energy_eyes_rate: 0.005,
+
+            //energy tuning parameters
             energy_movement_rate: 0.000005,
             energy_turning_rate: 0.0005,
             min_energy_storage_factor: 0.1,
             max_energy_storage_factor: 0.8,
+            energy_rep_tresh: 0.8,
+            energy_rep_cost: 0.3,
         }
     }
 }

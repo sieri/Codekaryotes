@@ -9,11 +9,6 @@ use crate::parameters::{CodekaryoteParameters, WorldParameters};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-pub const MAX_SPEED: f32 = 100.0;
-pub const MAX_ANGULAR: f32 = 3.0 * std::f32::consts::PI;
-pub const ENERGY_REP_TRESH: f32 = 0.8;
-pub const ENERGY_REP_COST: f32 = 0.3;
-
 pub fn system_move_codekaryote(
     param: Res<CodekaryoteParameters>,
     mut query: Query<(&mut ExternalForce, &mut Movement, &Transform, &Velocity)>,
@@ -23,8 +18,10 @@ pub fn system_move_codekaryote(
         movement.travelled += movement.last_pos.distance(current_pos);
         movement.last_pos = current_pos;
 
-        let reduce_force = (1.0 - (1.0 / (MAX_SPEED - velocity.linvel.length()).exp())).max(0.0);
-        let reduce_angle = (1.0 - (1.0 / (MAX_ANGULAR - velocity.angvel.abs()).exp())).max(0.0);
+        let reduce_force =
+            (1.0 - (1.0 / (param.max_speed - velocity.linvel.length()).exp())).max(0.0);
+        let reduce_angle =
+            (1.0 - (1.0 / (param.max_angular - velocity.angvel.abs()).exp())).max(0.0);
 
         let actual_forward: f32 = movement.forward
             * movement.multiplier_lin_base
@@ -84,15 +81,25 @@ pub fn system_reproduce(
     codekaryote_param: Res<CodekaryoteParameters>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    mut query: Query<(&CreatureGenome, &Transform, &mut EnergyStorage)>,
+    mut query: Query<(
+        &CreatureGenome,
+        &Transform,
+        &mut EnergyStorage,
+        &CodekaryoteBody,
+    )>,
 ) {
-    for (genome, transform, mut energy_storage) in query.iter_mut() {
-        if energy_storage.get_energy_level() >= ENERGY_REP_TRESH {
+    for (genome, transform, mut energy_storage, body) in query.iter_mut() {
+        if energy_storage.get_energy_level() >= codekaryote_param.energy_rep_tresh {
             //TODO: Add randomness
-            energy_storage.current_energy -= ENERGY_REP_COST * energy_storage.energy_max;
+            energy_storage.current_energy -=
+                codekaryote_param.energy_rep_cost * energy_storage.energy_max;
             let new_genome = genome.mutate();
-            let x = transform.translation.x;
-            let y = transform.translation.y;
+
+            let vector_dir_offset = transform.local_x().truncate();
+
+            let x = transform.translation.x + body.size * vector_dir_offset.x + 0.0001;
+            let y = transform.translation.y + body.size * vector_dir_offset.y + 0.0001;
+
             let baby = Creature::new(new_genome, Pos { x, y }, *codekaryote_param);
             spawn_creature(&mut commands, &mut meshes, &mut materials, baby);
         }

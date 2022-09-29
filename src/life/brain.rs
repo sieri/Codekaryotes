@@ -20,7 +20,7 @@ const NUM_OUTPUT: usize = 4;
 const INTERNAL_NEURON: usize = 42;
 
 const INTERNAL_PREFIX: usize = NUM_INPUT;
-const OUTPUT_PREFIX: usize = INTERNAL_PREFIX + INTERNAL_NEURON;
+const OUTPUT_PREFIX: usize = INTERNAL_PREFIX + INTERNAL_NEURON; //outputs need to be flipped to before in the genome, annoying refactor
 
 #[derive(Debug, Clone, Copy)]
 pub enum Activation {

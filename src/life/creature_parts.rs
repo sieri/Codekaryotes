@@ -117,13 +117,9 @@ pub struct Eyes {
 
 impl ChromosomalComponent for Eyes {
     fn new(c: Chromosome, param: CodekaryoteParameters) -> Self {
-        //TODO: Set parameters
-        const EYE_RANGE_LIMIT: f32 = 300.0;
-        const ENERGY_EYES_RATE: f32 = 0.005;
-
         let fov = scale_between(c[0] as f32, 0.002, f32::two_pi(), None, None);
-        let range = scale_between(c[1] as f32, 40.0, EYE_RANGE_LIMIT, None, None);
-        let energy_rate: f32 = (fov / 180.0 * range) * ENERGY_EYES_RATE;
+        let range = scale_between(c[1] as f32, 40.0, param.eye_range_limit, None, None);
+        let energy_rate: f32 = (fov / 180.0 * range) * param.energy_eyes_rate;
 
         Eyes {
             genome: c.to_vec(),
@@ -167,7 +163,7 @@ impl Eyes {
         }
     }
 
-    pub fn v(&self) -> f32 {
+    pub fn closest_creature_size(&self) -> f32 {
         match self.seen_creature.values().min() {
             Some(s) => s.size,
             None => 0.0,

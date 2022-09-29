@@ -1,8 +1,9 @@
 use crate::life::brain::{Activation, Brain, Inputs, Neuron, Outputs};
 use crate::life::common_parts::CodekaryoteBody;
 use crate::life::creature_parts::{EnergyStorage, Eyes, Movement};
+use crate::parameters::CodekaryoteParameters;
 use crate::Query;
-use bevy::prelude::Transform;
+use bevy::prelude::*;
 use bevy_rapier2d::na::RealField;
 use bevy_rapier2d::prelude::*;
 
@@ -38,6 +39,7 @@ pub fn brain_activate_system(mut query: Query<&mut Brain>) {
 }
 
 pub fn brain_input_system(
+    param: Res<CodekaryoteParameters>,
     mut query: Query<(
         &mut Brain,
         &Transform,
@@ -56,7 +58,7 @@ pub fn brain_input_system(
                 Inputs::Touch => 0.0,
                 Inputs::TouchForward => 0.0,
                 Inputs::Angle => transform.rotation.to_axis_angle().1 / f32::pi(),
-                Inputs::Speed => velocity.linvel.length() / crate::life::systems::MAX_SPEED,
+                Inputs::Speed => velocity.linvel.length() / param.max_speed,
                 Inputs::RotationSpeed => velocity.angvel / f32::pi(),
                 Inputs::Energy => energy.get_energy_level(),
                 Inputs::NumSeen => eyes.num_seen() as f32,
@@ -66,7 +68,7 @@ pub fn brain_input_system(
                 Inputs::ClosestCreatureDist => eyes.closest_creature_angle(),
                 Inputs::ClosestPlantDist => eyes.closest_plant_dist(),
                 Inputs::ClosestPlantAngle => eyes.closest_plant_angle(),
-                Inputs::ClosestCreatureSizeRatio => eyes.closest_creature_dist() / body.size,
+                Inputs::ClosestCreatureSizeRatio => eyes.closest_creature_size() / body.size,
                 Inputs::ClosestPlantSizeRatio => eyes.closest_plant_size() / body.size,
             };
         }
