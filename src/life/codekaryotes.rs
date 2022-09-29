@@ -12,6 +12,7 @@ use bevy::{
 };
 use bevy_rapier2d::prelude::*;
 use rand::Rng;
+use rand_distr::{Distribution, Normal};
 
 #[derive(Component, Debug, Copy, Clone)]
 pub struct Pos {
@@ -44,8 +45,8 @@ impl Plant {
         }
     }
 
-    pub fn new_rand(limits: (f32, f32), param: CodekaryoteParameters) -> Self {
-        Self::new(PlantGenome::new(), Pos::rand(limits), param)
+    pub fn new_rand(distribution: &mut Normal<f32>, param: CodekaryoteParameters) -> Self {
+        Self::new(PlantGenome::new(), Pos::rand(distribution), param)
     }
 
     pub fn create_mesh(&self) -> (Circle, ColorMaterial) {
@@ -60,11 +61,11 @@ impl Plant {
     }
 }
 impl Pos {
-    pub fn rand(limits: (f32, f32)) -> Pos {
+    pub fn rand(dist: &mut Normal<f32>) -> Pos {
         let mut r = rand::thread_rng();
         Pos {
-            x: r.gen_range(-(limits.0 / 2.0)..(limits.0 / 2.0)),
-            y: r.gen_range(-(limits.1 / 2.0)..(limits.1 / 2.0)),
+            x: dist.sample(&mut r),
+            y: dist.sample(&mut r),
         }
     }
 

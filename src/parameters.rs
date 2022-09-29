@@ -2,21 +2,21 @@ use crate::{FromWorld, World};
 
 #[derive(Copy, Clone)]
 pub struct WorldParameters {
-    pub height: f32,
-    pub width: f32,
+    pub size: f32,
     pub initial_creature: usize,
     pub initial_plant: usize,
     pub plant_per_seconds: usize,
+    pub infinite_world: bool,
 }
 
 impl FromWorld for WorldParameters {
     fn from_world(_world: &mut World) -> Self {
         WorldParameters {
-            height: 5000.0,
-            width: 5000.0,
+            size: 5000.0,
             initial_creature: 500,
             initial_plant: 500,
             plant_per_seconds: 3,
+            infinite_world: true,
         }
     }
 }

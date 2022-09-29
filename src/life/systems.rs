@@ -8,6 +8,7 @@ use crate::life::{plant, PlantSpawnTimer};
 use crate::parameters::{CodekaryoteParameters, WorldParameters};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+use rand_distr::{Distribution, Normal};
 
 pub fn system_move_codekaryote(
     param: Res<CodekaryoteParameters>,
@@ -110,15 +111,15 @@ pub fn system_plant_spawn(
     mut commands: Commands,
     world_parameters: Res<WorldParameters>,
     codekaryote_parameters: Res<CodekaryoteParameters>,
+    mut distribution: ResMut<Normal<f32>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     time: Res<Time>,
     mut timer: ResMut<PlantSpawnTimer>,
 ) {
     if timer.0.tick(time.delta()).just_finished() {
-        let limits = (world_parameters.width, world_parameters.height);
         for _ in 0..world_parameters.plant_per_seconds {
-            let mut plant = Plant::new_rand(limits, *codekaryote_parameters);
+            let mut plant = Plant::new_rand(&mut distribution, *codekaryote_parameters);
             plant::spawn_plant(&mut commands, &mut meshes, &mut materials, plant);
         }
     }

@@ -3,6 +3,8 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use creature::Creature;
 
+use rand_distr::{Distribution, Normal};
+
 use crate::life::brain::systems::*;
 use crate::life::codekaryotes::Plant;
 
@@ -64,52 +66,57 @@ pub fn create_world(
 ) {
     rapier_parameter.gravity = Vect::ZERO;
 
-    /* Create the walls. */
-    commands
-        .spawn()
-        .insert(Collider::cuboid(world_parameters.width, 50.0))
-        .insert_bundle(TransformBundle::from(Transform::from_xyz(
-            0.0,
-            -world_parameters.height,
-            0.0,
-        )));
-    commands
-        .spawn()
-        .insert(Collider::cuboid(world_parameters.width, 50.0))
-        .insert_bundle(TransformBundle::from(Transform::from_xyz(
-            0.0,
-            world_parameters.height,
-            0.0,
-        )));
-    commands
-        .spawn()
-        .insert(Collider::cuboid(50.0, world_parameters.height))
-        .insert_bundle(TransformBundle::from(Transform::from_xyz(
-            -world_parameters.width,
-            0.0,
-            0.0,
-        )));
-    commands
-        .spawn()
-        .insert(Collider::cuboid(50.0, world_parameters.height))
-        .insert_bundle(TransformBundle::from(Transform::from_xyz(
-            world_parameters.width,
-            0.0,
-            0.0,
-        )));
+    if !world_parameters.infinite_world {
+        /* Create the walls. */
+        commands
+            .spawn()
+            .insert(Collider::cuboid(world_parameters.size, 50.0))
+            .insert_bundle(TransformBundle::from(Transform::from_xyz(
+                0.0,
+                -world_parameters.size,
+                0.0,
+            )));
+        commands
+            .spawn()
+            .insert(Collider::cuboid(world_parameters.size, 50.0))
+            .insert_bundle(TransformBundle::from(Transform::from_xyz(
+                0.0,
+                world_parameters.size,
+                0.0,
+            )));
+        commands
+            .spawn()
+            .insert(Collider::cuboid(50.0, world_parameters.size))
+            .insert_bundle(TransformBundle::from(Transform::from_xyz(
+                -world_parameters.size,
+                0.0,
+                0.0,
+            )));
+        commands
+            .spawn()
+            .insert(Collider::cuboid(50.0, world_parameters.size))
+            .insert_bundle(TransformBundle::from(Transform::from_xyz(
+                world_parameters.size,
+                0.0,
+                0.0,
+            )));
+    }
+
+    let mut distribution = Normal::new(0.0, world_parameters.size / 2.0).unwrap();
+
+    commands.insert_resource(distribution);
 
     /* spawn the creatures. */
     let initial_creatures = world_parameters.initial_creature;
     let initial_plants = world_parameters.initial_plant;
-    let limits = (world_parameters.width, world_parameters.height);
 
     for _ in 0..initial_creatures {
-        let mut creature = Creature::new_rand(limits, *codekaryote_parameters);
+        let mut creature = Creature::new_rand(&mut distribution, *codekaryote_parameters);
         creature::spawn_creature(&mut commands, &mut meshes, &mut materials, creature);
     }
 
     for _ in 0..initial_plants {
-        let mut plant = Plant::new_rand(limits, *codekaryote_parameters);
+        let mut plant = Plant::new_rand(&mut distribution, *codekaryote_parameters);
         plant::spawn_plant(&mut commands, &mut meshes, &mut materials, plant);
     }
 }

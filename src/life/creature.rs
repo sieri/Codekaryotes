@@ -15,6 +15,7 @@ use bevy_rapier2d::dynamics::{
     Damping, ExternalForce, FixedJointBuilder, ImpulseJoint, RigidBody, Velocity,
 };
 use bevy_rapier2d::geometry::{ActiveEvents, Collider, ColliderMassProperties, Sensor};
+use rand_distr::{Distribution, Normal};
 
 #[derive(Bundle, Clone)]
 pub struct Creature {
@@ -49,8 +50,8 @@ impl Creature {
         c
     }
 
-    pub fn new_rand(limits: (f32, f32), param: CodekaryoteParameters) -> Self {
-        Self::new(CreatureGenome::new(), Pos::rand(limits), param)
+    pub fn new_rand(distribution: &mut Normal<f32>, param: CodekaryoteParameters) -> Self {
+        Self::new(CreatureGenome::new(), Pos::rand(distribution), param)
     }
 
     pub fn create_mesh(&self) -> (Circle, ColorMaterial) {

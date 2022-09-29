@@ -3,14 +3,11 @@ use crate::life::common_parts::{ChromosomalComponent, CodekaryoteBody};
 use crate::life::genome::{Chromosome, Mutating};
 use crate::parameters::CodekaryoteParameters;
 use crate::utils::scale_between;
-use bevy::ecs::schedule::ShouldRun::No;
 use bevy::prelude::*;
-use bevy::render::render_resource::ShaderType;
 use bevy::utils::HashMap;
 use bevy_rapier2d::na::RealField;
 use bevy_rapier2d::prelude::*;
 use std::cmp::Ordering;
-use std::hash::Hash;
 
 #[derive(Component, Debug, Clone)]
 pub struct Movement {
