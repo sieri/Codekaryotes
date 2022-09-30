@@ -51,10 +51,6 @@ impl ChromosomalComponent for Movement {
             last_pos: Vec3::ZERO,
         }
     }
-
-    fn get_mutated(&self) -> Chromosome {
-        self.chromosome.mutate(1)
-    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -126,10 +122,6 @@ impl ChromosomalComponent for Eyes {
             fov,
             range,
         }
-    }
-
-    fn get_mutated(&self) -> Chromosome {
-        self.genome.mutate(1)
     }
 }
 
@@ -211,10 +203,6 @@ impl ChromosomalComponent for EnergyStorage {
                 None,
             ),
         }
-    }
-
-    fn get_mutated(&self) -> Chromosome {
-        self.chromosome.mutate(1)
     }
 }
 

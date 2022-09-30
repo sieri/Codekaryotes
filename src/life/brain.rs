@@ -469,9 +469,6 @@ impl ChromosomalComponent for Brain {
 
         brain
     }
-    fn get_mutated(&self) -> Chromosome {
-        self.chromosome.mutate(5)
-    }
 }
 
 fn graph_def(defs: &[LinkDefinition]) {

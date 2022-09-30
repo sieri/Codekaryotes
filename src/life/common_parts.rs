@@ -9,7 +9,6 @@ pub const MASS_ENERGY_RATE: f32 = 0.005;
 
 pub trait ChromosomalComponent {
     fn new(c: Chromosome, param: CodekaryoteParameters) -> Self;
-    fn get_mutated(&self) -> Chromosome;
 }
 
 #[derive(Component, Debug, Clone)]
@@ -30,10 +29,6 @@ impl ChromosomalComponent for CodekaryoteColor {
             g: (c[1] as f32) / (u32::MAX as f32),
             b: (c[2] as f32) / (u32::MAX as f32),
         }
-    }
-
-    fn get_mutated(&self) -> Chromosome {
-        self.chromosome.to_vec()
     }
 }
 
@@ -69,10 +64,6 @@ impl ChromosomalComponent for CodekaryoteBody {
             size,
             mass,
         }
-    }
-
-    fn get_mutated(&self) -> Chromosome {
-        self.chromosome.mutate(1)
     }
 }
 
